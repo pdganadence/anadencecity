@@ -93,6 +93,15 @@ h1,h2,h3,h4,h5,.brand,.nav-section-title{font-family:'Poppins',sans-serif;}
 .photo-upload-box i{font-size:1.4rem;color:#B7BEC9;}
 .avatar-img{border-radius:50%;object-fit:cover;flex-shrink:0;}
 
+/* ===== Correctif défilement des fenêtres modales =====
+   Quand modal-body/modal-footer sont enveloppés dans un <form>, ce <form>
+   casse le calcul flex de Bootstrap (.modal-dialog-scrollable) et bloque le
+   défilement du contenu. On rend le <form> flex à son tour pour que le
+   défilement fonctionne normalement. */
+.modal-dialog-scrollable .modal-content>form{display:flex;flex-direction:column;min-height:0;overflow:hidden;}
+.modal-dialog-scrollable .modal-content>form>.modal-body{overflow-y:auto;}
+.modal-dialog-scrollable .modal-content>form>.modal-footer{flex-shrink:0;}
+
 /* ===== App shell ===== */
 #appShell{display:none;}
 #sidebar{
@@ -438,12 +447,12 @@ table.table td{vertical-align:middle;font-size:.87rem;}
             <div class="d-flex gap-2 flex-wrap">
               <input type="text" class="form-control form-control-sm search-input" id="searchEtudiant" placeholder="Rechercher un étudiant...">
               <select class="form-select form-select-sm" id="filterFiliereEtudiant" style="width:auto;"></select>
-              <select class="form-select form-select-sm" id="filterStatutEtudiant" style="width:auto;">
-                <option value="">Tous les statuts</option>
-                <option value="actif">Actifs</option>
-                <option value="abandon" id="optAbandonEtudiant">Abandon</option>
-                <option value="diplome" id="optDiplomeEtudiant">Diplômé</option>
-              </select>
+              <div class="btn-group btn-group-sm" role="group" id="filterStatutEtudiantGroup" aria-label="Filtrer par statut">
+                <button type="button" class="btn btn-outline-secondary active" data-statut="actif">Actifs</button>
+                <button type="button" class="btn btn-outline-secondary" data-statut="">Tous</button>
+                <button type="button" class="btn btn-outline-secondary" data-statut="abandon" id="optAbandonEtudiant">Abandon</button>
+                <button type="button" class="btn btn-outline-secondary" data-statut="diplome" id="optDiplomeEtudiant">Diplômé</button>
+              </div>
               <button class="btn btn-outline-secondary btn-sm" id="btnExportEtudiantsPdf"><i class="bi bi-file-earmark-pdf"></i> Exporter PDF</button>
               <button class="btn btn-amber btn-sm" id="btnNewEtudiant"><i class="bi bi-plus-lg"></i> Nouvel étudiant</button>
             </div>
@@ -553,7 +562,7 @@ table.table td{vertical-align:middle;font-size:.87rem;}
           <div class="card-body p-0">
             <div class="table-responsive">
               <table class="table table-hover align-middle mb-0">
-                <thead><tr><th>Étudiant</th><th class="d-none d-md-table-cell">Filière</th><th>Module</th><th class="d-none d-md-table-cell">Formateur</th><th>Note /20</th><th class="d-none d-lg-table-cell">Appréciation</th><th class="d-none d-lg-table-cell">Date</th></tr></thead>
+                <thead><tr><th>Étudiant</th><th class="d-none d-md-table-cell">Filière</th><th>Module</th><th class="d-none d-md-table-cell">Formateur</th><th>Note /20</th><th class="d-none d-lg-table-cell">Appréciation</th><th class="d-none d-lg-table-cell">Date</th><th class="text-end">Actions</th></tr></thead>
                 <tbody id="evaluationsBody"></tbody>
               </table>
             </div>
@@ -663,6 +672,59 @@ table.table td{vertical-align:middle;font-size:.87rem;}
             <div class="card-clean">
               <div class="card-header"><i class="bi bi-chat-dots-fill me-1"></i> Ma messagerie</div>
               <div class="card-body p-0" id="messagerieList" style="max-height:520px;overflow-y:auto;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== MON PROFIL (formateur) ===== -->
+      <div class="section-panel" id="panel-monprofil">
+        <div class="row g-3">
+          <div class="col-lg-7">
+            <div class="card-clean p-3">
+              <h6 class="fw-bold mb-3"><i class="bi bi-person-badge-fill me-1"></i> Mes informations</h6>
+              <form id="formMonProfil">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                  <div class="photo-upload-box" id="profilPhotoUploadBox">
+                    <img id="profilPhotoPreview" style="display:none;">
+                    <i class="bi bi-camera-fill" id="profilPhotoPlaceholderIcon"></i>
+                  </div>
+                  <div>
+                    <div class="fw-semibold small mb-1">Photo d'identité</div>
+                    <div class="text-muted mb-2" style="font-size:.78rem;">Cliquez sur le cadre pour ajouter ou changer votre photo.</div>
+                    <input type="file" accept="image/*" id="profilPhotoInput" class="form-control form-control-sm" style="max-width:220px;">
+                  </div>
+                </div>
+                <div class="row g-3">
+                  <div class="col-md-6"><label class="form-label small">Nom</label><input class="form-control" id="profilNom"></div>
+                  <div class="col-md-6"><label class="form-label small">Prénom</label><input class="form-control" id="profilPrenom"></div>
+                  <div class="col-md-6"><label class="form-label small">Spécialité</label><input class="form-control" id="profilSpecialite"></div>
+                  <div class="col-md-6"><label class="form-label small">Téléphone</label><input class="form-control" id="profilTelephone"></div>
+                  <div class="col-12"><label class="form-label small">Email</label><input type="email" class="form-control" id="profilEmail"></div>
+                  <div class="col-12"><label class="form-label small">Portfolio <span class="text-muted">(lien ou description)</span></label><textarea class="form-control" id="profilPortfolio" rows="2" placeholder="Ex : lien vers vos réalisations, projets menés..."></textarea></div>
+                  <div class="col-12">
+                    <label class="form-label small">CV</label>
+                    <input type="file" accept=".pdf,.doc,.docx" class="form-control" id="profilCvInput">
+                    <input type="hidden" id="profilCvData">
+                    <div class="mt-2" id="profilCvCurrent"></div>
+                  </div>
+                </div>
+                <hr class="my-3">
+                <h6 class="fw-bold small text-muted mb-2"><i class="bi bi-shield-lock-fill me-1"></i> Sécurité du compte</h6>
+                <div class="row g-3">
+                  <div class="col-md-6"><label class="form-label small">Identifiant de connexion</label><input class="form-control" id="profilIdentifiant"></div>
+                  <div class="col-md-6"><label class="form-label small">Nouveau mot de passe <span class="text-muted">(laisser vide pour ne pas changer)</span></label><input type="password" class="form-control" id="profilNouveauMdp" placeholder="••••••••"></div>
+                  <div class="col-md-6"><label class="form-label small">Mot de passe actuel <span class="text-muted">(requis pour tout changement d'identifiant/mot de passe)</span></label><input type="password" class="form-control" id="profilMdpActuel" placeholder="••••••••"></div>
+                </div>
+                <div id="profilError" class="alert alert-danger py-2 small mt-3" style="display:none;"></div>
+                <button class="btn btn-amber mt-3" type="submit"><i class="bi bi-check-lg me-1"></i> Enregistrer les modifications</button>
+              </form>
+            </div>
+          </div>
+          <div class="col-lg-5">
+            <div class="card-clean p-3">
+              <h6 class="fw-bold mb-2"><i class="bi bi-info-circle me-1"></i> À propos</h6>
+              <p class="text-muted small mb-0">Ces informations sont visibles par la direction et le secrétariat. La direction reste habilitée à modifier votre compte (y compris votre mot de passe) depuis la gestion des utilisateurs.</p>
             </div>
           </div>
         </div>
@@ -794,18 +856,32 @@ table.table td{vertical-align:middle;font-size:.87rem;}
 
 <!-- Formateur modal -->
 <div class="modal fade" id="modalFormateur" tabindex="-1">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header"><h5 class="modal-title" id="modalFormateurTitle">Nouveau formateur</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
       <form id="formFormateur">
         <div class="modal-body">
           <input type="hidden" name="id">
+          <input type="hidden" name="photo" id="formateurPhotoData">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="photo-upload-box" id="formateurPhotoUploadBox">
+              <img id="formateurPhotoPreview" style="display:none;">
+              <i class="bi bi-camera-fill" id="formateurPhotoPlaceholderIcon"></i>
+            </div>
+            <div>
+              <div class="fw-semibold small mb-1">Photo d'identité</div>
+              <div class="text-muted mb-2" style="font-size:.78rem;">Cliquez sur le cadre pour ajouter ou changer la photo (optionnel).</div>
+              <input type="file" accept="image/*" id="formateurPhotoInput" class="form-control form-control-sm" style="max-width:220px;">
+            </div>
+          </div>
           <div class="row g-3">
             <div class="col-md-6"><label class="form-label small">Nom</label><input required class="form-control" name="nom"></div>
             <div class="col-md-6"><label class="form-label small">Prénom</label><input required class="form-control" name="prenom"></div>
             <div class="col-md-6"><label class="form-label small">Spécialité</label><input class="form-control" name="specialite"></div>
             <div class="col-md-6"><label class="form-label small">Téléphone</label><input required class="form-control" name="telephone"></div>
             <div class="col-12"><label class="form-label small">Email</label><input type="email" class="form-control" name="email"></div>
+            <div class="col-md-6"><label class="form-label small">Date de démarrage</label><input type="date" class="form-control" name="dateDebut"></div>
+            <div class="col-md-6"><label class="form-label small">Durée du contrat</label><input class="form-control" name="dureeContrat" placeholder="Ex : 12 mois, CDI..."></div>
           </div>
         </div>
         <div class="modal-footer">
@@ -813,6 +889,17 @@ table.table td{vertical-align:middle;font-size:.87rem;}
           <button type="submit" class="btn btn-amber">Enregistrer</button>
         </div>
       </form>
+    </div>
+  </div>
+</div>
+
+<!-- Fiche formateur (view) -->
+<div class="modal fade" id="modalFicheFormateur" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Fiche formateur</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body" id="ficheFormateurBody"></div>
+      <div class="modal-footer"><button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Fermer</button></div>
     </div>
   </div>
 </div>
@@ -928,6 +1015,29 @@ table.table td{vertical-align:middle;font-size:.87rem;}
         <div class="modal-footer">
           <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
           <button type="submit" class="btn btn-amber">Enregistrer les notes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modification d'une note existante (accès direction) -->
+<div class="modal fade" id="modalEditEvaluation" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Modifier la note</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <form id="formEditEvaluation">
+        <div class="modal-body">
+          <input type="hidden" id="editEvalId">
+          <div class="fw-semibold mb-3" id="editEvalEtudiantNom">—</div>
+          <div class="row g-3">
+            <div class="col-md-5"><label class="form-label small">Note /20</label><input required type="number" min="0" max="20" step="0.5" class="form-control" id="editEvalNote"></div>
+            <div class="col-md-7"><label class="form-label small">Appréciation</label><input class="form-control" id="editEvalAppreciation" placeholder="Appréciation (optionnel)"></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button type="submit" class="btn btn-amber">Enregistrer</button>
         </div>
       </form>
     </div>
@@ -1127,6 +1237,7 @@ const NAV = [
   {section:'documents', label:'Documents', icon:'bi-folder-fill', roles:['direction','secretariat','formateur','etudiant']},
   {section:'annonces', label:'Annonces', icon:'bi-megaphone-fill', roles:['direction','secretariat','comptabilite','formateur','etudiant']},
   {section:'messagerie', label:'Messagerie', icon:'bi-chat-dots-fill', roles:['direction','secretariat','comptabilite','formateur','etudiant']},
+  {section:'monprofil', label:'Mon profil', icon:'bi-person-badge-fill', roles:['formateur']},
   {section:'utilisateurs', label:'Utilisateurs', icon:'bi-shield-lock-fill', roles:['direction']},
 ];
 
@@ -1145,8 +1256,8 @@ const DEFAULT_MANAGE = {
   documents: ['direction','secretariat'],
   annonces: ['direction','secretariat'],
 };
-// Liste des menus pouvant être cochés individuellement (hors tableau de bord et utilisateurs, gérés à part)
-const PERMISSION_MODULES = NAV.filter(n=>!['dashboard','utilisateurs'].includes(n.section));
+// Liste des menus pouvant être cochés individuellement (hors tableau de bord, mon profil et utilisateurs, gérés à part)
+const PERMISSION_MODULES = NAV.filter(n=>!['dashboard','utilisateurs','monprofil'].includes(n.section));
 
 function defaultPermsForRole(role){
   const perms = {};
@@ -1161,6 +1272,7 @@ function defaultPermsForRole(role){
 function currentUser(){ return DB && DB.users ? DB.users.find(u=>u.id===state.userId) : null; }
 function hasPerm(section, type){
   if(section==='utilisateurs') return state.role==='direction';
+  if(section==='monprofil') return state.role==='formateur';
   if(section==='dashboard') return true;
   if(state.role==='direction') return true; // la direction a toujours accès complet
   const u = currentUser();
@@ -1743,6 +1855,9 @@ function enterApp(user, skipSave){
   const optDiplome = document.getElementById('optDiplomeEtudiant');
   if(optAbandon) optAbandon.style.display = state.role==='formateur' ? 'none' : '';
   if(optDiplome) optDiplome.style.display = state.role==='formateur' ? 'none' : '';
+  // Par défaut, on n'affiche que les étudiants actifs (abandon/diplômé accessibles via les boutons dédiés)
+  etudiantStatutFilter = 'actif';
+  document.querySelectorAll('#filterStatutEtudiantGroup [data-statut]').forEach(b=>b.classList.toggle('active', b.dataset.statut==='actif'));
   goSection('dashboard');
 }
 
@@ -1765,7 +1880,7 @@ document.querySelectorAll('.modal').forEach(m=>{
 
 /* ---------- Navigation ---------- */
 function renderNav(){
-  const items = NAV.filter(n=> n.section==='dashboard' ? true : n.section==='utilisateurs' ? state.role==='direction' : hasPerm(n.section,'view'));
+  const items = NAV.filter(n=> n.section==='dashboard' ? true : n.section==='utilisateurs' ? state.role==='direction' : n.section==='monprofil' ? state.role==='formateur' : hasPerm(n.section,'view'));
   const html = `<div class="nav-section-title">Menu</div>` + items.map(n=>`
     <a href="#" class="side-link" data-section="${n.section}"><i class="bi ${n.icon}"></i> ${n.label}</a>
   `).join('');
@@ -1798,6 +1913,7 @@ function renderSection(section){
   if(section==='documents') renderDocuments();
   if(section==='annonces') renderAnnonces();
   if(section==='messagerie') renderMessagerie();
+  if(section==='monprofil') renderMonProfil();
   if(section==='utilisateurs') renderUtilisateurs();
 }
 
@@ -1934,10 +2050,11 @@ function renderDashboard(){
 }
 
 /* ---------- ETUDIANTS ---------- */
+let etudiantStatutFilter = 'actif'; // Par défaut, seuls les étudiants actifs sont affichés
 function renderEtudiants(){
   const search = (document.getElementById('searchEtudiant').value||'').toLowerCase();
   const filFilter = document.getElementById('filterFiliereEtudiant').value;
-  const statutFilter = document.getElementById('filterStatutEtudiant').value;
+  const statutFilter = etudiantStatutFilter;
   let list = scopeEtudiants(DB.etudiants).filter(e=>{
     const matchSearch = (nomComplet(e)+e.matricule).toLowerCase().includes(search);
     const matchFil = !filFilter || e.filiereId===filFilter;
@@ -1973,7 +2090,13 @@ function renderEtudiants(){
 document.getElementById('btnExportEtudiantsPdf').addEventListener('click', exportEtudiantsListPdf);
 document.getElementById('searchEtudiant').addEventListener('input', renderEtudiants);
 document.getElementById('filterFiliereEtudiant').addEventListener('change', renderEtudiants);
-document.getElementById('filterStatutEtudiant').addEventListener('change', renderEtudiants);
+document.querySelectorAll('#filterStatutEtudiantGroup [data-statut]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    etudiantStatutFilter = btn.dataset.statut;
+    document.querySelectorAll('#filterStatutEtudiantGroup [data-statut]').forEach(b=>b.classList.toggle('active', b===btn));
+    renderEtudiants();
+  });
+});
 
 function resetPhotoBox(){
   document.getElementById('photoInput').value='';
@@ -2341,18 +2464,45 @@ function renderFormateurs(){
     const modIdsSet = mods.map(m=>m.id);
     const nbEt = DB.etudiants.filter(e=>(e.moduleIds||[]).some(mid=>modIdsSet.includes(mid))).length;
     return `<tr>
-      <td><div class="d-flex align-items-center gap-2"><div class="avatar-circ">${initials(f.prenom,f.nom)}</div><span class="fw-semibold">${nomComplet(f)}</span></div></td>
+      <td><div class="d-flex align-items-center gap-2">${avatarHTML(f)}<span class="fw-semibold">${nomComplet(f)}</span></div></td>
       <td class="d-none d-md-table-cell">${f.specialite||'—'}</td>
       <td class="d-none d-md-table-cell">${f.telephone}<br><span class="text-muted small">${f.email||''}</span></td>
       <td class="d-none d-lg-table-cell">${mods.map(m=>`<span class="badge bg-light text-dark border me-1 mb-1">${m.nom}</span>`).join('')||'—'}</td>
       <td class="d-none d-lg-table-cell">${nbEt}</td>
-      <td class="text-end">${editable?`<button class="btn btn-sm btn-icon" onclick="editFormateur('${f.id}')"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-icon text-danger" onclick="askDelete('formateurs','${f.id}')"><i class="bi bi-trash"></i></button>`:''}</td>
+      <td class="text-end">
+        <button class="btn btn-sm btn-icon" onclick="viewFormateur('${f.id}')" title="Afficher"><i class="bi bi-eye"></i></button>
+        <button class="btn btn-sm btn-icon" onclick="exportFicheFormateurPdf('${f.id}')" title="Exporter PDF"><i class="bi bi-file-earmark-pdf"></i></button>
+        ${editable?`<button class="btn btn-sm btn-icon" onclick="editFormateur('${f.id}')" title="Modifier"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-icon text-danger" onclick="askDelete('formateurs','${f.id}')" title="Supprimer"><i class="bi bi-trash"></i></button>`:''}
+      </td>
     </tr>`;
   }).join('') || `<tr><td colspan="6"><div class="empty-state"><i class="bi bi-person-workspace"></i><p>Aucun formateur</p></div></td></tr>`;
 }
+function resetFormateurPhotoBox(){
+  document.getElementById('formateurPhotoInput').value='';
+  document.getElementById('formateurPhotoData').value='';
+  document.getElementById('formateurPhotoPreview').style.display='none';
+  document.getElementById('formateurPhotoPreview').src='';
+  document.getElementById('formateurPhotoPlaceholderIcon').style.display='block';
+}
+function setFormateurPhotoBox(dataUrl){
+  document.getElementById('formateurPhotoData').value = dataUrl || '';
+  const img = document.getElementById('formateurPhotoPreview');
+  const icon = document.getElementById('formateurPhotoPlaceholderIcon');
+  if(dataUrl){ img.src = dataUrl; img.style.display='block'; icon.style.display='none'; }
+  else { img.style.display='none'; icon.style.display='block'; }
+}
+document.getElementById('formateurPhotoUploadBox').addEventListener('click', ()=> document.getElementById('formateurPhotoInput').click());
+document.getElementById('formateurPhotoInput').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => setFormateurPhotoBox(ev.target.result);
+  reader.readAsDataURL(file);
+});
 document.getElementById('btnNewFormateur').addEventListener('click', ()=>{
   document.getElementById('formFormateur').reset();
   document.getElementById('formFormateur').elements['id'].value='';
+  resetFormateurPhotoBox();
   document.getElementById('modalFormateurTitle').textContent='Nouveau formateur';
   new bootstrap.Modal(document.getElementById('modalFormateur')).show();
 });
@@ -2360,8 +2510,82 @@ function editFormateur(id){
   const f = getFormateur(id);
   const form = document.getElementById('formFormateur');
   Object.keys(f).forEach(k=>{ if(form.elements[k]) form.elements[k].value = f[k]; });
+  setFormateurPhotoBox(f.photo || '');
   document.getElementById('modalFormateurTitle').textContent='Modifier formateur';
   new bootstrap.Modal(document.getElementById('modalFormateur')).show();
+}
+function viewFormateur(id){
+  const f = getFormateur(id);
+  if(!f) return;
+  const mods = modulesOfFormateur(f.id);
+  const modIdsSet = mods.map(m=>m.id);
+  const etudiantsSuivis = DB.etudiants.filter(e=>(e.moduleIds||[]).some(mid=>modIdsSet.includes(mid)));
+  document.getElementById('ficheFormateurBody').innerHTML = `
+    <div class="fiche-banner mb-3">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div class="d-flex align-items-center gap-3">
+          <div style="border-radius:50%;padding:3px;background:rgba(255,255,255,.18);flex-shrink:0;">${avatarHTML(f, 60)}</div>
+          <div>
+            <div class="fiche-name">${nomComplet(f)}</div>
+            <div class="fiche-sub">${f.specialite||'—'}</div>
+          </div>
+        </div>
+        <div class="d-flex gap-2 flex-wrap fiche-actions">
+          ${f.telephone ? `<a class="btn btn-sm btn-outline-light" href="tel:${f.telephone}" title="Appeler"><i class="bi bi-telephone-fill"></i></a>` : ''}
+          ${f.telephone ? `<a class="btn btn-sm btn-outline-light" href="${waLink(f.telephone)}" target="_blank" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>` : ''}
+          ${canEdit('formateurs') ? `<button class="btn btn-sm btn-outline-light" onclick="bootstrap.Modal.getInstance(document.getElementById('modalFicheFormateur')).hide(); editFormateur('${f.id}')" title="Modifier"><i class="bi bi-pencil"></i></button>` : ''}
+          ${canEdit('formateurs') ? `<button class="btn btn-sm btn-outline-light" onclick="bootstrap.Modal.getInstance(document.getElementById('modalFicheFormateur')).hide(); askDelete('formateurs','${f.id}')" title="Supprimer"><i class="bi bi-trash"></i></button>` : ''}
+          <button class="btn btn-sm btn-amber" onclick="exportFicheFormateurPdf('${f.id}')" title="Enregistrer en PDF"><i class="bi bi-file-earmark-pdf"></i> PDF</button>
+        </div>
+      </div>
+    </div>
+    <div class="fiche-section">
+      <h6><i class="bi bi-person-vcard me-1"></i> Informations</h6>
+      <div class="row g-2">
+        <div class="col-6 fiche-field"><span class="fiche-label">Téléphone</span><span class="fiche-value">${f.telephone||'—'}</span></div>
+        <div class="col-6 fiche-field"><span class="fiche-label">Email</span><span class="fiche-value">${f.email||'—'}</span></div>
+        <div class="col-6 fiche-field"><span class="fiche-label">Date de démarrage</span><span class="fiche-value">${f.dateDebut?fmtDate(f.dateDebut):'—'}</span></div>
+        <div class="col-6 fiche-field mb-0"><span class="fiche-label">Durée du contrat</span><span class="fiche-value">${f.dureeContrat||'—'}</span></div>
+      </div>
+    </div>
+    <div class="fiche-section">
+      <h6><i class="bi bi-collection-fill me-1"></i> Modules confiés</h6>
+      ${mods.length ? `<div class="d-flex flex-wrap gap-2">${mods.map(m=>`<span class="badge bg-light text-dark border">${m.nom}</span>`).join('')}</div>` : '<p class="text-muted small mb-0">Aucun module confié pour le moment.</p>'}
+    </div>
+    ${(f.portfolio || f.cv) ? `<div class="fiche-section mb-0">
+      <h6><i class="bi bi-briefcase-fill me-1"></i> Portfolio & CV</h6>
+      ${f.portfolio ? `<div class="fiche-field"><span class="fiche-label">Portfolio</span><span class="fiche-value">${f.portfolio}</span></div>` : ''}
+      ${f.cv ? `<a class="btn btn-sm btn-outline-secondary mt-1" href="${f.cv}" target="_blank" download="cv-${f.nom||'formateur'}"><i class="bi bi-file-earmark-person"></i> Voir le CV</a>` : ''}
+    </div>` : ''}
+  `;
+  new bootstrap.Modal(document.getElementById('modalFicheFormateur')).show();
+}
+async function exportFicheFormateurPdf(id){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const font = await ensurePdfFont(doc);
+  const f = getFormateur(id);
+  if(!f) return;
+  const mods = modulesOfFormateur(f.id);
+  pdfHeader(doc, 'Fiche formateur', nomComplet(f), font);
+  const body = [
+    ['Spécialité', f.specialite||'—'],
+    ['Téléphone', f.telephone||'—'],
+    ['Email', f.email||'—'],
+    ['Date de démarrage', f.dateDebut?fmtDate(f.dateDebut):'—'],
+    ['Durée du contrat', f.dureeContrat||'—'],
+    ['Modules confiés', mods.length ? mods.map(m=>m.nom).join(', ') : '—'],
+  ];
+  doc.autoTable({
+    startY: 48,
+    theme:'plain',
+    body,
+    styles:{font},
+    bodyStyles:{fontSize:9.5, font},
+    columnStyles:{0:{cellWidth:60, fontStyle:'bold'}},
+  });
+  pdfFooter(doc, font);
+  doc.save(`fiche-formateur-${(f.nom||'formateur').toLowerCase()}.pdf`);
 }
 document.getElementById('formFormateur').addEventListener('submit', async e=>{
   e.preventDefault();
@@ -2525,9 +2749,34 @@ function renderEvaluations(){
       <td><span class="note-pill ${noteCls}">${ev.note}/20</span></td>
       <td class="d-none d-lg-table-cell">${ev.appreciation||'—'}</td>
       <td class="d-none d-lg-table-cell">${fmtDate(ev.date)}</td>
+      <td class="text-end">${editable ? `<button class="btn btn-sm btn-icon" onclick="editEvaluation('${ev.id}')" title="Modifier la note"><i class="bi bi-pencil"></i></button>
+      <button class="btn btn-sm btn-icon text-danger" onclick="askDelete('evaluations','${ev.id}')" title="Supprimer la note"><i class="bi bi-trash"></i></button>` : ''}</td>
     </tr>`;
-  }).join('') : `<tr><td colspan="7"><div class="empty-state"><i class="bi bi-clipboard-x"></i><p>Aucune évaluation</p></div></td></tr>`;
+  }).join('') : `<tr><td colspan="8"><div class="empty-state"><i class="bi bi-clipboard-x"></i><p>Aucune évaluation</p></div></td></tr>`;
 }
+/* Modification ou suppression d'une note déjà enregistrée (accès direction) */
+function editEvaluation(id){
+  const ev = DB.evaluations.find(x=>x.id===id);
+  if(!ev) return;
+  const et = getEtudiant(ev.etudiantId);
+  document.getElementById('editEvalId').value = ev.id;
+  document.getElementById('editEvalEtudiantNom').textContent = nomComplet(et)+' — '+ev.module;
+  document.getElementById('editEvalNote').value = ev.note;
+  document.getElementById('editEvalAppreciation').value = ev.appreciation||'';
+  new bootstrap.Modal(document.getElementById('modalEditEvaluation')).show();
+}
+document.getElementById('formEditEvaluation').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const id = document.getElementById('editEvalId').value;
+  const ev = DB.evaluations.find(x=>x.id===id);
+  if(!ev){ return; }
+  ev.note = document.getElementById('editEvalNote').value;
+  ev.appreciation = document.getElementById('editEvalAppreciation').value;
+  await saveDB();
+  bootstrap.Modal.getInstance(document.getElementById('modalEditEvaluation')).hide();
+  toast('Note modifiée');
+  renderEvaluations();
+});
 document.getElementById('filterFiliereEval').addEventListener('change', renderEvaluations);
 
 /* Saisie groupée : la liste des étudiants (actifs uniquement pour le formateur) de la filière
@@ -2993,6 +3242,111 @@ document.getElementById('formMessage').addEventListener('submit', async e=>{
   e.target.reset();
   toast('Message envoyé');
   renderMessagerie();
+});
+
+/* ---------- MON PROFIL (auto-gestion du formateur) ---------- */
+function resetProfilPhotoBox(){
+  document.getElementById('profilPhotoInput').value='';
+  document.getElementById('profilPhotoPreview').style.display='none';
+  document.getElementById('profilPhotoPreview').src='';
+  document.getElementById('profilPhotoPlaceholderIcon').style.display='block';
+}
+function setProfilPhotoBox(dataUrl){
+  const img = document.getElementById('profilPhotoPreview');
+  const icon = document.getElementById('profilPhotoPlaceholderIcon');
+  if(dataUrl){ img.src = dataUrl; img.style.display='block'; icon.style.display='none'; }
+  else { img.style.display='none'; icon.style.display='block'; }
+}
+document.getElementById('profilPhotoUploadBox').addEventListener('click', ()=> document.getElementById('profilPhotoInput').click());
+let profilPhotoPending = null;
+let profilCvPending = null;
+document.getElementById('profilPhotoInput').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => { profilPhotoPending = ev.target.result; setProfilPhotoBox(profilPhotoPending); };
+  reader.readAsDataURL(file);
+});
+document.getElementById('profilCvInput').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    profilCvPending = ev.target.result;
+    document.getElementById('profilCvCurrent').innerHTML = `<span class="text-success small"><i class="bi bi-check-circle-fill me-1"></i> Nouveau fichier prêt : ${file.name}</span>`;
+  };
+  reader.readAsDataURL(file);
+});
+function renderMonProfil(){
+  const u = currentUser();
+  const f = u && u.formateurId ? getFormateur(u.formateurId) : null;
+  document.getElementById('profilNom').value = f?.nom || '';
+  document.getElementById('profilPrenom').value = f?.prenom || '';
+  document.getElementById('profilSpecialite').value = f?.specialite || '';
+  document.getElementById('profilTelephone').value = f?.telephone || '';
+  document.getElementById('profilEmail').value = f?.email || '';
+  document.getElementById('profilPortfolio').value = f?.portfolio || '';
+  document.getElementById('profilIdentifiant').value = u?.identifiant || '';
+  document.getElementById('profilNouveauMdp').value = '';
+  document.getElementById('profilMdpActuel').value = '';
+  document.getElementById('profilError').style.display = 'none';
+  document.getElementById('profilCvInput').value = '';
+  profilPhotoPending = f?.photo || null;
+  profilCvPending = f?.cv || null;
+  setProfilPhotoBox(f?.photo || '');
+  document.getElementById('profilCvCurrent').innerHTML = f?.cv ? `<a class="btn btn-sm btn-outline-secondary" href="${f.cv}" target="_blank" download="cv-${f.nom||'formateur'}"><i class="bi bi-file-earmark-person"></i> Voir mon CV actuel</a>` : '<span class="text-muted small">Aucun CV déposé pour le moment.</span>';
+}
+document.getElementById('formMonProfil').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const errBox = document.getElementById('profilError');
+  errBox.style.display = 'none';
+  const u = currentUser();
+  if(!u || !u.formateurId){ return; }
+  const f = getFormateur(u.formateurId);
+  if(!f) return;
+
+  const newIdentifiant = document.getElementById('profilIdentifiant').value.trim();
+  const newMdp = document.getElementById('profilNouveauMdp').value;
+  const mdpActuel = document.getElementById('profilMdpActuel').value;
+  const identifiantChange = newIdentifiant.toLowerCase() !== (u.identifiant||'').toLowerCase();
+  const mdpChange = !!newMdp;
+
+  // Le mot de passe actuel est exigé dès qu'on touche à l'identifiant ou au mot de passe
+  if(identifiantChange || mdpChange){
+    if(!mdpActuel || mdpActuel !== u.motDePasse){
+      errBox.textContent = "Mot de passe actuel incorrect. Vos identifiants n'ont pas été modifiés.";
+      errBox.style.display = 'block';
+      return;
+    }
+    if(identifiantChange){
+      const conflict = DB.users.find(x => (x.identifiant||'').toLowerCase()===newIdentifiant.toLowerCase() && x.id!==u.id);
+      if(conflict){
+        errBox.textContent = 'Cet identifiant est déjà utilisé par un autre compte.';
+        errBox.style.display = 'block';
+        return;
+      }
+      u.identifiant = newIdentifiant;
+    }
+    if(mdpChange) u.motDePasse = newMdp;
+  }
+
+  f.nom = document.getElementById('profilNom').value;
+  f.prenom = document.getElementById('profilPrenom').value;
+  f.specialite = document.getElementById('profilSpecialite').value;
+  f.telephone = document.getElementById('profilTelephone').value;
+  f.email = document.getElementById('profilEmail').value;
+  f.portfolio = document.getElementById('profilPortfolio').value;
+  f.photo = profilPhotoPending || '';
+  f.cv = profilCvPending || '';
+  u.nom = nomComplet(f);
+
+  await saveDB();
+  state.userName = u.nom;
+  document.getElementById('sideUserName').textContent = state.userName;
+  document.getElementById('sideUserNameMobile').textContent = state.userName;
+  toast('Profil mis à jour');
+  renderMonProfil();
+  populateAllSelects();
 });
 
 /* ---------- UTILISATEURS (création des profils par la direction) ---------- */
