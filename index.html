@@ -1219,7 +1219,7 @@ function scopeEtudiants(list){
 const uid = () => Math.random().toString(36).slice(2,9);
 const fmtCFA = n => new Intl.NumberFormat('fr-FR').format(Math.round(n||0)) + ' F';
 const fmtDate = d => d ? new Date(d).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}) : '—';
-const initials = (a,b='') => ((a||'?')[0]+(b||'')[0]).toUpperCase();
+const initials = (a,b='') => (((a||'?')[0]||'')+((b||'')[0]||'')).toUpperCase();
 function avatarHTML(o, size){
   size = size||34;
   if(o && o.photo){ return `<img src="${o.photo}" class="avatar-img" style="width:${size}px;height:${size}px;">`; }
@@ -1714,16 +1714,21 @@ document.getElementById('formLogin').addEventListener('submit', e=>{
   enterApp(match);
 });
 
-function enterApp(user){
+function enterApp(user, skipSave){
   state.role = user.role;
   state.userName = user.nom;
   state.userId = user.id;
+  if(!skipSave){
+    try{ localStorage.setItem('anadenceSessionUserId', user.id); }catch(e){}
+  }
   document.getElementById('publicSite').style.display='none';
   document.getElementById('appShell').style.display='block';
   const roleObj = ROLES.find(r=>r.id===state.role);
-  document.getElementById('sideAvatar').textContent = initials(state.userName);
-  document.getElementById('topAvatar').textContent = initials(state.userName);
-  document.getElementById('sideAvatarMobile').textContent = initials(state.userName);
+  const nameParts = String(state.userName||'').trim().split(/\s+/);
+  const userInitials = initials(nameParts[0], nameParts.length>1 ? nameParts[nameParts.length-1] : '');
+  document.getElementById('sideAvatar').textContent = userInitials;
+  document.getElementById('topAvatar').textContent = userInitials;
+  document.getElementById('sideAvatarMobile').textContent = userInitials;
   document.getElementById('sideUserName').textContent = state.userName;
   document.getElementById('sideUserNameMobile').textContent = state.userName;
   ['sideRoleBadge','topRoleBadge','sideRoleBadgeMobile'].forEach(id=>{
@@ -1747,6 +1752,7 @@ function logoutUser(){
   document.getElementById('appShell').style.display='none';
   document.getElementById('publicSite').style.display='block';
   state.role = null; state.userName = '';
+  try{ localStorage.removeItem('anadenceSessionUserId'); }catch(e){}
 }
 document.getElementById('btnLogout').addEventListener('click', logoutUser);
 document.getElementById('btnLogoutMobile').addEventListener('click', logoutUser);
@@ -3126,7 +3132,14 @@ document.getElementById('btnConfirmDelete').addEventListener('click', async ()=>
 (async function init(){
   await loadDB();
   renderPublicSite();
-  document.getElementById('publicSite').style.display='block';
+  let savedUserId = null;
+  try{ savedUserId = localStorage.getItem('anadenceSessionUserId'); }catch(e){}
+  const savedUser = savedUserId ? DB.users.find(u=>u.id===savedUserId) : null;
+  if(savedUser){
+    enterApp(savedUser, true);
+  } else {
+    document.getElementById('publicSite').style.display='block';
+  }
 })();
 </script>
 </body>
