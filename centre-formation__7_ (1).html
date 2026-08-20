@@ -1,0 +1,2925 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ANADENCE CITY — Gestion de Centre de Formation</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+<style>
+:root{
+  --navy:#16233F; --navy-light:#22335A; --navy-lighter:#2E4270;
+  --amber:#E8A33D; --amber-dark:#C97F1E; --teal:#2C7873;
+  --bg:#F3F5F8; --card:#FFFFFF; --text:#1A1D23; --muted:#6B7280;
+  --danger:#C1443B; --border:#E4E7EC;
+}
+*{box-sizing:border-box;}
+body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);}
+h1,h2,h3,h4,h5,.brand,.nav-section-title{font-family:'Poppins',sans-serif;}
+.text-mono{font-variant-numeric:tabular-nums;}
+
+/* ===== Site public (accueil dynamique) ===== */
+#publicSite{display:none;}
+.logo-mark{
+  width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,var(--amber),var(--amber-dark));
+  display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--navy);font-family:'Poppins';font-size:20px;
+  box-shadow:0 6px 16px rgba(232,163,61,0.4);flex-shrink:0;
+}
+.btn-amber{background:var(--amber);border-color:var(--amber);color:var(--navy);font-weight:600;}
+.btn-amber:hover{background:var(--amber-dark);border-color:var(--amber-dark);color:#fff;}
+.public-navbar{
+  background:var(--navy);padding:14px 0;position:sticky;top:0;z-index:1020;
+  box-shadow:0 2px 12px rgba(0,0,0,0.12);
+}
+.public-navbar .nav-link-custom{color:#C6CDE0;font-weight:500;font-size:.9rem;text-decoration:none;}
+.public-navbar .nav-link-custom:hover{color:#fff;}
+.public-hero{
+  background:radial-gradient(circle at 15% 20%, rgba(232,163,61,0.14), transparent 45%),
+             radial-gradient(circle at 85% 80%, rgba(44,120,115,0.22), transparent 45%),
+             linear-gradient(135deg,var(--navy) 0%,#0D1730 100%);
+  color:#fff;padding:70px 0 80px;
+}
+.public-hero h1{font-size:2.3rem;font-weight:800;max-width:640px;}
+.public-hero p{color:#C6CDE0;max-width:560px;}
+.public-section{padding:56px 0;}
+.public-footer{background:var(--navy);color:#8B96B4;padding:26px 0;font-size:.82rem;}
+
+/* ===== Login modal ===== */
+.login-side{
+  background:var(--navy);color:#fff;padding:32px 28px;position:relative;overflow:hidden;
+  border-radius:14px 0 0 14px;
+}
+.login-side::after{
+  content:"";position:absolute;right:-60px;bottom:-60px;width:220px;height:220px;
+  border-radius:50%;background:radial-gradient(circle,var(--amber) 0%, transparent 70%);opacity:.35;
+}
+#loginError{display:none;}
+
+/* ===== Services & Galerie (site public) ===== */
+.service-card{
+  border:1px solid var(--border);border-radius:14px;padding:24px 20px;background:#fff;height:100%;
+  transition:all .15s ease;
+}
+.service-card:hover{border-color:var(--amber);transform:translateY(-3px);box-shadow:0 10px 24px rgba(0,0,0,0.06);}
+.service-card .service-icon{
+  width:48px;height:48px;border-radius:12px;background:var(--navy);color:var(--amber);
+  display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:14px;
+}
+.gallery-item{
+  position:relative;border-radius:12px;overflow:hidden;aspect-ratio:4/3;background:#eee;
+}
+.gallery-item img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s ease;}
+.gallery-item:hover img{transform:scale(1.06);}
+.gallery-item .caption{
+  position:absolute;left:0;right:0;bottom:0;padding:10px 12px;
+  background:linear-gradient(0deg, rgba(22,35,63,0.88), transparent);
+  color:#fff;font-size:.8rem;font-weight:600;
+}
+
+/* ===== Photo étudiant ===== */
+.photo-upload-box{
+  width:96px;height:96px;border-radius:14px;border:2px dashed var(--border);
+  display:flex;align-items:center;justify-content:center;overflow:hidden;background:#F8F9FB;
+  cursor:pointer;flex-shrink:0;position:relative;
+}
+.photo-upload-box img{width:100%;height:100%;object-fit:cover;}
+.photo-upload-box i{font-size:1.4rem;color:#B7BEC9;}
+.avatar-img{border-radius:50%;object-fit:cover;flex-shrink:0;}
+
+/* ===== App shell ===== */
+#appShell{display:none;}
+#sidebar{
+  background:var(--navy);color:#EAEDF3;width:250px;min-height:100vh;position:fixed;top:0;left:0;
+  display:flex;flex-direction:column;z-index:1030;transition:transform .2s ease;
+}
+#sidebar .brand{color:#fff;font-weight:700;font-size:1.05rem;letter-spacing:.3px;}
+.nav-section-title{
+  font-size:.68rem;text-transform:uppercase;letter-spacing:1px;color:#8B96B4;
+  padding:16px 18px 6px;font-weight:600;
+}
+.side-link{
+  display:flex;align-items:center;gap:10px;color:#C6CDE0;padding:10px 18px;text-decoration:none;
+  font-size:.9rem;border-left:3px solid transparent;font-weight:500;
+}
+.side-link i{font-size:1.02rem;width:20px;text-align:center;}
+.side-link:hover{background:var(--navy-light);color:#fff;}
+.side-link.active{background:var(--navy-light);color:#fff;border-left-color:var(--amber);}
+#sidebar .user-box{
+  margin-top:auto;padding:16px 18px;border-top:1px solid rgba(255,255,255,0.08);
+}
+#mainWrap{margin-left:250px;min-height:100vh;display:flex;flex-direction:column;}
+#topbar{
+  background:#fff;border-bottom:1px solid var(--border);padding:12px 22px;
+  display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:1020;
+}
+#content{padding:24px;flex:1;}
+.role-badge{font-size:.7rem;padding:.32em .7em;border-radius:20px;font-weight:600;letter-spacing:.3px;}
+.rb-direction{background:#EAE3FF;color:#5B3FB0;}
+.rb-secretariat{background:#DDEEFF;color:#1D5FA8;}
+.rb-comptabilite{background:#DEF7EA;color:#1C7A46;}
+.rb-formateur{background:#FFEFD9;color:#B4700B;}
+.rb-etudiant{background:#E1F6F4;color:#116B62;}
+.rb-visiteur{background:#F1F2F4;color:#555;}
+
+.stat-card{
+  background:var(--card);border-radius:14px;padding:18px 20px;border:1px solid var(--border);
+  position:relative;overflow:hidden;height:100%;
+}
+.stat-card::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--amber),var(--teal));
+}
+.stat-card .stat-icon{
+  width:38px;height:38px;border-radius:10px;background:var(--navy);color:var(--amber);
+  display:flex;align-items:center;justify-content:center;font-size:16px;position:absolute;top:16px;right:16px;
+}
+.stat-card .stat-num{font-family:'Poppins';font-weight:700;font-size:1.7rem;color:var(--navy);}
+.stat-card .stat-label{font-size:.76rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;}
+
+.section-panel{display:none;}
+.section-panel.active{display:block;animation:fadein .2s ease;}
+@keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+
+.card-clean{background:var(--card);border:1px solid var(--border);border-radius:14px;}
+.card-clean .card-header{background:#fff;border-bottom:1px solid var(--border);border-radius:14px 14px 0 0 !important;font-weight:600;font-family:'Poppins';font-size:.95rem;}
+table.table thead th{font-size:.72rem;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);border-bottom:2px solid var(--border);font-weight:700;}
+table.table td{vertical-align:middle;font-size:.87rem;}
+.badge-statut-paye{background:#DEF7EA;color:#1C7A46;}
+.badge-statut-partiel{background:#FFF3D6;color:#B4700B;}
+.badge-statut-impaye{background:#FDE4E1;color:#B03327;}
+.badge-statut-actif{background:#DEF7EA;color:#1C7A46;}
+.badge-statut-abandon{background:#FDE4E1;color:#B03327;}
+.badge-statut-diplome{background:#E1E9FF;color:#2E4EA6;}
+.avatar-circ{
+  width:34px;height:34px;border-radius:50%;background:var(--navy);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;font-family:'Poppins';
+}
+.note-pill{font-family:'Poppins';font-weight:700;padding:3px 10px;border-radius:8px;font-size:.85rem;}
+.note-good{background:#DEF7EA;color:#1C7A46;}
+.note-avg{background:#FFF3D6;color:#B4700B;}
+.note-bad{background:#FDE4E1;color:#B03327;}
+.search-input{max-width:280px;}
+
+/* ===== Déconnexion ===== */
+.btn-logout{
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#EAEDF3;
+  font-weight:600;font-size:.82rem;border-radius:9px;padding:8px 10px;
+  display:flex;align-items:center;justify-content:center;gap:8px;width:100%;transition:all .15s ease;
+}
+.btn-logout:hover{background:var(--danger);border-color:var(--danger);color:#fff;}
+#offcanvasSidebar .user-box{margin-top:auto;padding:16px 18px;border-top:1px solid rgba(255,255,255,.08);}
+#offcanvasSidebar .offcanvas-body{display:flex;flex-direction:column;}
+
+/* ===== Fiche étudiant (redesign) ===== */
+.fiche-banner{
+  background:linear-gradient(135deg,var(--navy) 0%,#0D1730 100%);border-radius:14px;
+  padding:20px 22px;color:#fff;position:relative;overflow:hidden;
+}
+.fiche-banner::after{
+  content:"";position:absolute;right:-40px;top:-40px;width:160px;height:160px;border-radius:50%;
+  background:radial-gradient(circle,var(--amber) 0%, transparent 70%);opacity:.28;
+}
+.fiche-banner .fiche-name{font-family:'Poppins';font-weight:700;font-size:1.25rem;}
+.fiche-banner .fiche-sub{color:#B9C2DC;font-size:.85rem;}
+.fiche-actions .btn{white-space:nowrap;}
+.fiche-section{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:16px 18px;margin-bottom:14px;
+}
+.fiche-section h6{
+  font-weight:700;color:var(--navy);font-size:.78rem;text-transform:uppercase;letter-spacing:.5px;
+  margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border);
+}
+.fiche-field{margin-bottom:8px;}
+.fiche-field .fiche-label{font-size:.68rem;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:700;display:block;}
+.fiche-field .fiche-value{font-size:.9rem;color:var(--text);font-weight:500;}
+.fiche-mini-stat{background:#F8F9FB;border:1px solid var(--border);border-radius:12px;padding:12px 8px;text-align:center;}
+.fiche-mini-stat .stat-num{font-family:'Poppins';font-weight:700;font-size:1.15rem;}
+.fiche-mini-stat .stat-label{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:700;}
+.empty-state{text-align:center;padding:50px 20px;color:var(--muted);}
+.empty-state i{font-size:2.4rem;color:#C9CFDA;}
+.chantier-card{border:1px solid var(--border);border-radius:12px;padding:16px 18px;background:#fff;}
+.chantier-card .tag{background:var(--navy);color:var(--amber);font-size:.68rem;padding:2px 8px;border-radius:6px;font-weight:600;}
+.filiere-visitor-card{border:1px solid var(--border);border-radius:14px;overflow:hidden;background:#fff;height:100%;}
+.filiere-visitor-card .top{background:var(--navy);color:#fff;padding:18px;}
+.filiere-visitor-card .top .price{color:var(--amber);font-family:'Poppins';font-weight:700;font-size:1.3rem;}
+#offcanvasSidebar .side-link{color:#C6CDE0;}
+.btn-icon{width:34px;height:34px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;}
+@media (max-width: 991px){
+  #sidebar{display:none;}
+  #mainWrap{margin-left:0;}
+}
+.toast-container{z-index:2000;}
+</style>
+</head>
+<body>
+
+<!-- ===================== SITE PUBLIC (ACCUEIL DYNAMIQUE) ===================== -->
+<div id="publicSite">
+  <nav class="public-navbar">
+    <div class="container d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center gap-2">
+        <div class="logo-mark">NF</div>
+        <span class="brand text-white fw-bold">ANADENCE CITY</span>
+      </div>
+      <div class="d-none d-md-flex align-items-center gap-4">
+        <a href="#public-accueil" class="nav-link-custom">Accueil</a>
+        <a href="#public-services" class="nav-link-custom">Nos Services</a>
+        <a href="#public-formations" class="nav-link-custom">Nos formations</a>
+        <a href="#public-galerie" class="nav-link-custom">Galerie</a>
+        <a href="#public-contact" class="nav-link-custom">Contact</a>
+      </div>
+      <button class="btn btn-amber btn-sm px-3" id="btnOpenLogin"><i class="bi bi-box-arrow-in-right me-1"></i> Connexion</button>
+    </div>
+  </nav>
+
+  <div class="public-hero" id="public-accueil">
+    <div class="container">
+      <h1>Le pilotage complet de votre centre de formation</h1>
+      <p>Inscriptions, paiements, évaluations, rapports de chantier et suivi pédagogique — réunis dans un seul espace pour la direction, le secrétariat, la comptabilité, les formateurs et les étudiants.</p>
+      <a href="#public-formations" class="btn btn-amber mt-2 px-4 py-2">Découvrir nos formations <i class="bi bi-arrow-down ms-1"></i></a>
+    </div>
+  </div>
+
+  <div class="public-section" id="public-services" style="background:#fff;border-top:1px solid var(--border);">
+    <div class="container">
+      <h6 class="fw-bold mb-1" style="color:var(--amber);letter-spacing:.5px;text-transform:uppercase;font-size:.75rem;">Nos Services</h6>
+      <h3 class="fw-bold mb-4">Un accompagnement complet</h3>
+      <div class="row g-3" id="servicesGrid"></div>
+    </div>
+  </div>
+
+  <div class="public-section" id="public-formations">
+    <div class="container">
+      <h6 class="fw-bold mb-1" style="color:var(--amber);letter-spacing:.5px;text-transform:uppercase;font-size:.75rem;">Nos formations</h6>
+      <h3 class="fw-bold mb-4">Choisissez votre filière</h3>
+      <div class="row g-3" id="visitorFilieresGrid"></div>
+    </div>
+  </div>
+
+  <div class="public-section" id="public-galerie">
+    <div class="container">
+      <h6 class="fw-bold mb-1" style="color:var(--amber);letter-spacing:.5px;text-transform:uppercase;font-size:.75rem;">Galerie</h6>
+      <h3 class="fw-bold mb-4">La vie au centre</h3>
+      <div class="row g-3" id="galerieGrid"></div>
+    </div>
+  </div>
+
+  <div class="public-section" id="public-contact" style="background:#fff;border-top:1px solid var(--border);">
+    <div class="container">
+      <div class="row g-4">
+        <div class="col-lg-5">
+          <h6 class="fw-bold mb-1" style="color:var(--amber);letter-spacing:.5px;text-transform:uppercase;font-size:.75rem;">Contact</h6>
+          <h3 class="fw-bold mb-3">Demande d'information</h3>
+          <p class="text-muted">Laissez-nous vos coordonnées, notre secrétariat vous recontacte sous 48h pour vous présenter nos filières et modalités d'inscription.</p>
+          <div class="text-muted small"><i class="bi bi-geo-alt-fill me-1"></i> Cotonou, Bénin</div>
+        </div>
+        <div class="col-lg-7">
+          <div class="card-clean p-4">
+            <form id="formVisitorLead" class="row g-3">
+              <div class="col-md-6"><label class="form-label small">Nom complet</label><input required class="form-control" name="nom"></div>
+              <div class="col-md-6"><label class="form-label small">Téléphone</label><input required class="form-control" name="telephone"></div>
+              <div class="col-md-6"><label class="form-label small">Filière souhaitée</label><select class="form-select" name="filiere" id="visitorLeadFiliere"></select></div>
+              <div class="col-md-6"><label class="form-label small">Email</label><input type="email" class="form-control" name="email"></div>
+              <div class="col-12"><label class="form-label small">Message</label><textarea class="form-control" name="message" rows="2"></textarea></div>
+              <div class="col-12"><button class="btn btn-amber" type="submit"><i class="bi bi-send-fill me-1"></i> Envoyer ma demande</button></div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="public-footer text-center">© 2026 ANADENCE CITY — Centre de formation professionnelle, Cotonou</div>
+</div>
+
+<!-- ===================== MODALE DE CONNEXION ===================== -->
+<div class="modal fade" id="modalLogin" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content" style="border-radius:14px;overflow:hidden;">
+      <div class="row g-0">
+        <div class="col-md-5 login-side d-none d-md-flex flex-column justify-content-between">
+          <div>
+            <div class="d-flex align-items-center gap-2 mb-4">
+              <div class="logo-mark">NF</div>
+              <div class="brand">ANADENCE CITY</div>
+            </div>
+            <h5 class="fw-bold mb-2">Espace réservé</h5>
+            <p style="color:#B9C2DA;font-size:.85rem;">Connectez-vous avec l'identifiant et le mot de passe fournis par la direction.</p>
+          </div>
+          <div style="color:#8B96B4;font-size:.75rem;">© 2026 ANADENCE CITY</div>
+        </div>
+        <div class="col-md-7">
+          <div class="modal-header border-0 pb-0">
+            <h5 class="modal-title fw-bold">Connexion</h5>
+            <button class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <form id="formLogin">
+            <div class="modal-body pt-2">
+              <div class="alert alert-danger py-2 small" id="loginError">Identifiant ou mot de passe incorrect.</div>
+              <div class="mb-3">
+                <label class="form-label small">Identifiant</label>
+                <input required class="form-control" name="identifiant" id="loginIdentifiant" placeholder="Ex : a.hounsou">
+              </div>
+              <div class="mb-2">
+                <label class="form-label small">Mot de passe</label>
+                <input required type="password" class="form-control" name="motDePasse" placeholder="••••••••">
+              </div>
+              <p class="text-muted mb-0" style="font-size:.78rem;">Pas encore de compte ? Seule la direction peut créer un profil utilisateur.</p>
+            </div>
+            <div class="modal-footer border-0">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+              <button type="submit" class="btn btn-amber px-4">Se connecter <i class="bi bi-arrow-right ms-1"></i></button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== APP SHELL ===================== -->
+<div id="appShell">
+  <!-- Sidebar desktop -->
+  <div id="sidebar">
+    <div class="p-3 d-flex align-items-center gap-2" style="border-bottom:1px solid rgba(255,255,255,.08);">
+      <div class="logo-mark">NF</div>
+      <div class="brand">ANADENCE CITY</div>
+    </div>
+    <div id="navContainer" class="flex-grow-1 py-2" style="overflow-y:auto;"></div>
+    <div class="user-box">
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <div class="avatar-circ" id="sideAvatar">--</div>
+        <div class="flex-grow-1" style="min-width:0;">
+          <div class="text-truncate" style="font-size:.85rem;font-weight:600;color:#fff;" id="sideUserName">—</div>
+          <span class="role-badge" id="sideRoleBadge">—</span>
+        </div>
+      </div>
+      <button class="btn-logout" id="btnLogout" title="Déconnexion"><i class="bi bi-box-arrow-right"></i> Déconnexion</button>
+    </div>
+  </div>
+
+  <!-- Sidebar mobile (offcanvas) -->
+  <div class="offcanvas offcanvas-start text-bg-dark" tabindex="-1" id="offcanvasSidebar" style="background:var(--navy);width:250px;">
+    <div class="offcanvas-header">
+      <div class="d-flex align-items-center gap-2">
+        <div class="logo-mark">NF</div>
+        <div class="brand">ANADENCE CITY</div>
+      </div>
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body p-0 flex-grow-1" id="navContainerMobile"></div>
+    <div class="user-box">
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <div class="avatar-circ" id="sideAvatarMobile">--</div>
+        <div class="flex-grow-1" style="min-width:0;">
+          <div class="text-truncate" style="font-size:.85rem;font-weight:600;color:#fff;" id="sideUserNameMobile">—</div>
+          <span class="role-badge" id="sideRoleBadgeMobile">—</span>
+        </div>
+      </div>
+      <button class="btn-logout" id="btnLogoutMobile" title="Déconnexion"><i class="bi bi-box-arrow-right"></i> Déconnexion</button>
+    </div>
+  </div>
+
+  <div id="mainWrap">
+    <div id="topbar">
+      <button class="btn btn-icon d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar"><i class="bi bi-list fs-4"></i></button>
+      <h5 class="mb-0 flex-grow-1" id="pageTitle" style="font-family:'Poppins';font-weight:600;">Tableau de bord</h5>
+      <span class="role-badge d-none d-sm-inline-block" id="topRoleBadge">—</span>
+      <div class="avatar-circ d-none d-sm-flex" id="topAvatar">--</div>
+    </div>
+    <div id="content">
+      <!-- ===== DASHBOARD ===== -->
+      <div class="section-panel" id="panel-dashboard">
+        <div class="row g-3 mb-3" id="statCards"></div>
+        <div class="row g-3">
+          <div class="col-lg-7" id="dashChartCol">
+            <div class="card-clean p-3 h-100">
+              <h6 class="fw-bold mb-2">Répartition des étudiants par filière</h6>
+              <div style="position:relative;height:200px;">
+                <canvas id="chartFilieres"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-5" id="dashSideCol">
+            <div class="card-clean p-3 h-100">
+              <h6 class="fw-bold mb-3" id="dashSideTitle">Alertes impayés</h6>
+              <div id="dashSideContent"></div>
+            </div>
+          </div>
+        </div>
+        <div class="row g-3 mt-1" id="dashPaiementsRow">
+          <div class="col-12">
+            <div class="card-clean p-3">
+              <h6 class="fw-bold mb-3" id="dashPaiementsTitle">Derniers paiements enregistrés</h6>
+              <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                  <thead><tr><th>Étudiant</th><th class="d-none d-md-table-cell">Filière</th><th>Montant</th><th class="d-none d-lg-table-cell">Mode</th><th class="d-none d-lg-table-cell">Type</th><th class="d-none d-md-table-cell">Date</th></tr></thead>
+                  <tbody id="dashPaiementsBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== ETUDIANTS ===== -->
+      <div class="section-panel" id="panel-etudiants">
+        <div class="card-clean">
+          <div class="card-header d-flex flex-wrap gap-2 align-items-center justify-content-between">
+            <span><i class="bi bi-people-fill me-1"></i> Étudiants inscrits</span>
+            <div class="d-flex gap-2 flex-wrap">
+              <input type="text" class="form-control form-control-sm search-input" id="searchEtudiant" placeholder="Rechercher un étudiant...">
+              <select class="form-select form-select-sm" id="filterFiliereEtudiant" style="width:auto;"></select>
+              <select class="form-select form-select-sm" id="filterStatutEtudiant" style="width:auto;">
+                <option value="">Tous les statuts</option>
+                <option value="actif">Actifs</option>
+                <option value="abandon">Abandon</option>
+                <option value="diplome">Diplômé</option>
+              </select>
+              <button class="btn btn-outline-secondary btn-sm" id="btnExportEtudiantsPdf"><i class="bi bi-file-earmark-pdf"></i> Exporter PDF</button>
+              <button class="btn btn-amber btn-sm" id="btnNewEtudiant"><i class="bi bi-plus-lg"></i> Nouvel étudiant</button>
+            </div>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Étudiant</th><th class="d-none d-md-table-cell">Matricule</th><th class="d-none d-md-table-cell">Filière</th><th class="d-none d-lg-table-cell">Contact</th><th class="d-none d-lg-table-cell">Inscrit le</th><th class="d-none d-md-table-cell">Statut</th><th class="d-none d-lg-table-cell">Paiement</th><th class="text-end">Actions</th></tr></thead>
+                <tbody id="etudiantsBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== FILIERES ===== -->
+      <div class="section-panel" id="panel-filieres">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 class="fw-bold mb-0"><i class="bi bi-mortarboard-fill me-1"></i> Filières & Formations</h6>
+          <button class="btn btn-amber btn-sm" id="btnNewFiliere"><i class="bi bi-plus-lg"></i> Nouvelle filière</button>
+        </div>
+        <div class="row g-3" id="filieresGrid"></div>
+      </div>
+
+      <!-- ===== FORMATEURS ===== -->
+      <div class="section-panel" id="panel-formateurs">
+        <div class="card-clean">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-person-workspace me-1"></i> Formateurs</span>
+            <button class="btn btn-amber btn-sm" id="btnNewFormateur"><i class="bi bi-plus-lg"></i> Nouveau formateur</button>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Formateur</th><th class="d-none d-md-table-cell">Spécialité</th><th class="d-none d-md-table-cell">Contact</th><th class="d-none d-lg-table-cell">Module(s)</th><th class="d-none d-lg-table-cell">Étudiants suivis</th><th class="text-end">Actions</th></tr></thead>
+                <tbody id="formateursBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== PAIEMENTS ===== -->
+      <div class="section-panel" id="panel-paiements">
+        <div class="row g-3 mb-3" id="statCardsPaiements"></div>
+
+        <div class="card-clean mb-3">
+          <div class="card-header d-flex flex-wrap gap-2 align-items-center justify-content-between">
+            <span><i class="bi bi-cash-coin me-1"></i> État des paiements par étudiant</span>
+            <div class="d-flex gap-2 flex-wrap">
+              <input type="text" class="form-control form-control-sm search-input" id="searchPaiement" placeholder="Rechercher un étudiant...">
+              <select class="form-select form-select-sm" id="filterFilierePaiement" style="width:auto;"></select>
+              <select class="form-select form-select-sm" id="filterStatutPaiement" style="width:auto;">
+                <option value="">Tous les statuts</option>
+                <option value="Payé">Payé</option>
+                <option value="Partiel">Partiel</option>
+                <option value="Impayé">Impayé</option>
+              </select>
+              <button class="btn btn-outline-secondary btn-sm" id="btnExportFinancierPdf"><i class="bi bi-file-earmark-pdf"></i> Exporter PDF</button>
+              <button class="btn btn-amber btn-sm" id="btnNewPaiement"><i class="bi bi-plus-lg"></i> Enregistrer un versement</button>
+            </div>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Étudiant</th><th class="d-none d-md-table-cell">Filière</th><th class="d-none d-lg-table-cell">Montant total</th><th class="d-none d-lg-table-cell">Payé</th><th>Reste</th><th>Statut</th><th class="text-end">Historique</th></tr></thead>
+                <tbody id="paiementsBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-clean">
+          <div class="card-header d-flex flex-wrap gap-2 align-items-center justify-content-between">
+            <span><i class="bi bi-clock-history me-1"></i> Historique des paiements (période)</span>
+            <div class="d-flex gap-2 flex-wrap align-items-center">
+              <div class="d-flex align-items-center gap-1">
+                <input type="date" class="form-control form-control-sm" id="histDateDebut" style="width:auto;">
+                <span class="text-muted small">→</span>
+                <input type="date" class="form-control form-control-sm" id="histDateFin" style="width:auto;">
+              </div>
+              <button class="btn btn-outline-secondary btn-sm" id="btnExportHistoriquePeriodePdf"><i class="bi bi-file-earmark-pdf"></i> Exporter PDF</button>
+            </div>
+          </div>
+          <div class="px-3 pt-2 text-muted small" id="historiquePeriodeSummary"></div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Date</th><th>Étudiant</th><th class="d-none d-md-table-cell">Filière</th><th>Montant</th><th class="d-none d-lg-table-cell">Mode</th><th class="d-none d-lg-table-cell">Type</th></tr></thead>
+                <tbody id="historiquePeriodeBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== EVALUATIONS ===== -->
+      <div class="section-panel" id="panel-evaluations">
+        <div class="card-clean">
+          <div class="card-header d-flex flex-wrap gap-2 align-items-center justify-content-between">
+            <span><i class="bi bi-clipboard-check-fill me-1"></i> Notes & évaluations</span>
+            <div class="d-flex gap-2 flex-wrap">
+              <select class="form-select form-select-sm" id="filterFiliereEval" style="width:auto;"></select>
+              <button class="btn btn-amber btn-sm" id="btnNewEvaluation"><i class="bi bi-plus-lg"></i> Nouvelle évaluation</button>
+            </div>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Étudiant</th><th class="d-none d-md-table-cell">Filière</th><th>Module</th><th class="d-none d-md-table-cell">Formateur</th><th>Note /20</th><th class="d-none d-lg-table-cell">Appréciation</th><th class="d-none d-lg-table-cell">Date</th></tr></thead>
+                <tbody id="evaluationsBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== RAPPORTS DE CHANTIER ===== -->
+      <div class="section-panel" id="panel-rapports">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 class="fw-bold mb-0"><i class="bi bi-clipboard-data-fill me-1"></i> Rapports de chantier / séance pratique</h6>
+          <button class="btn btn-amber btn-sm" id="btnNewRapport"><i class="bi bi-plus-lg"></i> Nouveau rapport</button>
+        </div>
+        <div class="row g-3" id="rapportsGrid"></div>
+      </div>
+
+      <!-- ===== PRESENCES ===== -->
+      <div class="section-panel" id="panel-presences">
+        <div class="card-clean p-3 mb-3" id="presenceAppelCard">
+          <div class="row g-2 align-items-end">
+            <div class="col-md-5">
+              <label class="form-label small">Filière</label>
+              <select class="form-select" id="presenceFiliere"></select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small">Date</label>
+              <input type="date" class="form-control" id="presenceDate">
+            </div>
+            <div class="col-md-3">
+              <button class="btn btn-amber w-100" id="btnSavePresence"><i class="bi bi-check2-circle"></i> Enregistrer l'appel</button>
+            </div>
+          </div>
+        </div>
+        <div class="card-clean mb-3" id="presenceListCard">
+          <div class="card-header"><i class="bi bi-people me-1"></i> Liste d'appel</div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Étudiant</th><th>Statut</th><th>Motif (si absent/retard)</th></tr></thead>
+                <tbody id="presenceListBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="row g-2 mb-3" id="presenceStatsRow"></div>
+        <div class="card-clean">
+          <div class="card-header d-flex flex-wrap gap-2 align-items-center justify-content-between">
+            <span><i class="bi bi-clock-history me-1"></i> Rapport de présence</span>
+            <div class="d-flex gap-2 flex-wrap align-items-end">
+              <div><label class="form-label small mb-0">Du</label><input type="date" class="form-control form-control-sm" id="presenceHistFrom"></div>
+              <div><label class="form-label small mb-0">Au</label><input type="date" class="form-control form-control-sm" id="presenceHistTo"></div>
+              <select class="form-select form-select-sm" id="presenceHistFiliere" style="width:auto;"></select>
+            </div>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Date</th><th class="d-none d-md-table-cell">Filière</th><th>Étudiant</th><th>Statut</th><th class="d-none d-lg-table-cell">Motif</th></tr></thead>
+                <tbody id="presenceHistoryBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== DOCUMENTS ===== -->
+      <div class="section-panel" id="panel-documents">
+        <div class="card-clean">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-folder-fill me-1"></i> Documents & justificatifs</span>
+            <button class="btn btn-amber btn-sm" id="btnNewDocument"><i class="bi bi-plus-lg"></i> Ajouter un document</button>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Étudiant</th><th>Document</th><th class="d-none d-md-table-cell">Type</th><th class="d-none d-lg-table-cell">Date</th><th class="text-end">Actions</th></tr></thead>
+                <tbody id="documentsBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== ANNONCES ===== -->
+      <div class="section-panel" id="panel-annonces">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 class="fw-bold mb-0"><i class="bi bi-megaphone-fill me-1"></i> Annonces internes</h6>
+          <button class="btn btn-amber btn-sm" id="btnNewAnnonce"><i class="bi bi-plus-lg"></i> Nouvelle annonce</button>
+        </div>
+        <div id="annoncesList"></div>
+      </div>
+
+      <!-- ===== MESSAGERIE ===== -->
+      <div class="section-panel" id="panel-messagerie">
+        <div class="row g-3">
+          <div class="col-lg-5">
+            <div class="card-clean p-3">
+              <h6 class="fw-bold mb-3"><i class="bi bi-send-fill me-1"></i> Nouveau message</h6>
+              <form id="formMessage">
+                <div class="mb-3"><label class="form-label small">Destinataire</label><select required class="form-select" name="destinataireId" id="selectMessageDestinataire"></select></div>
+                <div class="mb-3"><label class="form-label small">Message</label><textarea required class="form-control" name="contenu" rows="4"></textarea></div>
+                <button class="btn btn-amber w-100" type="submit"><i class="bi bi-send-fill me-1"></i> Envoyer</button>
+              </form>
+            </div>
+          </div>
+          <div class="col-lg-7">
+            <div class="card-clean">
+              <div class="card-header"><i class="bi bi-chat-dots-fill me-1"></i> Ma messagerie</div>
+              <div class="card-body p-0" id="messagerieList" style="max-height:520px;overflow-y:auto;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== UTILISATEURS ===== -->
+      <div class="section-panel" id="panel-utilisateurs">
+        <div class="card-clean">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-shield-lock-fill me-1"></i> Comptes & rôles</span>
+            <button class="btn btn-amber btn-sm" id="btnNewUser"><i class="bi bi-plus-lg"></i> Nouveau compte</button>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Nom</th><th class="d-none d-md-table-cell">Identifiant</th><th>Rôle</th><th class="text-end">Actions</th></tr></thead>
+                <tbody id="usersBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <footer class="text-center text-muted py-3" style="font-size:.78rem;">ANADENCE CITY — Gestion de centre de formation · Données stockées localement à votre compte</footer>
+  </div>
+</div>
+
+<!-- ===================== MODALS ===================== -->
+
+<!-- Etudiant modal -->
+<div class="modal fade" id="modalEtudiant" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title" id="modalEtudiantTitle">Nouvel étudiant</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <form id="formEtudiant">
+        <div class="modal-body">
+          <input type="hidden" name="id">
+          <input type="hidden" name="photo" id="etudiantPhotoData">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="photo-upload-box" id="photoUploadBox">
+              <img id="photoPreview" style="display:none;">
+              <i class="bi bi-camera-fill" id="photoPlaceholderIcon"></i>
+            </div>
+            <div>
+              <div class="fw-semibold small mb-1">Photo d'identité</div>
+              <div class="text-muted mb-2" style="font-size:.78rem;">Cliquez sur le cadre pour ajouter ou changer la photo (optionnel).</div>
+              <input type="file" accept="image/*" id="photoInput" class="form-control form-control-sm" style="max-width:220px;">
+            </div>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label small">Nom</label><input required class="form-control" name="nom"></div>
+            <div class="col-md-6"><label class="form-label small">Prénom</label><input required class="form-control" name="prenom"></div>
+            <div class="col-md-4"><label class="form-label small">Sexe</label>
+              <select class="form-select" name="sexe"><option value="F">Féminin</option><option value="M">Masculin</option></select>
+            </div>
+            <div class="col-md-4"><label class="form-label small">Date de naissance</label><input type="date" class="form-control" name="dateNaissance"></div>
+            <div class="col-md-4"><label class="form-label small">Date d'inscription</label><input type="date" class="form-control" name="dateInscription" required></div>
+            <div class="col-md-6"><label class="form-label small">Téléphone</label><input required class="form-control" name="telephone"></div>
+            <div class="col-md-6"><label class="form-label small">Email</label><input type="email" class="form-control" name="email"></div>
+            <div class="col-12"><label class="form-label small">Adresse</label><input class="form-control" name="adresse"></div>
+            <div class="col-md-6"><label class="form-label small">Filière</label><select required class="form-select" name="filiereId" id="selectFiliereEtudiant"></select></div>
+            <div class="col-md-6"><label class="form-label small">Statut</label>
+              <select class="form-select" name="statut">
+                <option value="actif">Actif</option><option value="diplome">Diplômé</option><option value="abandon">Abandon</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label small">Modules suivis <span class="text-muted">(l'étudiant peut ne pas s'inscrire à tous les modules de sa filière)</span></label>
+              <div id="etudiantModulesList" class="border rounded p-2" style="max-height:160px; overflow:auto;"></div>
+            </div>
+          </div>
+          <hr class="my-3">
+          <h6 class="fw-bold small text-muted mb-2"><i class="bi bi-people-fill me-1"></i> Tuteur / Parent</h6>
+          <div class="row g-3">
+            <div class="col-md-5"><label class="form-label small">Nom du tuteur / parent</label><input class="form-control" name="nomTuteur"></div>
+            <div class="col-md-4"><label class="form-label small">Téléphone du tuteur</label><input class="form-control" name="telephoneTuteur"></div>
+            <div class="col-md-3"><label class="form-label small">Lien</label>
+              <select class="form-select" name="lienTuteur">
+                <option value="Parent">Parent</option><option value="Père">Père</option><option value="Mère">Mère</option><option value="Tuteur">Tuteur</option><option value="Autre">Autre</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button type="submit" class="btn btn-amber">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Fiche étudiant (view) -->
+<div class="modal fade" id="modalFicheEtudiant" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Fiche étudiant</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body" id="ficheEtudiantBody"></div>
+      <div class="modal-footer"><button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Fermer</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- Filiere modal -->
+<div class="modal fade" id="modalFiliere" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title" id="modalFiliereTitle">Nouvelle filière</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <form id="formFiliere">
+        <div class="modal-body">
+          <input type="hidden" name="id">
+          <div class="mb-3"><label class="form-label small">Nom de la filière</label><input required class="form-control" name="nom"></div>
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label small">Durée</label><input class="form-control" name="duree" placeholder="Ex: 6 mois"></div>
+            <div class="col-md-6"><label class="form-label small">Prix total (F)</label><input required type="number" min="0" class="form-control" name="prixTotal"></div>
+          </div>
+          <div><label class="form-label small">Description</label><textarea class="form-control" name="description" rows="2"></textarea></div>
+          <div class="alert alert-light border small mt-3 mb-0"><i class="bi bi-info-circle me-1"></i> Les modules et leurs formateurs se gèrent depuis le bouton <strong>Modules</strong> sur la fiche de la filière, une fois celle-ci enregistrée.</div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button type="submit" class="btn btn-amber">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Formateur modal -->
+<div class="modal fade" id="modalFormateur" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title" id="modalFormateurTitle">Nouveau formateur</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <form id="formFormateur">
+        <div class="modal-body">
+          <input type="hidden" name="id">
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label small">Nom</label><input required class="form-control" name="nom"></div>
+            <div class="col-md-6"><label class="form-label small">Prénom</label><input required class="form-control" name="prenom"></div>
+            <div class="col-md-6"><label class="form-label small">Spécialité</label><input class="form-control" name="specialite"></div>
+            <div class="col-md-6"><label class="form-label small">Téléphone</label><input required class="form-control" name="telephone"></div>
+            <div class="col-12"><label class="form-label small">Email</label><input type="email" class="form-control" name="email"></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button type="submit" class="btn btn-amber">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modules d'une filière (liste) -->
+<div class="modal fade" id="modalModules" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title" id="modalModulesTitle">Modules de la filière</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div class="text-muted small">Chaque module peut être confié à un formateur. Un formateur peut être associé à plusieurs modules.</div>
+          <button class="btn btn-amber btn-sm text-nowrap" id="btnNewModule"><i class="bi bi-plus-lg"></i> Nouveau module</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead><tr><th>Module</th><th>Formateur</th><th class="d-none d-md-table-cell">Description</th><th class="text-end">Actions</th></tr></thead>
+            <tbody id="modulesBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Fermer</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- Module modal (formulaire) -->
+<div class="modal fade" id="modalModuleForm" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title" id="modalModuleFormTitle">Nouveau module</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <form id="formModule">
+        <div class="modal-body">
+          <input type="hidden" name="id">
+          <input type="hidden" name="filiereId" id="moduleFiliereId">
+          <div class="mb-3"><label class="form-label small">Nom du module</label><input required class="form-control" name="nom" placeholder="Ex : Câblage domestique"></div>
+          <div class="mb-3"><label class="form-label small">Formateur</label><select class="form-select" name="formateurId" id="selectFormateurModule"><option value="">—</option></select></div>
+          <div><label class="form-label small">Description</label><textarea class="form-control" name="description" rows="2"></textarea></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button type="submit" class="btn btn-amber">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Paiement modal -->
+<div class="modal fade" id="modalPaiement" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Enregistrer un versement</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <form id="formPaiement">
+        <div class="modal-body">
+          <div class="mb-3"><label class="form-label small">Étudiant</label><select required class="form-select" name="etudiantId" id="selectEtudiantPaiement"></select></div>
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label small">Montant (F)</label><input required type="number" min="1" class="form-control" name="montant"></div>
+            <div class="col-md-6"><label class="form-label small">Date</label><input required type="date" class="form-control" name="date"></div>
+            <div class="col-md-6"><label class="form-label small">Mode de paiement</label>
+              <select class="form-select" name="mode"><option>Espèces</option><option>Mobile Money</option><option>Virement bancaire</option></select>
+            </div>
+            <div class="col-md-6"><label class="form-label small">Type de versement</label>
+              <select class="form-select" name="type"><option>Frais d'inscription</option><option>Tranche 1</option><option>Tranche 2</option><option>Tranche 3</option><option>Solde</option></select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button type="submit" class="btn btn-amber">Valider le versement</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Historique paiement modal -->
+<div class="modal fade" id="modalHistorique" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title" id="modalHistoriqueTitle">Historique des versements</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body" id="historiqueBody"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Fermer</button>
+        <button type="button" class="btn btn-amber btn-sm" id="btnExportHistoriqueEtudiantPdf"><i class="bi bi-file-earmark-pdf"></i> Exporter PDF</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Evaluation modal -->
+<div class="modal fade" id="modalEvaluation" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Nouvelle évaluation</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <form id="formEvaluation">
+        <div class="modal-body">
+          <div class="mb-3"><label class="form-label small">Étudiant</label><select required class="form-select" name="etudiantId" id="selectEtudiantEval"></select></div>
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label small">Module / matière</label><input required class="form-control" name="module"></div>
+            <div class="col-md-6"><label class="form-label small">Formateur évaluateur</label><select required class="form-select" name="formateurId" id="selectFormateurEval"></select></div>
+            <div class="col-md-6"><label class="form-label small">Note /20</label><input required type="number" min="0" max="20" step="0.5" class="form-control" name="note"></div>
+            <div class="col-md-6"><label class="form-label small">Date</label><input required type="date" class="form-control" name="date"></div>
+            <div class="col-12"><label class="form-label small">Appréciation</label><input class="form-control" name="appreciation" placeholder="Ex: Bon niveau, assidu(e)"></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button type="submit" class="btn btn-amber">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Rapport chantier modal -->
+<div class="modal fade" id="modalRapport" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Nouveau rapport de chantier</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <form id="formRapport">
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label small">Titre</label><input required class="form-control" name="titre" placeholder="Ex: Montage tableau électrique"></div>
+            <div class="col-md-6"><label class="form-label small">Filière concernée</label><select required class="form-select" name="filiereId" id="selectFiliereRapport"></select></div>
+            <div class="col-md-6"><label class="form-label small">Formateur encadrant</label><select required class="form-select" name="formateurId" id="selectFormateurRapport"></select></div>
+            <div class="col-md-6"><label class="form-label small">Date</label><input required type="date" class="form-control" name="date"></div>
+            <div class="col-md-6"><label class="form-label small">Lieu / chantier</label><input class="form-control" name="lieu"></div>
+            <div class="col-md-6"><label class="form-label small">Nombre de participants</label><input type="number" min="0" class="form-control" name="participants"></div>
+            <div class="col-12"><label class="form-label small">Description des travaux réalisés</label><textarea class="form-control" name="description" rows="3"></textarea></div>
+            <div class="col-12"><label class="form-label small">Incidents / observations</label><textarea class="form-control" name="incidents" rows="2"></textarea></div>
+            <div class="col-12"><label class="form-label small">Recommandations</label><textarea class="form-control" name="recommandations" rows="2"></textarea></div>
+            <div class="col-12">
+              <label class="form-label small">Photos justificatives <span class="text-muted">(optionnel, plusieurs images possibles)</span></label>
+              <input type="file" accept="image/*" multiple class="form-control" id="rapportImagesInput">
+              <div class="d-flex flex-wrap gap-2 mt-2" id="rapportImagesPreview"></div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button type="submit" class="btn btn-amber">Enregistrer le rapport</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Document modal -->
+<div class="modal fade" id="modalDocument" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Ajouter un document</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <form id="formDocument">
+        <div class="modal-body">
+          <div class="mb-3"><label class="form-label small">Étudiant</label><select required class="form-select" name="etudiantId" id="selectEtudiantDocument"></select></div>
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label small">Nom du document</label><input required class="form-control" name="nom" placeholder="Ex : Attestation de fin de formation"></div>
+            <div class="col-md-6"><label class="form-label small">Type</label>
+              <select class="form-select" name="type">
+                <option>Attestation</option><option>Pièce d'identité</option><option>Fiche de retard</option><option>Fiche d'absence</option><option>Certificat médical</option><option>Autre</option>
+              </select>
+            </div>
+            <div class="col-md-6"><label class="form-label small">Date</label><input required type="date" class="form-control" name="date"></div>
+            <div class="col-md-6"><label class="form-label small">Fichier (image ou PDF)</label><input type="file" accept="image/*,.pdf" class="form-control" id="documentFileInput"></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button type="submit" class="btn btn-amber">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Annonce modal -->
+<div class="modal fade" id="modalAnnonce" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Nouvelle annonce</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <form id="formAnnonce">
+        <div class="modal-body">
+          <div class="mb-3"><label class="form-label small">Titre</label><input required class="form-control" name="titre"></div>
+          <div><label class="form-label small">Contenu</label><textarea required class="form-control" name="contenu" rows="4"></textarea></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button type="submit" class="btn btn-amber">Publier</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Utilisateur modal -->
+<div class="modal fade" id="modalUser" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title" id="modalUserTitle">Nouveau compte</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <form id="formUser">
+        <div class="modal-body">
+          <input type="hidden" name="id">
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label small">Nom complet</label><input required class="form-control" name="nom" placeholder="Ex : Adjovi HOUNSOU"></div>
+            <div class="col-md-6"><label class="form-label small">Rôle</label>
+              <select required class="form-select" name="role" id="selectUserRole"></select>
+            </div>
+            <div class="col-md-6"><label class="form-label small">Identifiant</label><input required class="form-control" name="identifiant" placeholder="Ex : a.hounsou"></div>
+            <div class="col-md-6"><label class="form-label small">Mot de passe</label><input required class="form-control" name="motDePasse" id="userPasswordField" placeholder="Défini par la direction"></div>
+          </div>
+          <div class="mt-3" id="userFormateurLinkWrap" style="display:none;">
+            <label class="form-label small">Formateur lié <span class="text-muted">(détermine sa filière / module)</span></label>
+            <select class="form-select" name="formateurId" id="selectUserFormateurLink"><option value="">—</option></select>
+          </div>
+          <div class="mt-3" id="userEtudiantLinkWrap" style="display:none;">
+            <label class="form-label small">Étudiant lié <span class="text-muted">(détermine ses données personnelles)</span></label>
+            <select class="form-select" name="etudiantId" id="selectUserEtudiantLink"><option value="">—</option></select>
+          </div>
+          <div class="mt-4" id="userPermsWrap">
+            <label class="form-label small fw-bold mb-2">Autorisations — menus visibles / gérables par ce compte</label>
+            <div class="text-muted small mb-2">La direction coche, pour chaque menu, ce que cet utilisateur peut voir et/ou gérer (créer, modifier, supprimer). Les accès sont limités à sa filière / ses données lorsque cela s'applique (formateur, étudiant).</div>
+            <div class="table-responsive">
+              <table class="table table-sm align-middle mb-0" style="font-size:.83rem;">
+                <thead><tr><th>Menu</th><th class="text-center" style="width:80px;">Voir</th><th class="text-center" style="width:80px;">Gérer</th></tr></thead>
+                <tbody id="userPermsBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button type="submit" class="btn btn-amber">Enregistrer le compte</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm delete -->
+<div class="modal fade" id="modalConfirm" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-body text-center py-4">
+        <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size:2rem;"></i>
+        <p class="mt-2 mb-3">Confirmer la suppression ?</p>
+        <div class="d-flex gap-2 justify-content-center">
+          <button class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Annuler</button>
+          <button class="btn btn-danger btn-sm" id="btnConfirmDelete">Supprimer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3"><div id="mainToast" class="toast align-items-center text-bg-dark border-0" role="alert"><div class="d-flex"><div class="toast-body" id="toastMsg">OK</div><button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+/* ========================================================================
+   ANADENCE CITY — Application de gestion de centre de formation
+   ======================================================================== */
+const STORAGE_KEY = 'anadence_db_v1';
+let DB = null;
+let state = { role: null, userName: '', userId: null, section: 'dashboard' };
+let pendingDelete = null;
+
+const ROLES = [
+  {id:'direction', label:'Direction', icon:'bi-briefcase-fill'},
+  {id:'secretariat', label:'Secrétariat', icon:'bi-journal-text'},
+  {id:'comptabilite', label:'Comptabilité', icon:'bi-calculator-fill'},
+  {id:'formateur', label:'Formateur', icon:'bi-person-workspace'},
+  {id:'etudiant', label:'Étudiant', icon:'bi-mortarboard-fill'},
+];
+
+const NAV = [
+  {section:'dashboard', label:'Tableau de bord', icon:'bi-speedometer2', roles:['direction','secretariat','comptabilite','formateur','etudiant']},
+  {section:'etudiants', label:'Étudiants', icon:'bi-people-fill', roles:['direction','secretariat','comptabilite','formateur']},
+  {section:'filieres', label:'Filières', icon:'bi-mortarboard-fill', roles:['direction','secretariat','formateur']},
+  {section:'formateurs', label:'Formateurs', icon:'bi-person-workspace', roles:['direction','secretariat']},
+  {section:'paiements', label:'Paiements', icon:'bi-cash-coin', roles:['direction','comptabilite','etudiant']},
+  {section:'evaluations', label:'Évaluations', icon:'bi-clipboard-check-fill', roles:['direction','secretariat','formateur','etudiant']},
+  {section:'rapports', label:'Rapports de chantier', icon:'bi-clipboard-data-fill', roles:['direction','secretariat','formateur','etudiant']},
+  {section:'presences', label:'Présences', icon:'bi-calendar-check-fill', roles:['direction','secretariat','formateur','etudiant']},
+  {section:'documents', label:'Documents', icon:'bi-folder-fill', roles:['direction','secretariat','formateur','etudiant']},
+  {section:'annonces', label:'Annonces', icon:'bi-megaphone-fill', roles:['direction','secretariat','comptabilite','formateur','etudiant']},
+  {section:'messagerie', label:'Messagerie', icon:'bi-chat-dots-fill', roles:['direction','secretariat','comptabilite','formateur','etudiant']},
+  {section:'utilisateurs', label:'Utilisateurs', icon:'bi-shield-lock-fill', roles:['direction']},
+];
+
+/* ---------- Autorisations par menu (par défaut selon le rôle, ajustables par utilisateur) ---------- */
+// Modules pour lesquels une case "Gérer" (créer/modifier/supprimer) a un sens
+const MANAGE_MODULES = ['etudiants','filieres','formateurs','paiements','evaluations','rapports','presences','documents','annonces'];
+// Réglages "Gérer" par défaut selon le rôle (utilisés pour pré-remplir un nouveau compte)
+const DEFAULT_MANAGE = {
+  etudiants: ['direction','secretariat'],
+  filieres: ['direction','secretariat'],
+  formateurs: ['direction','secretariat'],
+  paiements: ['direction','comptabilite'],
+  evaluations: ['direction','formateur'],
+  rapports: ['direction','formateur','secretariat','etudiant'],
+  presences: ['direction','formateur','secretariat'],
+  documents: ['direction','secretariat'],
+  annonces: ['direction','secretariat'],
+};
+// Liste des menus pouvant être cochés individuellement (hors tableau de bord et utilisateurs, gérés à part)
+const PERMISSION_MODULES = NAV.filter(n=>!['dashboard','utilisateurs'].includes(n.section));
+
+function defaultPermsForRole(role){
+  const perms = {};
+  PERMISSION_MODULES.forEach(n=>{
+    perms[n.section] = {
+      view: n.roles.includes(role),
+      manage: MANAGE_MODULES.includes(n.section) ? (DEFAULT_MANAGE[n.section]||[]).includes(role) : false,
+    };
+  });
+  return perms;
+}
+function currentUser(){ return DB && DB.users ? DB.users.find(u=>u.id===state.userId) : null; }
+function hasPerm(section, type){
+  if(section==='utilisateurs') return state.role==='direction';
+  if(section==='dashboard') return true;
+  if(state.role==='direction') return true; // la direction a toujours accès complet
+  const u = currentUser();
+  const perms = (u && u.perms && u.perms[section]) ? u.perms[section] : defaultPermsForRole(state.role)[section];
+  return !!(perms && perms[type]);
+}
+
+/* ---------- Portée des données (chaque profil ne voit que ce qui le concerne) ---------- */
+function scopedFiliereIds(){
+  const u = currentUser();
+  if(state.role==='formateur' && u && u.formateurId){
+    const filIds = modulesOfFormateur(u.formateurId).map(m=>m.filiereId);
+    return [...new Set(filIds)];
+  }
+  if(state.role==='etudiant' && u && u.etudiantId){
+    const et = DB.etudiants.find(e=>e.id===u.etudiantId);
+    return et ? [et.filiereId] : [];
+  }
+  return null; // null = pas de restriction (voit toutes les filières autorisées)
+}
+function scopedFormateurOptionsHTML(){
+  const u = currentUser();
+  if(state.role==='formateur' && u && u.formateurId){
+    return DB.formateurs.filter(f=>f.id===u.formateurId).map(f=>`<option value="${f.id}">${nomComplet(f)}</option>`).join('');
+  }
+  if(state.role==='etudiant'){
+    const ids = scopedFiliereIds() || [];
+    const formIds = [...new Set(DB.modules.filter(m=>ids.includes(m.filiereId)).map(m=>m.formateurId).filter(Boolean))];
+    return DB.formateurs.filter(f=>formIds.includes(f.id)).map(f=>`<option value="${f.id}">${nomComplet(f)}</option>`).join('');
+  }
+  return null; // null = pas de restriction, utiliser la liste complète
+}
+function scopeFilieres(list){
+  const ids = scopedFiliereIds();
+  return ids ? list.filter(f=>ids.includes(f.id)) : list;
+}
+function scopeByFiliereId(list){
+  const ids = scopedFiliereIds();
+  return ids ? list.filter(x=>ids.includes(x.filiereId)) : list;
+}
+function scopeEtudiants(list){
+  const u = currentUser();
+  if(state.role==='etudiant'){
+    return list.filter(e=>u && e.id===u.etudiantId);
+  }
+  const ids = scopedFiliereIds();
+  return ids ? list.filter(e=>ids.includes(e.filiereId)) : list;
+}
+
+/* ---------- Helpers ---------- */
+const uid = () => Math.random().toString(36).slice(2,9);
+const fmtCFA = n => new Intl.NumberFormat('fr-FR').format(Math.round(n||0)) + ' F';
+const fmtDate = d => d ? new Date(d).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+const initials = (a,b='') => ((a||'?')[0]+(b||'')[0]).toUpperCase();
+function avatarHTML(o, size){
+  size = size||34;
+  if(o && o.photo){ return `<img src="${o.photo}" class="avatar-img" style="width:${size}px;height:${size}px;">`; }
+  return `<div class="avatar-circ" style="width:${size}px;height:${size}px;font-size:${size<40?'.7rem':'1rem'};">${initials(o?o.prenom:'',o?o.nom:'')}</div>`;
+}
+function toast(msg){ document.getElementById('toastMsg').textContent = msg; new bootstrap.Toast(document.getElementById('mainToast')).show(); }
+function getFiliere(id){ return DB.filieres.find(f=>f.id===id); }
+function getFormateur(id){ return DB.formateurs.find(f=>f.id===id); }
+function getEtudiant(id){ return DB.etudiants.find(e=>e.id===id); }
+function getModule(id){ return DB.modules.find(m=>m.id===id); }
+function modulesOfFiliere(filId){ return DB.modules.filter(m=>m.filiereId===filId); }
+function modulesOfFormateur(forId){ return DB.modules.filter(m=>m.formateurId===forId); }
+function nomComplet(o){ return o ? `${o.prenom} ${o.nom}` : '—'; }
+function waLink(phone){
+  if(!phone) return '';
+  let digits = String(phone).replace(/\D/g,'');
+  if(digits.startsWith('0')) digits = digits.slice(1);
+  if(!digits.startsWith('229')) digits = '229'+digits;
+  return `https://wa.me/${digits}`;
+}
+
+function etudiantFinance(etId){
+  const et = getEtudiant(etId);
+  const fil = et ? getFiliere(et.filiereId) : null;
+  const total = fil ? Number(fil.prixTotal)||0 : 0;
+  const paye = DB.paiements.filter(p=>p.etudiantId===etId).reduce((s,p)=>s+Number(p.montant),0);
+  const reste = Math.max(total-paye,0);
+  let statut = 'Impayé';
+  if(reste<=0 && total>0) statut='Payé'; else if(paye>0) statut='Partiel';
+  return {total,paye,reste,statut};
+}
+
+/* ---------- Génération PDF (police Poppins embarquée) ---------- */
+let PDF_FONT_READY = null;
+function bufferToBase64(buf){
+  let binary = '';
+  const bytes = new Uint8Array(buf);
+  const chunk = 0x8000;
+  for(let i=0;i<bytes.length;i+=chunk){
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i+chunk));
+  }
+  return btoa(binary);
+}
+async function ensurePdfFont(doc){
+  if(!PDF_FONT_READY){
+    PDF_FONT_READY = (async()=>{
+      try{
+        const base = 'https://raw.githubusercontent.com/google/fonts/main/ofl/poppins/';
+        const [regBuf, boldBuf] = await Promise.all([
+          fetch(base+'Poppins-Regular.ttf').then(r=>r.arrayBuffer()),
+          fetch(base+'Poppins-Bold.ttf').then(r=>r.arrayBuffer()),
+        ]);
+        return { regular: bufferToBase64(regBuf), bold: bufferToBase64(boldBuf) };
+      }catch(err){
+        console.warn('Police Poppins indisponible pour le PDF (hors-ligne ?), utilisation de la police par défaut.', err);
+        return null;
+      }
+    })();
+  }
+  const fonts = await PDF_FONT_READY;
+  if(fonts){
+    doc.addFileToVFS('Poppins-Regular.ttf', fonts.regular);
+    doc.addFont('Poppins-Regular.ttf', 'Poppins', 'normal');
+    doc.addFileToVFS('Poppins-Bold.ttf', fonts.bold);
+    doc.addFont('Poppins-Bold.ttf', 'Poppins', 'bold');
+    doc.setFont('Poppins', 'normal');
+    return 'Poppins';
+  }
+  return 'helvetica';
+}
+function pdfHeader(doc, titre, sousTitre, font){
+  font = font || 'helvetica';
+  doc.setFillColor(22,35,63);
+  doc.rect(0,0,210,26,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFont(font,'bold');
+  doc.setFontSize(14);
+  doc.text('ANADENCE CITY', 14, 12);
+  doc.setFontSize(9);
+  doc.setFont(font,'normal');
+  doc.text('Centre de formation professionnelle — Cotonou, Bénin', 14, 18);
+  doc.setTextColor(30,30,30);
+  doc.setFont(font,'bold');
+  doc.setFontSize(15);
+  doc.text(titre, 14, 36);
+  if(sousTitre){
+    doc.setFont(font,'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(100,100,100);
+    doc.text(sousTitre, 14, 42);
+  }
+  doc.setTextColor(30,30,30);
+}
+function pdfFooter(doc, font){
+  font = font || 'helvetica';
+  const pageCount = doc.internal.getNumberOfPages();
+  for(let i=1;i<=pageCount;i++){
+    doc.setPage(i);
+    doc.setFont(font,'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(150,150,150);
+    doc.text(`Document généré le ${new Date().toLocaleDateString('fr-FR')} — ANADENCE CITY`, 14, 290);
+    doc.text(`Page ${i}/${pageCount}`, 190, 290, {align:'right'});
+  }
+}
+
+async function exportEtudiantsListPdf(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const font = await ensurePdfFont(doc);
+  const search = (document.getElementById('searchEtudiant').value||'').toLowerCase();
+  const filFilter = document.getElementById('filterFiliereEtudiant').value;
+  const statutFilter = document.getElementById('filterStatutEtudiant').value;
+  const list = scopeEtudiants(DB.etudiants).filter(e=>{
+    const matchSearch = (nomComplet(e)+e.matricule).toLowerCase().includes(search);
+    const matchFil = !filFilter || e.filiereId===filFilter;
+    const matchStatut = !statutFilter || e.statut===statutFilter;
+    return matchSearch && matchFil && matchStatut;
+  }).sort((a,b)=>nomComplet(a).localeCompare(nomComplet(b),'fr',{sensitivity:'base'}));
+  pdfHeader(doc, 'Liste des étudiants inscrits', `${list.length} étudiant(s)` + (filFilter ? ' — Filière : '+getFiliere(filFilter)?.nom : ''), font);
+  doc.autoTable({
+    startY: 48,
+    head: [['Matricule','Nom & Prénom','Filière','Téléphone','Statut','Paiement']],
+    body: list.map(e=>{
+      const fin = etudiantFinance(e.id);
+      return [e.matricule, nomComplet(e), getFiliere(e.filiereId)?.nom||'—', e.telephone, e.statut, fin.statut];
+    }),
+    styles:{font},
+    headStyles:{fillColor:[22,35,63], textColor:255, fontSize:9, font},
+    bodyStyles:{fontSize:8.5, font},
+    alternateRowStyles:{fillColor:[245,246,248]},
+  });
+  pdfFooter(doc, font);
+  doc.save('liste-etudiants-anadence.pdf');
+}
+
+async function exportFinancierPdf(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const font = await ensurePdfFont(doc);
+  const filterStatut = document.getElementById('filterStatutPaiement').value;
+  const filterFil = document.getElementById('filterFilierePaiement').value;
+  const search = (document.getElementById('searchPaiement').value||'').toLowerCase();
+  let finances = scopeEtudiants(DB.etudiants).map(e=>({e, fin:etudiantFinance(e.id)}))
+    .filter(x=> !filterStatut || x.fin.statut===filterStatut)
+    .filter(x=> !filterFil || x.e.filiereId===filterFil)
+    .filter(x=> nomComplet(x.e).toLowerCase().includes(search));
+  finances.sort((a,b)=>nomComplet(a.e).localeCompare(nomComplet(b.e),'fr',{sensitivity:'base'}));
+  const totalCollecte = finances.reduce((s,x)=>s+x.fin.paye,0);
+  const totalDu = finances.reduce((s,x)=>s+x.fin.total,0);
+  const totalReste = Math.max(totalDu-totalCollecte,0);
+  const taux = totalDu>0 ? Math.round((totalCollecte/totalDu)*100) : 0;
+  const sousTitreParts = [
+    filterFil ? 'Filière : '+(getFiliere(filterFil)?.nom||'') : null,
+    filterStatut ? 'Statut : '+filterStatut : null,
+  ].filter(Boolean);
+  const sousTitre = `${finances.length} étudiant(s)` + (sousTitreParts.length ? ' — '+sousTitreParts.join(' — ') : '');
+  pdfHeader(doc, 'État des paiements des étudiants', sousTitre, font);
+  doc.autoTable({
+    startY: 48,
+    theme:'plain',
+    body:[
+      ['Montant total dû', fmtCFA(totalDu)],
+      ['Montant total collecté', fmtCFA(totalCollecte)],
+      ['Reste à recouvrer', fmtCFA(totalReste)],
+      ['Taux de recouvrement', taux+'%'],
+    ],
+    styles:{font},
+    bodyStyles:{fontSize:10, fontStyle:'bold', font},
+    columnStyles:{0:{cellWidth:100}},
+  });
+  doc.autoTable({
+    startY: doc.lastAutoTable.finalY + 8,
+    head: [['Étudiant','Filière','Montant dû','Payé','Reste','Statut']],
+    body: finances.map(x=>[nomComplet(x.e), getFiliere(x.e.filiereId)?.nom||'—', fmtCFA(x.fin.total), fmtCFA(x.fin.paye), fmtCFA(x.fin.reste), x.fin.statut]),
+    styles:{font},
+    headStyles:{fillColor:[22,35,63], textColor:255, fontSize:9, font},
+    bodyStyles:{fontSize:8.5, font},
+    alternateRowStyles:{fillColor:[245,246,248]},
+  });
+  pdfFooter(doc, font);
+  doc.save('etat-paiements-etudiants-anadence.pdf');
+}
+
+/* ---------- Historique des paiements (toutes transactions, filtrable par période) ---------- */
+function scopedPaiements(){
+  const scopedIds = scopeEtudiants(DB.etudiants).map(e=>e.id);
+  return DB.paiements.filter(p=>scopedIds.includes(p.etudiantId));
+}
+function filteredHistoriquePeriode(){
+  const debut = document.getElementById('histDateDebut').value;
+  const fin = document.getElementById('histDateFin').value;
+  return scopedPaiements().filter(p=>{
+    if(debut && p.date < debut) return false;
+    if(fin && p.date > fin) return false;
+    return true;
+  });
+}
+function renderHistoriquePeriode(){
+  const list = filteredHistoriquePeriode().slice().sort((a,b)=> new Date(b.date)-new Date(a.date));
+  const total = list.reduce((s,p)=>s+Number(p.montant),0);
+  document.getElementById('historiquePeriodeSummary').textContent = `${list.length} versement(s) — Total collecté : ${fmtCFA(total)}`;
+  document.getElementById('historiquePeriodeBody').innerHTML = list.length ? list.map(p=>{
+    const e = getEtudiant(p.etudiantId);
+    return `<tr>
+      <td>${fmtDate(p.date)}</td>
+      <td>${e?nomComplet(e):'—'}</td>
+      <td class="d-none d-md-table-cell">${e?getFiliere(e.filiereId)?.nom||'—':'—'}</td>
+      <td class="fw-semibold text-success">${fmtCFA(p.montant)}</td>
+      <td class="d-none d-lg-table-cell">${p.mode||'—'}</td>
+      <td class="d-none d-lg-table-cell">${p.type||'—'}</td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="6"><div class="empty-state"><i class="bi bi-receipt"></i><p>Aucun versement sur cette période</p></div></td></tr>`;
+}
+document.getElementById('histDateDebut').addEventListener('change', renderHistoriquePeriode);
+document.getElementById('histDateFin').addEventListener('change', renderHistoriquePeriode);
+async function exportHistoriquePeriodePdf(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const font = await ensurePdfFont(doc);
+  const debut = document.getElementById('histDateDebut').value;
+  const fin = document.getElementById('histDateFin').value;
+  const list = filteredHistoriquePeriode().slice().sort((a,b)=> new Date(a.date)-new Date(b.date));
+  const total = list.reduce((s,p)=>s+Number(p.montant),0);
+  const periodeLabel = (debut||fin) ? `Période du ${debut?fmtDate(debut):'—'} au ${fin?fmtDate(fin):'—'}` : 'Toutes périodes';
+  pdfHeader(doc, 'Historique des paiements', `${periodeLabel} — ${list.length} versement(s)`, font);
+  doc.autoTable({
+    startY: 48,
+    head: [['Date','Étudiant','Filière','Montant','Mode','Type']],
+    body: list.map(p=>{
+      const e = getEtudiant(p.etudiantId);
+      return [fmtDate(p.date), e?nomComplet(e):'—', e?getFiliere(e.filiereId)?.nom||'—':'—', fmtCFA(p.montant), p.mode||'—', p.type||'—'];
+    }),
+    foot: [['','','Total', fmtCFA(total), '', '']],
+    styles:{font},
+    headStyles:{fillColor:[22,35,63], textColor:255, fontSize:9, font},
+    bodyStyles:{fontSize:8.5, font},
+    alternateRowStyles:{fillColor:[245,246,248]},
+    footStyles:{fillColor:[240,240,240], textColor:[20,20,20], fontStyle:'bold', font},
+  });
+  pdfFooter(doc, font);
+  doc.save('historique-paiements-anadence.pdf');
+}
+document.getElementById('btnExportHistoriquePeriodePdf').addEventListener('click', exportHistoriquePeriodePdf);
+
+async function exportRapportPdf(id){
+  const r = DB.rapports.find(x=>x.id===id);
+  if(!r) return;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const font = await ensurePdfFont(doc);
+  pdfHeader(doc, 'Rapport de chantier / séance pratique', r.titre, font);
+  doc.autoTable({
+    startY: 48,
+    theme:'plain',
+    body:[
+      ['Filière', getFiliere(r.filiereId)?.nom||'—'],
+      ['Formateur encadrant', nomComplet(getFormateur(r.formateurId))],
+      ['Date', fmtDate(r.date)],
+      ['Lieu / chantier', r.lieu||'—'],
+      ['Nombre de participants', r.participants||0],
+    ],
+    styles:{font},
+    bodyStyles:{fontSize:10, font},
+    columnStyles:{0:{cellWidth:60, fontStyle:'bold'}},
+  });
+  let y = doc.lastAutoTable.finalY + 8;
+  const addBlock = (titre, texte) => {
+    doc.setFont(font,'bold'); doc.setFontSize(11);
+    doc.text(titre, 14, y); y += 6;
+    doc.setFont(font,'normal'); doc.setFontSize(9.5);
+    const lines = doc.splitTextToSize(texte || 'Néant', 180);
+    doc.text(lines, 14, y); y += lines.length*5 + 8;
+  };
+  addBlock('Description des travaux réalisés', r.description);
+  addBlock('Incidents / observations', r.incidents);
+  addBlock('Recommandations', r.recommandations);
+  pdfFooter(doc, font);
+  doc.save(`rapport-chantier-${(r.titre||'sans-titre').toLowerCase().replace(/[^a-z0-9]+/g,'-').slice(0,40)}.pdf`);
+}
+
+/* ---------- Persistence ---------- */
+async function loadDB(){
+  try{
+    const res = await window.storage.get('db', false);
+    if(res && res.value){ DB = JSON.parse(res.value); migrateDB(); return; }
+  }catch(e){ /* not found */ }
+  DB = seedData();
+  await saveDB();
+}
+function migrateDB(){
+  // Ajoute les nouvelles collections aux bases déjà sauvegardées (versions précédentes)
+  if(!DB.presences) DB.presences = [];
+  if(!DB.documents) DB.documents = [];
+  if(!DB.annonces) DB.annonces = [];
+  if(!DB.messages) DB.messages = [];
+  if(!DB.leads) DB.leads = [];
+  if(!DB.modules) DB.modules = [];
+  // Migration : les anciennes bases avaient un formateur unique par filière (filiere.formateurId).
+  // On convertit ce lien en un module par défaut, pour ne pas perdre l'information existante.
+  if(DB.modules.length===0){
+    (DB.filieres||[]).forEach(f=>{
+      if(f.formateurId){
+        DB.modules.push({id:uid(), nom:'Module principal', filiereId:f.id, formateurId:f.formateurId, description:''});
+      }
+    });
+  }
+  (DB.etudiants||[]).forEach(e=>{
+    if(!e.moduleIds) e.moduleIds = [];
+  });
+  // Ajoute les autorisations par défaut et les liens formateur/étudiant aux comptes existants
+  (DB.users||[]).forEach(u=>{
+    if(!u.perms) u.perms = defaultPermsForRole(u.role);
+    if(u.role==='formateur' && !u.formateurId){
+      const match = DB.formateurs.find(f=> nomComplet(f).toLowerCase()===String(u.nom).toLowerCase());
+      if(match) u.formateurId = match.id;
+    }
+    if(u.role==='etudiant' && !u.etudiantId){
+      const match = DB.etudiants.find(e=> nomComplet(e).toLowerCase()===String(u.nom).toLowerCase());
+      if(match) u.etudiantId = match.id;
+    }
+  });
+  (DB.etudiants||[]).forEach(e=>{
+    if(e.nomTuteur===undefined) e.nomTuteur='';
+    if(e.telephoneTuteur===undefined) e.telephoneTuteur='';
+    if(e.lienTuteur===undefined) e.lienTuteur='Parent';
+  });
+  (DB.presences||[]).forEach(p=>{
+    if(p.motif===undefined) p.motif='';
+  });
+}
+async function saveDB(){
+  try{ await window.storage.set('db', JSON.stringify(DB), false); }
+  catch(e){ console.error('Erreur de sauvegarde', e); }
+}
+
+function seedData(){
+  const filiereIds = {elec: uid(), info: uid(), couture: uid(), plomberie: uid()};
+  const formateurIds = {f1: uid(), f2: uid(), f3: uid()};
+  const filieres = [
+    {id:filiereIds.elec, nom:'Électricité Bâtiment', duree:'9 mois', prixTotal:350000, description:"Installation électrique domestique et industrielle."},
+    {id:filiereIds.info, nom:'Informatique de Gestion', duree:'6 mois', prixTotal:250000, description:"Bureautique, réseaux, maintenance PC."},
+    {id:filiereIds.couture, nom:'Couture & Stylisme', duree:'12 mois', prixTotal:200000, description:"Coupe, couture, création de modèles."},
+    {id:filiereIds.plomberie, nom:'Plomberie Sanitaire', duree:'6 mois', prixTotal:220000, description:"Installation et dépannage sanitaire."},
+  ];
+  const formateurs = [
+    {id:formateurIds.f1, nom:'HOUNSOU', prenom:'Adjovi', specialite:'Électricité / Plomberie', telephone:'97 12 34 56', email:'a.hounsou@anadence.bj'},
+    {id:formateurIds.f2, nom:'DOSSOU', prenom:'Kokou', specialite:'Informatique', telephone:'96 45 67 89', email:'k.dossou@anadence.bj'},
+    {id:formateurIds.f3, nom:'AGBODJAN', prenom:'Rose', specialite:'Couture', telephone:'95 78 90 12', email:'r.agbodjan@anadence.bj'},
+  ];
+  // Une filière peut avoir plusieurs modules ; un formateur peut être associé à plusieurs modules
+  // (ici Adjovi HOUNSOU intervient à la fois en Électricité et en Plomberie).
+  const modId = {elecCab:uid(), elecSec:uid(), infoBur:uid(), infoRes:uid(), coutCoupe:uid(), coutModele:uid(), plombInstall:uid()};
+  const modules = [
+    {id:modId.elecCab, nom:'Câblage domestique', filiereId:filiereIds.elec, formateurId:formateurIds.f1, description:"Installation et câblage des circuits domestiques."},
+    {id:modId.elecSec, nom:'Normes de sécurité électrique', filiereId:filiereIds.elec, formateurId:formateurIds.f1, description:"Sécurité et prévention des risques électriques."},
+    {id:modId.infoBur, nom:'Bureautique', filiereId:filiereIds.info, formateurId:formateurIds.f2, description:"Word, Excel, PowerPoint."},
+    {id:modId.infoRes, nom:'Réseaux informatiques', filiereId:filiereIds.info, formateurId:formateurIds.f2, description:"Bases des réseaux et maintenance PC."},
+    {id:modId.coutCoupe, nom:'Coupe de base', filiereId:filiereIds.couture, formateurId:formateurIds.f3, description:"Prise de mesures et patronage."},
+    {id:modId.coutModele, nom:'Création de modèles', filiereId:filiereIds.couture, formateurId:formateurIds.f3, description:"Conception de modèles originaux."},
+    {id:modId.plombInstall, nom:'Installation sanitaire', filiereId:filiereIds.plomberie, formateurId:formateurIds.f1, description:"Installation et dépannage sanitaire."},
+  ];
+  const etu = (nom,prenom,sexe,fil,modIds,statut='actif') => ({id:uid(),matricule:'CF-'+Math.floor(1000+Math.random()*9000),nom,prenom,sexe,dateNaissance:'2002-03-14',dateInscription:'2026-02-10',telephone:'01'+Math.floor(10000000+Math.random()*89999999),email:prenom.toLowerCase()+'.'+nom.toLowerCase()+'@mail.com',adresse:'Cotonou',filiereId:fil,statut,moduleIds:modIds||[],nomTuteur:'Parent de '+prenom,telephoneTuteur:'01'+Math.floor(10000000+Math.random()*89999999),lienTuteur:'Parent'});
+  const etudiants = [
+    // Chantal suit les deux modules de sa filière
+    etu('ALAPINI','Chantal','F',filiereIds.elec,[modId.elecCab, modId.elecSec]),
+    // Marius ne s'est inscrit qu'au module Bureautique, pas à Réseaux informatiques
+    etu('ZINSOU','Marius','M',filiereIds.info,[modId.infoBur]),
+    etu('SOSSOU','Bernadette','F',filiereIds.couture,[modId.coutCoupe, modId.coutModele]),
+    etu('AGOSSOU','Fabrice','M',filiereIds.plomberie,[modId.plombInstall]),
+    // Sandrine ne suit pour l'instant que Réseaux informatiques
+    etu('KOUDJO','Sandrine','F',filiereIds.info,[modId.infoRes]),
+    etu('TOSSOU','Éric','M',filiereIds.elec,[modId.elecCab, modId.elecSec],'diplome'),
+  ];
+  const paiements = [
+    {id:uid(), etudiantId:etudiants[0].id, montant:150000, date:'2026-02-12', mode:'Mobile Money', type:"Frais d'inscription"},
+    {id:uid(), etudiantId:etudiants[0].id, montant:100000, date:'2026-04-02', mode:'Espèces', type:'Tranche 1'},
+    {id:uid(), etudiantId:etudiants[1].id, montant:250000, date:'2026-02-15', mode:'Virement bancaire', type:'Solde'},
+    {id:uid(), etudiantId:etudiants[2].id, montant:50000, date:'2026-03-01', mode:'Espèces', type:"Frais d'inscription"},
+    {id:uid(), etudiantId:etudiants[4].id, montant:100000, date:'2026-03-20', mode:'Mobile Money', type:"Frais d'inscription"},
+  ];
+  const evaluations = [
+    {id:uid(), etudiantId:etudiants[0].id, filiereId:filiereIds.elec, module:'Câblage domestique', formateurId:formateurIds.f1, note:15, appreciation:'Bon niveau pratique', date:'2026-05-10'},
+    {id:uid(), etudiantId:etudiants[1].id, filiereId:filiereIds.info, module:'Réseaux informatiques', formateurId:formateurIds.f2, note:12.5, appreciation:'Peut mieux faire', date:'2026-05-11'},
+    {id:uid(), etudiantId:etudiants[2].id, filiereId:filiereIds.couture, module:'Coupe de base', formateurId:formateurIds.f3, note:17, appreciation:'Excellent travail', date:'2026-05-12'},
+  ];
+  const rapports = [
+    {id:uid(), titre:'Installation tableau électrique — Atelier', filiereId:filiereIds.elec, formateurId:formateurIds.f1, date:'2026-05-15', lieu:'Atelier ANADENCE CITY, Cotonou', participants:8, description:"Montage et câblage d'un tableau électrique domestique par groupes de 2.", incidents:"Aucun incident majeur.", recommandations:"Prévoir plus de disjoncteurs pour la prochaine session."},
+  ];
+  const users = [
+    {id:uid(), nom:'Directeur Général', role:'direction', identifiant:'direction', motDePasse:'direction123', perms:defaultPermsForRole('direction')},
+    {id:uid(), nom:'Secrétariat Académique', role:'secretariat', identifiant:'secretariat', motDePasse:'secret123', perms:defaultPermsForRole('secretariat')},
+    {id:uid(), nom:'Service Comptabilité', role:'comptabilite', identifiant:'comptabilite', motDePasse:'compta123', perms:defaultPermsForRole('comptabilite')},
+    {id:uid(), nom:'Adjovi HOUNSOU', role:'formateur', identifiant:'a.hounsou', motDePasse:'formateur123', formateurId:formateurIds.f1, perms:defaultPermsForRole('formateur')},
+    {id:uid(), nom:'Chantal ALAPINI', role:'etudiant', identifiant:'c.alapini', motDePasse:'etudiant123', etudiantId:etudiants[0].id, perms:defaultPermsForRole('etudiant')},
+  ];
+  return {filieres, modules, formateurs, etudiants, paiements, evaluations, rapports, users, leads:[], presences:[], documents:[], annonces:[
+    {id:uid(), titre:'Reprise des cours après les fêtes', contenu:"Les cours reprennent normalement le 5 janvier 2027 pour toutes les filières. Merci de vous présenter à l'heure.", auteur:'Direction Générale', date:'2026-12-20'}
+  ], messages:[]};
+}
+
+/* ---------- Site public ---------- */
+const SERVICES = [
+  {icon:'bi-mortarboard-fill', titre:'Formations qualifiantes', desc:"Des cursus pratiques et théoriques dans nos différentes filières, sanctionnés par une attestation de fin de formation."},
+  {icon:'bi-tools', titre:'Ateliers & chantiers école', desc:"Mise en pratique sur des chantiers réels et en atelier, encadrée par des formateurs expérimentés."},
+  {icon:'bi-briefcase-fill', titre:"Accompagnement à l'insertion", desc:"Aide à la recherche de stage et d'emploi, mise en relation avec des entreprises partenaires."},
+  {icon:'bi-award-fill', titre:'Certification', desc:"Délivrance d'attestations et de certificats reconnus à l'issue de chaque filière."},
+  {icon:'bi-person-lines-fill', titre:'Orientation & conseil', desc:"Un accompagnement personnalisé pour choisir la filière adaptée à votre projet professionnel."},
+  {icon:'bi-arrow-repeat', titre:'Formation continue', desc:"Des modules courts pour les professionnels souhaitant se perfectionner ou se reconvertir."},
+];
+const GALERIE = [
+  {seed:'anadence-elec', legende:'Atelier électricité bâtiment'},
+  {seed:'anadence-info', legende:'Salle informatique de gestion'},
+  {seed:'anadence-couture', legende:'Atelier couture & stylisme'},
+  {seed:'anadence-plomberie', legende:'Chantier école plomberie'},
+  {seed:'anadence-diplome', legende:'Remise des attestations'},
+  {seed:'anadence-campus', legende:'Le campus ANADENCE CITY'},
+];
+function renderPublicSite(){
+  document.getElementById('servicesGrid').innerHTML = SERVICES.map(s=>`
+    <div class="col-md-6 col-lg-4">
+      <div class="service-card">
+        <div class="service-icon"><i class="bi ${s.icon}"></i></div>
+        <h6 class="fw-bold mb-2">${s.titre}</h6>
+        <p class="text-muted small mb-0">${s.desc}</p>
+      </div>
+    </div>`).join('');
+  document.getElementById('galerieGrid').innerHTML = GALERIE.map(g=>`
+    <div class="col-md-4 col-6">
+      <div class="gallery-item">
+        <img src="https://picsum.photos/seed/${g.seed}/500/380" alt="${g.legende}" loading="lazy">
+        <div class="caption">${g.legende}</div>
+      </div>
+    </div>`).join('');
+  document.getElementById('visitorFilieresGrid').innerHTML = DB.filieres.map(f=>`
+    <div class="col-md-6 col-lg-3">
+      <div class="filiere-visitor-card">
+        <div class="top">
+          <div class="fw-bold">${f.nom}</div>
+          <div class="small" style="color:#B9C2DA;">${f.duree||''}</div>
+        </div>
+        <div class="p-3">
+          <p class="small text-muted mb-2">${f.description||''}</p>
+          <div class="price">${fmtCFA(f.prixTotal)}</div>
+        </div>
+      </div>
+    </div>`).join('');
+  document.getElementById('visitorLeadFiliere').innerHTML = DB.filieres.map(f=>`<option value="${f.id}">${f.nom}</option>`).join('');
+}
+document.getElementById('formVisitorLead').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(e.target).entries());
+  data.id = uid(); data.date = new Date().toISOString();
+  DB.leads.push(data);
+  await saveDB();
+  e.target.reset();
+  toast("Votre demande a été envoyée. Nous vous recontactons sous 48h.");
+});
+
+/* ---------- Connexion ---------- */
+document.getElementById('btnOpenLogin').addEventListener('click', ()=>{
+  document.getElementById('formLogin').reset();
+  document.getElementById('loginError').style.display='none';
+  new bootstrap.Modal(document.getElementById('modalLogin')).show();
+});
+document.getElementById('formLogin').addEventListener('submit', e=>{
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(e.target).entries());
+  const identifiant = data.identifiant.trim().toLowerCase();
+  const match = DB.users.find(u => (u.identifiant||'').toLowerCase()===identifiant && u.motDePasse===data.motDePasse);
+  if(!match){
+    document.getElementById('loginError').style.display='block';
+    return;
+  }
+  bootstrap.Modal.getInstance(document.getElementById('modalLogin')).hide();
+  enterApp(match);
+});
+
+function enterApp(user){
+  state.role = user.role;
+  state.userName = user.nom;
+  state.userId = user.id;
+  document.getElementById('publicSite').style.display='none';
+  document.getElementById('appShell').style.display='block';
+  const roleObj = ROLES.find(r=>r.id===state.role);
+  document.getElementById('sideAvatar').textContent = initials(state.userName);
+  document.getElementById('topAvatar').textContent = initials(state.userName);
+  document.getElementById('sideAvatarMobile').textContent = initials(state.userName);
+  document.getElementById('sideUserName').textContent = state.userName;
+  document.getElementById('sideUserNameMobile').textContent = state.userName;
+  ['sideRoleBadge','topRoleBadge','sideRoleBadgeMobile'].forEach(id=>{
+    const el = document.getElementById(id);
+    el.textContent = roleObj ? roleObj.label : state.role;
+    el.className = 'role-badge rb-'+state.role;
+  });
+  renderNav();
+  populateAllSelects();
+  goSection('dashboard');
+}
+
+function logoutUser(){
+  const oc = bootstrap.Offcanvas.getInstance(document.getElementById('offcanvasSidebar'));
+  if(oc) oc.hide();
+  document.getElementById('appShell').style.display='none';
+  document.getElementById('publicSite').style.display='block';
+  state.role = null; state.userName = '';
+}
+document.getElementById('btnLogout').addEventListener('click', logoutUser);
+document.getElementById('btnLogoutMobile').addEventListener('click', logoutUser);
+
+/* Empêche la fermeture des fenêtres modales en cliquant en dehors (fond) :
+   seule une action explicite (Fermer / Annuler / croix) ferme la fenêtre. */
+document.querySelectorAll('.modal').forEach(m=>{
+  m.setAttribute('data-bs-backdrop','static');
+});
+
+/* ---------- Navigation ---------- */
+function renderNav(){
+  const items = NAV.filter(n=> n.section==='dashboard' ? true : n.section==='utilisateurs' ? state.role==='direction' : hasPerm(n.section,'view'));
+  const html = `<div class="nav-section-title">Menu</div>` + items.map(n=>`
+    <a href="#" class="side-link" data-section="${n.section}"><i class="bi ${n.icon}"></i> ${n.label}</a>
+  `).join('');
+  document.getElementById('navContainer').innerHTML = html;
+  document.getElementById('navContainerMobile').innerHTML = html;
+  document.querySelectorAll('[data-section]').forEach(a=>{
+    a.addEventListener('click', e=>{ e.preventDefault(); goSection(a.dataset.section); });
+  });
+}
+function goSection(section){
+  state.section = section;
+  document.querySelectorAll('.section-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+section).classList.add('active');
+  document.querySelectorAll('[data-section]').forEach(a=> a.classList.toggle('active', a.dataset.section===section));
+  const nav = NAV.find(n=>n.section===section);
+  document.getElementById('pageTitle').textContent = nav ? nav.label : '';
+  const oc = bootstrap.Offcanvas.getInstance(document.getElementById('offcanvasSidebar'));
+  if(oc) oc.hide();
+  renderSection(section);
+}
+function renderSection(section){
+  if(section==='dashboard') renderDashboard();
+  if(section==='etudiants') renderEtudiants();
+  if(section==='filieres') renderFilieres();
+  if(section==='formateurs') renderFormateurs();
+  if(section==='paiements'){ renderPaiements(); renderHistoriquePeriode(); }
+  if(section==='evaluations') renderEvaluations();
+  if(section==='rapports') renderRapports();
+  if(section==='presences') renderPresences();
+  if(section==='documents') renderDocuments();
+  if(section==='annonces') renderAnnonces();
+  if(section==='messagerie') renderMessagerie();
+  if(section==='utilisateurs') renderUtilisateurs();
+}
+
+function canEdit(module){
+  return hasPerm(module, 'manage');
+}
+
+/* ---------- Selects population ---------- */
+function populateAllSelects(){
+  const filOpts = scopeFilieres(DB.filieres).map(f=>`<option value="${f.id}">${f.nom}</option>`).join('');
+  const forOpts = DB.formateurs.map(f=>`<option value="${f.id}">${nomComplet(f)}</option>`).join('');
+  const etOpts = scopeEtudiants(DB.etudiants).slice().sort((a,b)=>nomComplet(a).localeCompare(nomComplet(b),'fr',{sensitivity:'base'})).map(e=>`<option value="${e.id}">${nomComplet(e)} — ${e.matricule}</option>`).join('');
+  const scopedForm = scopedFormateurOptionsHTML();
+
+  document.getElementById('selectFiliereEtudiant').innerHTML = filOpts;
+  document.getElementById('selectEtudiantPaiement').innerHTML = etOpts;
+  document.getElementById('selectEtudiantEval').innerHTML = etOpts;
+  document.getElementById('selectFormateurEval').innerHTML = scopedForm!==null ? scopedForm : forOpts;
+  document.getElementById('selectFiliereRapport').innerHTML = filOpts;
+  document.getElementById('selectFormateurRapport').innerHTML = scopedForm!==null ? scopedForm : forOpts;
+  document.getElementById('visitorLeadFiliere').innerHTML = filOpts;
+  document.getElementById('selectEtudiantDocument').innerHTML = etOpts;
+  document.getElementById('presenceFiliere').innerHTML = filOpts;
+  document.getElementById('selectMessageDestinataire').innerHTML = DB.users.filter(u=>u.id!==state.userId).map(u=>`<option value="${u.id}">${u.nom} (${ROLES.find(r=>r.id===u.role)?.label||u.role})</option>`).join('');
+
+  const filterFil = document.getElementById('filterFiliereEtudiant');
+  filterFil.innerHTML = '<option value="">Toutes les filières</option>'+filOpts;
+  const filterFilEval = document.getElementById('filterFiliereEval');
+  filterFilEval.innerHTML = '<option value="">Toutes les filières</option>'+filOpts;
+  const presenceHistFil = document.getElementById('presenceHistFiliere');
+  presenceHistFil.innerHTML = '<option value="">Toutes les filières</option>'+filOpts;
+  const filterFilPai = document.getElementById('filterFilierePaiement');
+  filterFilPai.innerHTML = '<option value="">Toutes les filières</option>'+filOpts;
+}
+
+/* ---------- DASHBOARD ---------- */
+let chartFilieresInstance = null;
+function renderDashboard(){
+  const dashEtudiants = scopeEtudiants(DB.etudiants);
+  const dashFilieres = scopeFilieres(DB.filieres);
+  const totalEtudiants = dashEtudiants.filter(e=>e.statut==='actif').length;
+  const totalFormateurs = DB.formateurs.length;
+  const totalFilieres = dashFilieres.length;
+  const finances = dashEtudiants.map(e=>etudiantFinance(e.id));
+  const dashEtIds = dashEtudiants.map(e=>e.id);
+  const totalCollecte = DB.paiements.filter(p=>dashEtIds.includes(p.etudiantId)).reduce((s,p)=>s+Number(p.montant),0);
+  const totalDu = finances.reduce((s,f)=>s+f.total,0);
+  const tauxRecouvrement = totalDu>0 ? Math.round((totalCollecte/totalDu)*100) : 0;
+
+  const isFinanceUser = hasPerm('paiements','view') && state.role!=='etudiant'; // vue globale des paiements (direction/comptabilité)
+  const isEtudiantFinance = state.role==='etudiant' && hasPerm('paiements','view');
+
+  const cards = [
+    {label:'Étudiants actifs', num:totalEtudiants, icon:'bi-people-fill'},
+    {label:'Filières', num:totalFilieres, icon:'bi-mortarboard-fill'},
+    {label:'Formateurs', num:totalFormateurs, icon:'bi-person-workspace'},
+  ];
+  if(isFinanceUser){
+    cards.push({label:'Taux de recouvrement', num:tauxRecouvrement+'%', icon:'bi-graph-up-arrow'});
+  } else if(isEtudiantFinance && dashEtudiants[0]){
+    const mine = etudiantFinance(dashEtudiants[0].id);
+    cards.push({label:'Reste à payer', num:fmtCFA(mine.reste), icon:'bi-cash-coin'});
+  }
+  document.getElementById('statCards').innerHTML = cards.map(c=>`
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="stat-icon"><i class="bi ${c.icon}"></i></div>
+        <div class="stat-num">${c.num}</div>
+        <div class="stat-label">${c.label}</div>
+      </div>
+    </div>`).join('');
+
+  // chart
+  const ctx = document.getElementById('chartFilieres');
+  const labels = dashFilieres.map(f=>f.nom);
+  const data = dashFilieres.map(f=>dashEtudiants.filter(e=>e.filiereId===f.id).length);
+  if(chartFilieresInstance) chartFilieresInstance.destroy();
+  chartFilieresInstance = new Chart(ctx, {
+    type:'doughnut',
+    data:{ labels, datasets:[{ data, backgroundColor:['#16233F','#E8A33D','#2C7873','#8B96B4','#C1443B','#2E4EA6'] }]},
+    options:{ maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{size:10} } } } }
+  });
+
+  // panneau latéral : contenu selon le profil (aucune info financière pour le formateur)
+  const dashSideCol = document.getElementById('dashSideCol');
+  const dashChartCol = document.getElementById('dashChartCol');
+  const dashSideTitle = document.getElementById('dashSideTitle');
+  const dashSideContent = document.getElementById('dashSideContent');
+  if(isFinanceUser){
+    dashSideCol.style.display=''; dashChartCol.className='col-lg-7';
+    dashSideTitle.textContent = 'Alertes impayés';
+    const impayes = dashEtudiants.map(e=>({e, f:etudiantFinance(e.id)})).filter(x=>x.f.reste>0).sort((a,b)=>b.f.reste-a.f.reste).slice(0,6);
+    dashSideContent.innerHTML = impayes.length ? impayes.map(x=>`
+      <div class="d-flex justify-content-between align-items-center py-2" style="border-bottom:1px solid var(--border);">
+        <div>
+          <div class="fw-semibold" style="font-size:.85rem;">${nomComplet(x.e)}</div>
+          <div class="text-muted" style="font-size:.75rem;">${getFiliere(x.e.filiereId)?.nom||''}</div>
+        </div>
+        <span class="fw-bold text-danger" style="font-size:.85rem;">${fmtCFA(x.f.reste)}</span>
+      </div>`).join('') : `<div class="empty-state py-3"><i class="bi bi-check-circle"></i><p class="mb-0 mt-2">Aucun impayé notable</p></div>`;
+  } else if(isEtudiantFinance && dashEtudiants[0]){
+    dashSideCol.style.display=''; dashChartCol.className='col-lg-7';
+    dashSideTitle.textContent = 'Mon état financier';
+    const mine = etudiantFinance(dashEtudiants[0].id);
+    dashSideContent.innerHTML = `
+      <div class="d-flex justify-content-between py-2" style="border-bottom:1px solid var(--border);"><span class="text-muted small">Montant dû</span><span class="fw-semibold">${fmtCFA(mine.total)}</span></div>
+      <div class="d-flex justify-content-between py-2" style="border-bottom:1px solid var(--border);"><span class="text-muted small">Payé</span><span class="fw-semibold text-success">${fmtCFA(mine.paye)}</span></div>
+      <div class="d-flex justify-content-between py-2"><span class="text-muted small">Reste à payer</span><span class="fw-semibold text-danger">${fmtCFA(mine.reste)}</span></div>`;
+  } else {
+    // pas d'accès aux paiements (ex : formateur) : on masque totalement le volet financier
+    dashSideCol.style.display='none'; dashChartCol.className='col-lg-12';
+  }
+
+  // derniers paiements (masqué si pas d'accès aux paiements)
+  const dashPaiementsRow = document.getElementById('dashPaiementsRow');
+  if(hasPerm('paiements','view')){
+    dashPaiementsRow.style.display='';
+    document.getElementById('dashPaiementsTitle').textContent = state.role==='etudiant' ? 'Mes derniers versements' : 'Derniers paiements enregistrés';
+    const last = [...DB.paiements].filter(p=>dashEtIds.includes(p.etudiantId)).sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,6);
+    document.getElementById('dashPaiementsBody').innerHTML = last.map(p=>{
+      const et = getEtudiant(p.etudiantId);
+      return `<tr>
+        <td>${nomComplet(et)}</td>
+        <td class="d-none d-md-table-cell">${getFiliere(et?.filiereId)?.nom||'—'}</td>
+        <td class="fw-semibold">${fmtCFA(p.montant)}</td>
+        <td class="d-none d-lg-table-cell">${p.mode}</td>
+        <td class="d-none d-lg-table-cell">${p.type}</td>
+        <td class="d-none d-md-table-cell">${fmtDate(p.date)}</td>
+      </tr>`;
+    }).join('') || `<tr><td colspan="6" class="text-center text-muted py-3">Aucun paiement enregistré</td></tr>`;
+  } else {
+    dashPaiementsRow.style.display='none';
+  }
+}
+
+/* ---------- ETUDIANTS ---------- */
+function renderEtudiants(){
+  const search = (document.getElementById('searchEtudiant').value||'').toLowerCase();
+  const filFilter = document.getElementById('filterFiliereEtudiant').value;
+  const statutFilter = document.getElementById('filterStatutEtudiant').value;
+  let list = scopeEtudiants(DB.etudiants).filter(e=>{
+    const matchSearch = (nomComplet(e)+e.matricule).toLowerCase().includes(search);
+    const matchFil = !filFilter || e.filiereId===filFilter;
+    const matchStatut = !statutFilter || e.statut===statutFilter;
+    return matchSearch && matchFil && matchStatut;
+  });
+  list.sort((a,b)=> nomComplet(a).localeCompare(nomComplet(b), 'fr', {sensitivity:'base'}));
+  const editable = canEdit('etudiants');
+  document.getElementById('etudiantsBody').innerHTML = list.length ? list.map(e=>{
+    const fin = etudiantFinance(e.id);
+    const statutCls = {actif:'badge-statut-actif',diplome:'badge-statut-diplome',abandon:'badge-statut-abandon'}[e.statut];
+    const payCls = {'Payé':'badge-statut-paye','Partiel':'badge-statut-partiel','Impayé':'badge-statut-impaye'}[fin.statut];
+    return `<tr>
+      <td><div class="d-flex align-items-center gap-2">${avatarHTML(e)}<div><div class="fw-semibold">${nomComplet(e)}</div><div class="text-muted" style="font-size:.75rem;">${getFiliere(e.filiereId)?.nom||'—'}</div></div></div></td>
+      <td class="text-mono d-none d-md-table-cell">${e.matricule}</td>
+      <td class="d-none d-md-table-cell">${getFiliere(e.filiereId)?.nom||'—'}</td>
+      <td class="d-none d-lg-table-cell">${e.telephone}</td>
+      <td class="d-none d-lg-table-cell">${fmtDate(e.dateInscription)}</td>
+      <td class="d-none d-md-table-cell"><span class="badge ${statutCls}">${e.statut}</span></td>
+      <td class="d-none d-lg-table-cell"><span class="badge ${payCls}">${fin.statut}</span></td>
+      <td class="text-end">
+        <button class="btn btn-sm btn-amber d-inline-flex d-md-none align-items-center gap-1" onclick="viewEtudiant('${e.id}')"><i class="bi bi-eye"></i> Afficher</button>
+        <button class="btn btn-sm btn-icon d-none d-md-inline-flex" onclick="viewEtudiant('${e.id}')" title="Voir"><i class="bi bi-eye"></i></button>
+        ${editable ? `<button class="btn btn-sm btn-icon d-none d-md-inline-flex" onclick="editEtudiant('${e.id}')" title="Modifier"><i class="bi bi-pencil"></i></button>
+        <button class="btn btn-sm btn-icon text-danger d-none d-md-inline-flex" onclick="askDelete('etudiants','${e.id}')" title="Supprimer"><i class="bi bi-trash"></i></button>` : ''}
+      </td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="8"><div class="empty-state"><i class="bi bi-inboxes"></i><p>Aucun étudiant trouvé</p></div></td></tr>`;
+  document.getElementById('btnNewEtudiant').style.display = editable ? 'inline-block':'none';
+}
+document.getElementById('btnExportEtudiantsPdf').addEventListener('click', exportEtudiantsListPdf);
+document.getElementById('searchEtudiant').addEventListener('input', renderEtudiants);
+document.getElementById('filterFiliereEtudiant').addEventListener('change', renderEtudiants);
+document.getElementById('filterStatutEtudiant').addEventListener('change', renderEtudiants);
+
+function resetPhotoBox(){
+  document.getElementById('photoInput').value='';
+  document.getElementById('etudiantPhotoData').value='';
+  document.getElementById('photoPreview').style.display='none';
+  document.getElementById('photoPreview').src='';
+  document.getElementById('photoPlaceholderIcon').style.display='block';
+}
+function setPhotoBox(dataUrl){
+  document.getElementById('etudiantPhotoData').value = dataUrl || '';
+  const img = document.getElementById('photoPreview');
+  const icon = document.getElementById('photoPlaceholderIcon');
+  if(dataUrl){ img.src = dataUrl; img.style.display='block'; icon.style.display='none'; }
+  else { img.style.display='none'; icon.style.display='block'; }
+}
+document.getElementById('photoUploadBox').addEventListener('click', ()=> document.getElementById('photoInput').click());
+document.getElementById('photoInput').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => setPhotoBox(ev.target.result);
+  reader.readAsDataURL(file);
+});
+/* Un étudiant peut ne pas s'inscrire à tous les modules de sa filière : on affiche
+   les modules de la filière choisie sous forme de cases à cocher, sans obligation de tout cocher. */
+function renderEtudiantModulesCheckboxes(filId, selectedIds){
+  selectedIds = selectedIds || [];
+  const mods = modulesOfFiliere(filId);
+  const wrap = document.getElementById('etudiantModulesList');
+  wrap.innerHTML = mods.length ? mods.map(m=>`
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" name="moduleIds" value="${m.id}" id="modChk_${m.id}" ${selectedIds.includes(m.id)?'checked':''}>
+      <label class="form-check-label small" for="modChk_${m.id}">${m.nom}${m.formateurId?` <span class="text-muted">— ${nomComplet(getFormateur(m.formateurId))}</span>`:''}</label>
+    </div>`).join('') : `<div class="text-muted small">Aucun module défini pour cette filière pour le moment.</div>`;
+}
+document.getElementById('selectFiliereEtudiant').addEventListener('change', e=>{
+  renderEtudiantModulesCheckboxes(e.target.value, []);
+});
+document.getElementById('btnNewEtudiant').addEventListener('click', ()=>{
+  document.getElementById('formEtudiant').reset();
+  document.getElementById('formEtudiant').elements['id'].value='';
+  resetPhotoBox();
+  renderEtudiantModulesCheckboxes(document.getElementById('selectFiliereEtudiant').value, []);
+  document.getElementById('modalEtudiantTitle').textContent='Nouvel étudiant';
+  new bootstrap.Modal(document.getElementById('modalEtudiant')).show();
+});
+function editEtudiant(id){
+  const e = getEtudiant(id);
+  const f = document.getElementById('formEtudiant');
+  Object.keys(e).forEach(k=>{ if(f.elements[k]) f.elements[k].value = e[k]; });
+  setPhotoBox(e.photo || '');
+  renderEtudiantModulesCheckboxes(e.filiereId, e.moduleIds||[]);
+  document.getElementById('modalEtudiantTitle').textContent='Modifier étudiant';
+  new bootstrap.Modal(document.getElementById('modalEtudiant')).show();
+}
+function viewEtudiant(id){
+  const e = getEtudiant(id);
+  const fin = etudiantFinance(id);
+  const notes = DB.evaluations.filter(ev=>ev.etudiantId===id);
+  const moy = notes.length ? (notes.reduce((s,n)=>s+Number(n.note),0)/notes.length).toFixed(1) : '—';
+  const editable = canEdit('etudiants');
+  const showFinance = hasPerm('paiements','view') && state.role!=='formateur';
+  const pres = DB.presences.filter(p=>p.etudiantId===id);
+  const totalPres = pres.length;
+  const nbPresent = pres.filter(p=>p.statut==='present').length;
+  const nbRetard = pres.filter(p=>p.statut==='retard').length;
+  const nbAbsent = pres.filter(p=>p.statut==='absent').length;
+  const tauxPres = totalPres>0 ? Math.round((nbPresent/totalPres)*100) : 0;
+  const fil = getFiliere(e.filiereId);
+  const modsFil = fil ? modulesOfFiliere(fil.id) : [];
+  const modsEt = (e.moduleIds||[]).map(getModule).filter(Boolean);
+  const statutCls = {actif:'badge-statut-actif',diplome:'badge-statut-diplome',abandon:'badge-statut-abandon'}[e.statut];
+
+  const noteCls = n => n>=14 ? 'note-good' : n>=10 ? 'note-avg' : 'note-bad';
+
+  document.getElementById('ficheEtudiantBody').innerHTML = `
+    <div class="fiche-banner mb-3">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div class="d-flex align-items-center gap-3">
+          <div style="border-radius:50%;padding:3px;background:rgba(255,255,255,.18);flex-shrink:0;">${avatarHTML(e, 60)}</div>
+          <div>
+            <div class="fiche-name">${nomComplet(e)}</div>
+            <div class="fiche-sub">${e.matricule} · ${fil?.nom||'—'}</div>
+            <span class="badge ${statutCls} mt-1">${e.statut}</span>
+          </div>
+        </div>
+        <div class="d-flex gap-2 flex-wrap fiche-actions">
+          ${e.telephone ? `<a class="btn btn-sm btn-outline-light" href="tel:${e.telephone}" title="Appeler"><i class="bi bi-telephone-fill"></i></a>` : ''}
+          ${e.telephone ? `<a class="btn btn-sm btn-outline-light" href="${waLink(e.telephone)}" target="_blank" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>` : ''}
+          ${editable ? `<button class="btn btn-sm btn-outline-light" onclick="bootstrap.Modal.getInstance(document.getElementById('modalFicheEtudiant')).hide(); editEtudiant('${e.id}')" title="Modifier"><i class="bi bi-pencil"></i></button>` : ''}
+          ${editable ? `<button class="btn btn-sm btn-outline-light" onclick="bootstrap.Modal.getInstance(document.getElementById('modalFicheEtudiant')).hide(); askDelete('etudiants','${e.id}')" title="Supprimer"><i class="bi bi-trash"></i></button>` : ''}
+          <button class="btn btn-sm btn-amber" onclick="exportFicheEtudiantPdf('${e.id}')" title="Enregistrer en PDF"><i class="bi bi-file-earmark-pdf"></i> PDF</button>
+        </div>
+      </div>
+    </div>
+
+    ${showFinance ? `<div class="row g-3 mb-3">
+      <div class="col-4"><div class="fiche-mini-stat"><div class="stat-num">${fmtCFA(fin.total)}</div><div class="stat-label">Montant dû</div></div></div>
+      <div class="col-4"><div class="fiche-mini-stat"><div class="stat-num" style="color:#1C7A46;">${fmtCFA(fin.paye)}</div><div class="stat-label">Payé</div></div></div>
+      <div class="col-4"><div class="fiche-mini-stat"><div class="stat-num" style="color:#B03327;">${fmtCFA(fin.reste)}</div><div class="stat-label">Reste à payer</div></div></div>
+    </div>` : ''}
+
+    <div class="row g-3 mb-1">
+      <div class="col-md-6">
+        <div class="fiche-section h-100">
+          <h6><i class="bi bi-person-vcard me-1"></i> Informations personnelles</h6>
+          <div class="row g-2">
+            <div class="col-6 fiche-field"><span class="fiche-label">Sexe</span><span class="fiche-value">${e.sexe==='F'?'Féminin':'Masculin'}</span></div>
+            <div class="col-6 fiche-field"><span class="fiche-label">Date de naissance</span><span class="fiche-value">${fmtDate(e.dateNaissance)}</span></div>
+            <div class="col-6 fiche-field"><span class="fiche-label">Téléphone</span><span class="fiche-value">${e.telephone||'—'}</span></div>
+            <div class="col-6 fiche-field"><span class="fiche-label">Email</span><span class="fiche-value">${e.email||'—'}</span></div>
+            <div class="col-12 fiche-field mb-0"><span class="fiche-label">Adresse</span><span class="fiche-value">${e.adresse||'—'}</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="fiche-section h-100">
+          <h6><i class="bi bi-people-fill me-1"></i> Tuteur / Parent</h6>
+          <div class="row g-2">
+            <div class="col-6 fiche-field"><span class="fiche-label">Nom</span><span class="fiche-value">${e.nomTuteur||'—'}</span></div>
+            <div class="col-6 fiche-field"><span class="fiche-label">Lien</span><span class="fiche-value">${e.lienTuteur||'—'}</span></div>
+            <div class="col-12 fiche-field mb-0">
+              <span class="fiche-label">Téléphone</span>
+              <div class="d-flex align-items-center gap-2">
+                <span class="fiche-value">${e.telephoneTuteur||'—'}</span>
+                ${e.telephoneTuteur ? `<a class="btn btn-sm btn-icon" href="tel:${e.telephoneTuteur}" title="Appeler le tuteur"><i class="bi bi-telephone-fill"></i></a>
+                <a class="btn btn-sm btn-icon text-success" href="${waLink(e.telephoneTuteur)}" target="_blank" title="WhatsApp tuteur"><i class="bi bi-whatsapp"></i></a>` : ''}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fiche-section">
+      <h6><i class="bi bi-mortarboard-fill me-1"></i> Formation</h6>
+      <div class="row g-2">
+        <div class="col-6 col-md-3 fiche-field mb-0"><span class="fiche-label">Filière</span><span class="fiche-value">${fil?.nom||'—'}</span></div>
+        <div class="col-6 col-md-3 fiche-field mb-0"><span class="fiche-label">Modules suivis</span><span class="fiche-value">${modsEt.length}/${modsFil.length}</span></div>
+        <div class="col-6 col-md-3 fiche-field mb-0"><span class="fiche-label">Date d'inscription</span><span class="fiche-value">${fmtDate(e.dateInscription)}</span></div>
+        <div class="col-6 col-md-3 fiche-field mb-0"><span class="fiche-label">Moyenne générale</span><span class="fiche-value">${moy}/20</span></div>
+      </div>
+    </div>
+
+    <div class="fiche-section">
+      <h6><i class="bi bi-collection-fill me-1"></i> Modules suivis</h6>
+      ${modsEt.length ? `<div class="d-flex flex-wrap gap-2">${modsEt.map(m=>`<span class="badge bg-light text-dark border">${m.nom}${m.formateurId?' — '+nomComplet(getFormateur(m.formateurId)):''}</span>`).join('')}</div>` : '<p class="text-muted small mb-0">Aucun module sélectionné pour le moment.</p>'}
+    </div>
+
+    <div class="fiche-section">
+      <h6><i class="bi bi-calendar-check-fill me-1"></i> État de présence</h6>
+      <div class="row g-2">
+        <div class="col-3"><div class="fiche-mini-stat"><div class="stat-num" style="color:#1C7A46;">${nbPresent}</div><div class="stat-label">Présences</div></div></div>
+        <div class="col-3"><div class="fiche-mini-stat"><div class="stat-num" style="color:#B4700B;">${nbRetard}</div><div class="stat-label">Retards</div></div></div>
+        <div class="col-3"><div class="fiche-mini-stat"><div class="stat-num" style="color:#B03327;">${nbAbsent}</div><div class="stat-label">Absences</div></div></div>
+        <div class="col-3"><div class="fiche-mini-stat"><div class="stat-num">${tauxPres}%</div><div class="stat-label">Taux présence</div></div></div>
+      </div>
+    </div>
+
+    <div class="fiche-section mb-0">
+      <h6><i class="bi bi-clipboard-check-fill me-1"></i> Évaluations</h6>
+      ${notes.length? `<div class="d-flex flex-column gap-2">${notes.map(n=>`<div class="d-flex align-items-center justify-content-between"><span style="font-size:.87rem;">${n.module}</span><span class="note-pill ${noteCls(Number(n.note))}">${n.note}/20</span></div>`).join('')}</div>` : '<p class="text-muted small mb-0">Aucune évaluation enregistrée.</p>'}
+    </div>
+  `;
+  new bootstrap.Modal(document.getElementById('modalFicheEtudiant')).show();
+}
+async function exportFicheEtudiantPdf(id){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const font = await ensurePdfFont(doc);
+  const e = getEtudiant(id);
+  const fin = etudiantFinance(id);
+  const notes = DB.evaluations.filter(ev=>ev.etudiantId===id);
+  const moy = notes.length ? (notes.reduce((s,n)=>s+Number(n.note),0)/notes.length).toFixed(1) : '—';
+  const showFinance = hasPerm('paiements','view') && state.role!=='formateur';
+  const pres = DB.presences.filter(p=>p.etudiantId===id);
+  const totalPres = pres.length;
+  const nbPresent = pres.filter(p=>p.statut==='present').length;
+  const nbRetard = pres.filter(p=>p.statut==='retard').length;
+  const nbAbsent = pres.filter(p=>p.statut==='absent').length;
+  const tauxPres = totalPres>0 ? Math.round((nbPresent/totalPres)*100) : 0;
+  const fil = getFiliere(e.filiereId);
+  const modsEt = (e.moduleIds||[]).map(getModule).filter(Boolean);
+
+  pdfHeader(doc, 'Fiche étudiant', `${nomComplet(e)} — ${e.matricule}`, font);
+  const body = [
+    ['Sexe', e.sexe==='F'?'Féminin':'Masculin'],
+    ['Date de naissance', fmtDate(e.dateNaissance)],
+    ['Téléphone', e.telephone||'—'],
+    ['Email', e.email||'—'],
+    ['Adresse', e.adresse||'—'],
+    ['Tuteur / Parent', `${e.nomTuteur||'—'} (${e.lienTuteur||'—'}) — ${e.telephoneTuteur||'—'}`],
+    ['Filière', fil?.nom||'—'],
+    ['Modules suivis', modsEt.length ? modsEt.map(m=>m.nom).join(', ') : '—'],
+    ["Date d'inscription", fmtDate(e.dateInscription)],
+    ['Statut', e.statut],
+    ['Moyenne générale', moy+'/20'],
+    ['Présences / Retards / Absences', `${nbPresent} / ${nbRetard} / ${nbAbsent} (taux : ${tauxPres}%)`],
+  ];
+  if(showFinance) body.push(['Montant dû / Payé / Reste', `${fmtCFA(fin.total)} / ${fmtCFA(fin.paye)} / ${fmtCFA(fin.reste)} (${fin.statut})`]);
+  doc.autoTable({
+    startY: 48,
+    theme:'plain',
+    body,
+    styles:{font},
+    bodyStyles:{fontSize:9.5, font},
+    columnStyles:{0:{cellWidth:60, fontStyle:'bold'}},
+  });
+  if(notes.length){
+    doc.autoTable({
+      startY: doc.lastAutoTable.finalY + 8,
+      head: [['Module','Note /20','Appréciation','Date']],
+      body: notes.map(n=>[n.module, n.note, n.appreciation||'—', fmtDate(n.date)]),
+      styles:{font},
+      headStyles:{fillColor:[22,35,63], textColor:255, fontSize:9, font},
+      bodyStyles:{fontSize:8.5, font},
+      alternateRowStyles:{fillColor:[245,246,248]},
+    });
+  }
+  pdfFooter(doc, font);
+  doc.save(`fiche-${e.matricule}.pdf`);
+}
+document.getElementById('formEtudiant').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const f = e.target;
+  const fd = new FormData(f);
+  const data = Object.fromEntries(fd.entries());
+  data.moduleIds = fd.getAll('moduleIds'); // plusieurs cases peuvent être cochées (ou aucune)
+  if(data.id){
+    const idx = DB.etudiants.findIndex(x=>x.id===data.id);
+    DB.etudiants[idx] = {...DB.etudiants[idx], ...data};
+  } else {
+    data.id = uid();
+    data.matricule = 'CF-'+Math.floor(1000+Math.random()*9000);
+    DB.etudiants.push(data);
+  }
+  await saveDB();
+  bootstrap.Modal.getInstance(document.getElementById('modalEtudiant')).hide();
+  toast('Étudiant enregistré avec succès');
+  populateAllSelects(); renderEtudiants();
+});
+
+/* ---------- FILIERES ---------- */
+function renderFilieres(){
+  const editable = canEdit('filieres');
+  document.getElementById('btnNewFiliere').style.display = editable?'inline-block':'none';
+  document.getElementById('filieresGrid').innerHTML = scopeFilieres(DB.filieres).map(f=>{
+    const nbEt = DB.etudiants.filter(e=>e.filiereId===f.id).length;
+    const mods = modulesOfFiliere(f.id);
+    return `<div class="col-md-6 col-lg-4">
+      <div class="card-clean p-3 h-100 d-flex flex-column">
+        <div class="d-flex justify-content-between align-items-start">
+          <h6 class="fw-bold mb-1">${f.nom}</h6>
+          ${editable?`<div><button class="btn btn-sm btn-icon" onclick="editFiliere('${f.id}')"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-icon text-danger" onclick="askDelete('filieres','${f.id}')"><i class="bi bi-trash"></i></button></div>`:''}
+        </div>
+        <div class="text-muted small mb-2">${f.description||''}</div>
+        <div class="mt-auto">
+          <div class="d-flex justify-content-between small mb-1"><span class="text-muted">Durée</span><span class="fw-semibold">${f.duree||'—'}</span></div>
+          <div class="d-flex justify-content-between small mb-1"><span class="text-muted">Prix</span><span class="fw-semibold">${fmtCFA(f.prixTotal)}</span></div>
+          <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Étudiants</span><span class="fw-semibold">${nbEt}</span></div>
+          <button class="btn btn-outline-secondary btn-sm w-100" onclick="openModulesModal('${f.id}')"><i class="bi bi-collection"></i> Modules (${mods.length})</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('') || `<div class="col-12"><div class="empty-state"><i class="bi bi-mortarboard"></i><p>Aucune filière</p></div></div>`;
+}
+document.getElementById('btnNewFiliere').addEventListener('click', ()=>{
+  document.getElementById('formFiliere').reset();
+  document.getElementById('formFiliere').elements['id'].value='';
+  document.getElementById('modalFiliereTitle').textContent='Nouvelle filière';
+  new bootstrap.Modal(document.getElementById('modalFiliere')).show();
+});
+function editFiliere(id){
+  const f = getFiliere(id);
+  const form = document.getElementById('formFiliere');
+  Object.keys(f).forEach(k=>{ if(form.elements[k]) form.elements[k].value = f[k]; });
+  document.getElementById('modalFiliereTitle').textContent='Modifier filière';
+  new bootstrap.Modal(document.getElementById('modalFiliere')).show();
+}
+document.getElementById('formFiliere').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(e.target).entries());
+  if(data.id){
+    const idx = DB.filieres.findIndex(x=>x.id===data.id);
+    DB.filieres[idx] = {...DB.filieres[idx], ...data};
+  } else {
+    data.id = uid();
+    DB.filieres.push(data);
+  }
+  await saveDB();
+  bootstrap.Modal.getInstance(document.getElementById('modalFiliere')).hide();
+  toast('Filière enregistrée');
+  populateAllSelects(); renderFilieres();
+});
+
+/* ---------- MODULES (rattachés à une filière) ---------- */
+let currentModulesFiliereId = null;
+function openModulesModal(filId){
+  currentModulesFiliereId = filId;
+  const fil = getFiliere(filId);
+  document.getElementById('modalModulesTitle').textContent = 'Modules — '+(fil?fil.nom:'');
+  renderModulesList();
+  new bootstrap.Modal(document.getElementById('modalModules')).show();
+}
+function renderModulesList(){
+  const editable = canEdit('filieres');
+  document.getElementById('btnNewModule').style.display = editable?'inline-block':'none';
+  const list = modulesOfFiliere(currentModulesFiliereId);
+  document.getElementById('modulesBody').innerHTML = list.length ? list.map(m=>`
+    <tr>
+      <td class="fw-semibold">${m.nom}</td>
+      <td>${m.formateurId ? nomComplet(getFormateur(m.formateurId)) : '<span class="text-muted">Non assigné</span>'}</td>
+      <td class="d-none d-md-table-cell text-muted small">${m.description||'—'}</td>
+      <td class="text-end">${editable?`<button class="btn btn-sm btn-icon" onclick="editModule('${m.id}')"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-icon text-danger" onclick="deleteModule('${m.id}')"><i class="bi bi-trash"></i></button>`:''}</td>
+    </tr>`).join('') : `<tr><td colspan="4"><div class="empty-state"><i class="bi bi-collection"></i><p>Aucun module pour cette filière</p></div></td></tr>`;
+}
+function fillSelectFormateurModule(){
+  document.getElementById('selectFormateurModule').innerHTML = '<option value="">—</option>'+DB.formateurs.map(f=>`<option value="${f.id}">${nomComplet(f)}</option>`).join('');
+}
+document.getElementById('btnNewModule').addEventListener('click', ()=>{
+  fillSelectFormateurModule();
+  document.getElementById('formModule').reset();
+  document.getElementById('formModule').elements['id'].value='';
+  document.getElementById('moduleFiliereId').value = currentModulesFiliereId;
+  document.getElementById('modalModuleFormTitle').textContent='Nouveau module';
+  new bootstrap.Modal(document.getElementById('modalModuleForm')).show();
+});
+function editModule(id){
+  fillSelectFormateurModule();
+  const m = getModule(id);
+  const form = document.getElementById('formModule');
+  form.reset();
+  Object.keys(m).forEach(k=>{ if(form.elements[k]) form.elements[k].value = m[k]; });
+  document.getElementById('modalModuleFormTitle').textContent='Modifier module';
+  new bootstrap.Modal(document.getElementById('modalModuleForm')).show();
+}
+document.getElementById('formModule').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(e.target).entries());
+  if(data.id){
+    const idx = DB.modules.findIndex(x=>x.id===data.id);
+    DB.modules[idx] = {...DB.modules[idx], ...data};
+  } else {
+    data.id = uid();
+    DB.modules.push(data);
+  }
+  await saveDB();
+  bootstrap.Modal.getInstance(document.getElementById('modalModuleForm')).hide();
+  toast('Module enregistré');
+  renderModulesList();
+  renderFilieres();
+  if(document.getElementById('panel-formateurs').classList.contains('active')) renderFormateurs();
+});
+function deleteModule(id){
+  pendingDelete = {collection:'modules', id};
+  new bootstrap.Modal(document.getElementById('modalConfirm')).show();
+}
+
+/* ---------- FORMATEURS ---------- */
+function renderFormateurs(){
+  const editable = canEdit('formateurs');
+  document.getElementById('btnNewFormateur').style.display = editable?'inline-block':'none';
+  document.getElementById('formateursBody').innerHTML = DB.formateurs.map(f=>{
+    const mods = modulesOfFormateur(f.id);
+    const modIdsSet = mods.map(m=>m.id);
+    const nbEt = DB.etudiants.filter(e=>(e.moduleIds||[]).some(mid=>modIdsSet.includes(mid))).length;
+    return `<tr>
+      <td><div class="d-flex align-items-center gap-2"><div class="avatar-circ">${initials(f.prenom,f.nom)}</div><span class="fw-semibold">${nomComplet(f)}</span></div></td>
+      <td class="d-none d-md-table-cell">${f.specialite||'—'}</td>
+      <td class="d-none d-md-table-cell">${f.telephone}<br><span class="text-muted small">${f.email||''}</span></td>
+      <td class="d-none d-lg-table-cell">${mods.map(m=>`<span class="badge bg-light text-dark border me-1 mb-1">${m.nom}</span>`).join('')||'—'}</td>
+      <td class="d-none d-lg-table-cell">${nbEt}</td>
+      <td class="text-end">${editable?`<button class="btn btn-sm btn-icon" onclick="editFormateur('${f.id}')"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-icon text-danger" onclick="askDelete('formateurs','${f.id}')"><i class="bi bi-trash"></i></button>`:''}</td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="6"><div class="empty-state"><i class="bi bi-person-workspace"></i><p>Aucun formateur</p></div></td></tr>`;
+}
+document.getElementById('btnNewFormateur').addEventListener('click', ()=>{
+  document.getElementById('formFormateur').reset();
+  document.getElementById('formFormateur').elements['id'].value='';
+  document.getElementById('modalFormateurTitle').textContent='Nouveau formateur';
+  new bootstrap.Modal(document.getElementById('modalFormateur')).show();
+});
+function editFormateur(id){
+  const f = getFormateur(id);
+  const form = document.getElementById('formFormateur');
+  Object.keys(f).forEach(k=>{ if(form.elements[k]) form.elements[k].value = f[k]; });
+  document.getElementById('modalFormateurTitle').textContent='Modifier formateur';
+  new bootstrap.Modal(document.getElementById('modalFormateur')).show();
+}
+document.getElementById('formFormateur').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(e.target).entries());
+  if(data.id){
+    const idx = DB.formateurs.findIndex(x=>x.id===data.id);
+    DB.formateurs[idx] = {...DB.formateurs[idx], ...data};
+  } else { data.id = uid(); DB.formateurs.push(data); }
+  await saveDB();
+  bootstrap.Modal.getInstance(document.getElementById('modalFormateur')).hide();
+  toast('Formateur enregistré');
+  populateAllSelects(); renderFormateurs();
+});
+
+/* ---------- PAIEMENTS ---------- */
+function renderPaiements(){
+  const editable = canEdit('paiements');
+  document.getElementById('btnNewPaiement').style.display = editable?'inline-block':'none';
+  document.getElementById('btnExportFinancierPdf').style.display = state.role==='etudiant' ? 'none' : 'inline-block';
+  const filterStatut = document.getElementById('filterStatutPaiement').value;
+  const filterFil = document.getElementById('filterFilierePaiement').value;
+  const search = (document.getElementById('searchPaiement').value||'').toLowerCase();
+
+  const scopedEt = scopeEtudiants(DB.etudiants);
+  const finances = scopedEt.map(e=>({e, fin:etudiantFinance(e.id)}));
+  const totalCollecte = finances.reduce((s,x)=>s+x.fin.paye,0);
+  const totalDu = finances.reduce((s,x)=>s+x.fin.total,0);
+  const totalReste = totalDu-totalCollecte;
+  const impayesCount = finances.filter(x=>x.fin.statut==='Impayé').length;
+  document.getElementById('statCardsPaiements').innerHTML = [
+    {label: state.role==='etudiant' ? 'Total payé' : 'Total collecté', num:fmtCFA(totalCollecte), icon:'bi-cash-stack'},
+    {label:'Reste à recouvrer', num:fmtCFA(Math.max(totalReste,0)), icon:'bi-hourglass-split'},
+    {label: state.role==='etudiant' ? 'Statut' : 'Étudiants impayés', num: state.role==='etudiant' ? (finances[0]?.fin.statut||'—') : impayesCount, icon:'bi-exclamation-circle'},
+  ].map(c=>`<div class="col-md-4"><div class="stat-card"><div class="stat-icon"><i class="bi ${c.icon}"></i></div><div class="stat-num" style="font-size:1.3rem;">${c.num}</div><div class="stat-label">${c.label}</div></div></div>`).join('');
+
+  let list = finances.filter(x=> !filterStatut || x.fin.statut===filterStatut)
+    .filter(x=> !filterFil || x.e.filiereId===filterFil)
+    .filter(x=> nomComplet(x.e).toLowerCase().includes(search));
+  list.sort((a,b)=>nomComplet(a.e).localeCompare(nomComplet(b.e),'fr',{sensitivity:'base'}));
+  document.getElementById('paiementsBody').innerHTML = list.length ? list.map(x=>{
+    const payCls = {'Payé':'badge-statut-paye','Partiel':'badge-statut-partiel','Impayé':'badge-statut-impaye'}[x.fin.statut];
+    return `<tr>
+      <td><div class="d-flex align-items-center gap-2"><div class="avatar-circ">${initials(x.e.prenom,x.e.nom)}</div>${nomComplet(x.e)}</div></td>
+      <td class="d-none d-md-table-cell">${getFiliere(x.e.filiereId)?.nom||'—'}</td>
+      <td class="d-none d-lg-table-cell">${fmtCFA(x.fin.total)}</td>
+      <td class="d-none d-lg-table-cell text-success fw-semibold">${fmtCFA(x.fin.paye)}</td>
+      <td class="text-danger fw-semibold">${fmtCFA(x.fin.reste)}</td>
+      <td><span class="badge ${payCls}">${x.fin.statut}</span></td>
+      <td class="text-end"><button class="btn btn-sm btn-outline-secondary" onclick="viewHistorique('${x.e.id}')"><i class="bi bi-clock-history"></i> Voir</button></td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="7"><div class="empty-state"><i class="bi bi-cash"></i><p>Aucun résultat</p></div></td></tr>`;
+}
+document.getElementById('filterStatutPaiement').addEventListener('change', renderPaiements);
+document.getElementById('filterFilierePaiement').addEventListener('change', renderPaiements);
+document.getElementById('searchPaiement').addEventListener('input', renderPaiements);
+document.getElementById('btnExportFinancierPdf').addEventListener('click', exportFinancierPdf);
+document.getElementById('btnNewPaiement').addEventListener('click', ()=>{
+  document.getElementById('formPaiement').reset();
+  document.getElementById('formPaiement').elements['date'].value = new Date().toISOString().slice(0,10);
+  new bootstrap.Modal(document.getElementById('modalPaiement')).show();
+});
+document.getElementById('formPaiement').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(e.target).entries());
+  data.id = uid();
+  DB.paiements.push(data);
+  await saveDB();
+  bootstrap.Modal.getInstance(document.getElementById('modalPaiement')).hide();
+  toast('Versement enregistré');
+  renderPaiements();
+  renderHistoriquePeriode();
+});
+let currentHistoriqueEtId = null;
+function viewHistorique(etId){
+  currentHistoriqueEtId = etId;
+  const e = getEtudiant(etId);
+  const fin = etudiantFinance(etId);
+  const payCls = {'Payé':'badge-statut-paye','Partiel':'badge-statut-partiel','Impayé':'badge-statut-impaye'}[fin.statut];
+  document.getElementById('modalHistoriqueTitle').textContent = `État de paiement — ${e?nomComplet(e):''}`;
+  const list = DB.paiements.filter(p=>p.etudiantId===etId).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  document.getElementById('historiqueBody').innerHTML = `
+    <div class="row g-2 mb-3">
+      <div class="col-4"><div class="fiche-mini-stat"><div class="stat-num" style="font-size:1rem;">${fmtCFA(fin.total)}</div><div class="stat-label">Montant dû</div></div></div>
+      <div class="col-4"><div class="fiche-mini-stat"><div class="stat-num" style="font-size:1rem;color:#1C7A46;">${fmtCFA(fin.paye)}</div><div class="stat-label">Payé</div></div></div>
+      <div class="col-4"><div class="fiche-mini-stat"><div class="stat-num" style="font-size:1rem;color:#B03327;">${fmtCFA(fin.reste)}</div><div class="stat-label">Reste</div></div></div>
+    </div>
+    <div class="d-flex align-items-center justify-content-between mb-2">
+      <span class="fw-semibold small text-muted">Historique des versements</span>
+      <span class="badge ${payCls}">${fin.statut}</span>
+    </div>
+    ${list.length ? `
+    <ul class="list-group list-group-flush">${list.map(p=>`
+      <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+        <div><div class="fw-semibold small">${p.type}</div><div class="text-muted" style="font-size:.75rem;">${fmtDate(p.date)} · ${p.mode}</div></div>
+        <span class="fw-bold">${fmtCFA(p.montant)}</span>
+      </li>`).join('')}</ul>` : `<div class="empty-state"><i class="bi bi-receipt"></i><p>Aucun versement</p></div>`}
+  `;
+  new bootstrap.Modal(document.getElementById('modalHistorique')).show();
+}
+document.getElementById('btnExportHistoriqueEtudiantPdf').addEventListener('click', ()=>{
+  if(currentHistoriqueEtId) exportHistoriqueEtudiantPdf(currentHistoriqueEtId);
+});
+async function exportHistoriqueEtudiantPdf(etId){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const font = await ensurePdfFont(doc);
+  const e = getEtudiant(etId);
+  const fin = etudiantFinance(etId);
+  const fil = e ? getFiliere(e.filiereId) : null;
+  const list = DB.paiements.filter(p=>p.etudiantId===etId).sort((a,b)=>new Date(a.date)-new Date(b.date));
+  pdfHeader(doc, 'État de paiement', `${e?nomComplet(e):''} — ${e?.matricule||''}${fil?' — '+fil.nom:''}`, font);
+  doc.autoTable({
+    startY: 48,
+    theme:'plain',
+    body:[
+      ['Montant total dû', fmtCFA(fin.total)],
+      ['Montant payé', fmtCFA(fin.paye)],
+      ['Reste à payer', fmtCFA(fin.reste)],
+      ['Statut', fin.statut],
+    ],
+    styles:{font},
+    bodyStyles:{fontSize:10, fontStyle:'bold', font},
+    columnStyles:{0:{cellWidth:100}},
+  });
+  doc.autoTable({
+    startY: doc.lastAutoTable.finalY + 8,
+    head: [['Date','Type','Mode','Montant']],
+    body: list.map(p=>[fmtDate(p.date), p.type||'—', p.mode||'—', fmtCFA(p.montant)]),
+    foot: [['','','Total payé', fmtCFA(fin.paye)]],
+    styles:{font},
+    headStyles:{fillColor:[22,35,63], textColor:255, fontSize:9, font},
+    bodyStyles:{fontSize:8.5, font},
+    alternateRowStyles:{fillColor:[245,246,248]},
+    footStyles:{fillColor:[240,240,240], textColor:[20,20,20], fontStyle:'bold', font},
+  });
+  pdfFooter(doc, font);
+  doc.save(`etat-paiement-${(e?.matricule||'etudiant')}.pdf`);
+}
+
+/* ---------- EVALUATIONS ---------- */
+function renderEvaluations(){
+  const editable = canEdit('evaluations');
+  document.getElementById('btnNewEvaluation').style.display = editable?'inline-block':'none';
+  const filFilter = document.getElementById('filterFiliereEval').value;
+  let base = DB.evaluations;
+  if(state.role==='etudiant'){
+    const u = currentUser();
+    base = base.filter(ev=>u && ev.etudiantId===u.etudiantId);
+  } else {
+    base = scopeByFiliereId(base);
+  }
+  let list = base.filter(ev=> !filFilter || ev.filiereId===filFilter);
+  document.getElementById('evaluationsBody').innerHTML = list.length ? list.map(ev=>{
+    const et = getEtudiant(ev.etudiantId);
+    const noteCls = ev.note>=14 ? 'note-good' : ev.note>=10 ? 'note-avg' : 'note-bad';
+    return `<tr>
+      <td>${nomComplet(et)}</td>
+      <td class="d-none d-md-table-cell">${getFiliere(ev.filiereId)?.nom||'—'}</td>
+      <td>${ev.module}</td>
+      <td class="d-none d-md-table-cell">${nomComplet(getFormateur(ev.formateurId))}</td>
+      <td><span class="note-pill ${noteCls}">${ev.note}/20</span></td>
+      <td class="d-none d-lg-table-cell">${ev.appreciation||'—'}</td>
+      <td class="d-none d-lg-table-cell">${fmtDate(ev.date)}</td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="7"><div class="empty-state"><i class="bi bi-clipboard-x"></i><p>Aucune évaluation</p></div></td></tr>`;
+}
+document.getElementById('filterFiliereEval').addEventListener('change', renderEvaluations);
+document.getElementById('btnNewEvaluation').addEventListener('click', ()=>{
+  document.getElementById('formEvaluation').reset();
+  document.getElementById('formEvaluation').elements['date'].value = new Date().toISOString().slice(0,10);
+  new bootstrap.Modal(document.getElementById('modalEvaluation')).show();
+});
+document.getElementById('formEvaluation').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(e.target).entries());
+  data.id = uid();
+  const et = getEtudiant(data.etudiantId);
+  data.filiereId = et.filiereId;
+  DB.evaluations.push(data);
+  await saveDB();
+  bootstrap.Modal.getInstance(document.getElementById('modalEvaluation')).hide();
+  toast('Évaluation enregistrée');
+  renderEvaluations();
+});
+
+/* ---------- RAPPORTS DE CHANTIER ---------- */
+function renderRapports(){
+  const editable = canEdit('rapports');
+  document.getElementById('btnNewRapport').style.display = editable?'inline-block':'none';
+  const list = scopeByFiliereId([...DB.rapports]).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  document.getElementById('rapportsGrid').innerHTML = list.length ? list.map(r=>{
+    const canDelete = editable && (state.role!=='etudiant' || r.auteurId===state.userId);
+    const photos = Array.isArray(r.photos) ? r.photos : [];
+    return `
+    <div class="col-md-6">
+      <div class="chantier-card h-100">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <span class="tag">${getFiliere(r.filiereId)?.nom||'—'}</span>
+          <span class="text-muted small">${fmtDate(r.date)}</span>
+        </div>
+        <h6 class="fw-bold">${r.titre}</h6>
+        <div class="small text-muted mb-2"><i class="bi bi-geo-alt"></i> ${r.lieu||'—'} · <i class="bi bi-people"></i> ${r.participants||0} participants · <i class="bi bi-person-badge"></i> ${nomComplet(getFormateur(r.formateurId))}</div>
+        <p class="small mb-2">${r.description||''}</p>
+        ${r.incidents?`<div class="small mb-1"><strong>Observations :</strong> ${r.incidents}</div>`:''}
+        ${r.recommandations?`<div class="small text-muted mb-2"><strong>Recommandations :</strong> ${r.recommandations}</div>`:''}
+        ${r.auteurNom?`<div class="text-muted" style="font-size:.74rem;">Ajouté par ${r.auteurNom}</div>`:''}
+        ${photos.length ? `<div class="d-flex flex-wrap gap-2 my-2">${photos.map(p=>`<img src="${p}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:pointer;" onclick="window.open('${p}','_blank')">`).join('')}</div>` : ''}
+        <div class="d-flex gap-2 mt-1">
+          <button class="btn btn-outline-secondary btn-sm" onclick="exportRapportPdf('${r.id}')"><i class="bi bi-file-earmark-pdf"></i> Télécharger le PDF</button>
+          ${canDelete ? `<button class="btn btn-outline-danger btn-sm" onclick="askDelete('rapports','${r.id}')"><i class="bi bi-trash"></i></button>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('') : `<div class="col-12"><div class="empty-state"><i class="bi bi-clipboard"></i><p>Aucun rapport de chantier</p></div></div>`;
+}
+document.getElementById('btnNewRapport').addEventListener('click', ()=>{
+  document.getElementById('formRapport').reset();
+  document.getElementById('formRapport').elements['date'].value = new Date().toISOString().slice(0,10);
+  document.getElementById('rapportImagesInput').value='';
+  document.getElementById('rapportImagesPreview').innerHTML='';
+  new bootstrap.Modal(document.getElementById('modalRapport')).show();
+});
+document.getElementById('rapportImagesInput').addEventListener('change', e=>{
+  const preview = document.getElementById('rapportImagesPreview');
+  preview.innerHTML='';
+  [...e.target.files].forEach(file=>{
+    const reader = new FileReader();
+    reader.onload = ev=>{
+      const img = document.createElement('img');
+      img.src = ev.target.result;
+      img.style.cssText = 'width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--border);';
+      preview.appendChild(img);
+    };
+    reader.readAsDataURL(file);
+  });
+});
+document.getElementById('formRapport').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(e.target).entries());
+  data.id = uid();
+  data.auteurId = state.userId;
+  data.auteurNom = state.userName;
+  const files = [...document.getElementById('rapportImagesInput').files];
+  if(files.length){
+    data.photos = await Promise.all(files.map(file => new Promise(res=>{
+      const reader = new FileReader();
+      reader.onload = ev => res(ev.target.result);
+      reader.readAsDataURL(file);
+    })));
+  }
+  DB.rapports.push(data);
+  await saveDB();
+  bootstrap.Modal.getInstance(document.getElementById('modalRapport')).hide();
+  toast('Rapport de chantier enregistré');
+  renderRapports();
+});
+
+/* ---------- PRESENCES ---------- */
+function renderPresences(){
+  const manage = canEdit('presences');
+  document.getElementById('presenceAppelCard').style.display = manage ? '' : 'none';
+  document.getElementById('presenceListCard').style.display = manage ? '' : 'none';
+  if(manage) populatePresenceList();
+  renderPresenceHistory();
+}
+document.getElementById('presenceDate').value = new Date().toISOString().slice(0,10);
+document.getElementById('histDateDebut').value = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0,10);
+document.getElementById('histDateFin').value = new Date().toISOString().slice(0,10);
+const MOTIFS_ABSENCE = ['Avec permission','Sans permission','Malade','Deuil','Autre'];
+function populatePresenceList(){
+  const fid = document.getElementById('presenceFiliere').value;
+  const date = document.getElementById('presenceDate').value;
+  const students = DB.etudiants.filter(e=>e.filiereId===fid && e.statut==='actif').sort((a,b)=>nomComplet(a).localeCompare(nomComplet(b),'fr',{sensitivity:'base'}));
+  document.getElementById('presenceListBody').innerHTML = students.length ? students.map(e=>{
+    const existing = DB.presences.find(p=>p.etudiantId===e.id && p.filiereId===fid && p.date===date);
+    const statut = existing ? existing.statut : 'present';
+    const motif = existing ? (existing.motif||'') : '';
+    return `<tr data-student="${e.id}">
+      <td><div class="d-flex align-items-center gap-2">${avatarHTML(e,30)}${nomComplet(e)}</div></td>
+      <td>
+        <div class="btn-group btn-group-sm presence-toggle" role="group">
+          <button type="button" class="btn ${statut==='present'?'btn-success':'btn-outline-success'}" data-val="present">Présent</button>
+          <button type="button" class="btn ${statut==='retard'?'btn-warning':'btn-outline-warning'}" data-val="retard">Retard</button>
+          <button type="button" class="btn ${statut==='absent'?'btn-danger':'btn-outline-danger'}" data-val="absent">Absent</button>
+        </div>
+      </td>
+      <td>
+        <select class="form-select form-select-sm presence-motif" style="display:${statut==='present'?'none':'inline-block'};max-width:170px;">
+          <option value="">Motif...</option>
+          ${MOTIFS_ABSENCE.map(m=>`<option value="${m}" ${motif===m?'selected':''}>${m}</option>`).join('')}
+        </select>
+      </td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="3"><div class="empty-state"><i class="bi bi-people"></i><p>Aucun étudiant actif dans cette filière</p></div></td></tr>`;
+  document.querySelectorAll('.presence-toggle').forEach(grp=>{
+    grp.querySelectorAll('button').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        grp.querySelectorAll('button').forEach(b=>{
+          b.className = 'btn ' + (b.dataset.val==='present'?'btn-outline-success':b.dataset.val==='retard'?'btn-outline-warning':'btn-outline-danger');
+        });
+        btn.className = 'btn ' + (btn.dataset.val==='present'?'btn-success':btn.dataset.val==='retard'?'btn-warning':'btn-danger');
+        const motifSelect = grp.closest('tr').querySelector('.presence-motif');
+        motifSelect.style.display = btn.dataset.val==='present' ? 'none' : 'inline-block';
+        if(btn.dataset.val==='present') motifSelect.value = '';
+      });
+    });
+  });
+}
+document.getElementById('presenceFiliere').addEventListener('change', populatePresenceList);
+document.getElementById('presenceDate').addEventListener('change', populatePresenceList);
+document.getElementById('btnSavePresence').addEventListener('click', async ()=>{
+  const fid = document.getElementById('presenceFiliere').value;
+  const date = document.getElementById('presenceDate').value;
+  if(!fid || !date){ toast('Sélectionnez une filière et une date'); return; }
+  document.querySelectorAll('#presenceListBody tr[data-student]').forEach(row=>{
+    const etudiantId = row.dataset.student;
+    const activeBtn = row.querySelector('.presence-toggle .btn-success, .presence-toggle .btn-warning, .presence-toggle .btn-danger');
+    const statut = activeBtn ? activeBtn.dataset.val : 'present';
+    const motif = statut!=='present' ? (row.querySelector('.presence-motif').value || '') : '';
+    const idx = DB.presences.findIndex(p=>p.etudiantId===etudiantId && p.filiereId===fid && p.date===date);
+    const record = {id: idx>=0?DB.presences[idx].id:uid(), etudiantId, filiereId:fid, date, statut, motif, formateurId: state.role==='formateur'?state.userId:null};
+    if(idx>=0) DB.presences[idx] = record; else DB.presences.push(record);
+  });
+  await saveDB();
+  toast("Appel enregistré");
+  renderPresenceHistory();
+});
+document.getElementById('presenceHistFrom').addEventListener('change', renderPresenceHistory);
+document.getElementById('presenceHistTo').addEventListener('change', renderPresenceHistory);
+document.getElementById('presenceHistFiliere').addEventListener('change', renderPresenceHistory);
+function renderPresenceHistory(){
+  const from = document.getElementById('presenceHistFrom').value;
+  const to = document.getElementById('presenceHistTo').value;
+  const filFilter = document.getElementById('presenceHistFiliere').value;
+  let list = scopeByFiliereId([...DB.presences]);
+  if(state.role==='etudiant'){
+    const u = currentUser();
+    list = list.filter(p=>u && p.etudiantId===u.etudiantId);
+  }
+  if(filFilter) list = list.filter(p=>p.filiereId===filFilter);
+  if(from) list = list.filter(p=>p.date>=from);
+  if(to) list = list.filter(p=>p.date<=to);
+  list.sort((a,b)=> b.date.localeCompare(a.date));
+
+  // résumé de la période
+  const total = list.length;
+  const present = list.filter(p=>p.statut==='present').length;
+  const retard = list.filter(p=>p.statut==='retard').length;
+  const absent = list.filter(p=>p.statut==='absent').length;
+  const taux = total>0 ? Math.round((present/total)*100) : 0;
+  document.getElementById('presenceStatsRow').innerHTML = [
+    {label:'Présences', num:present, icon:'bi-check-circle', color:'#1C7A46'},
+    {label:'Retards', num:retard, icon:'bi-clock-history', color:'#B4700B'},
+    {label:'Absences', num:absent, icon:'bi-x-circle', color:'#B03327'},
+    {label:'Taux de présence', num:taux+'%', icon:'bi-graph-up', color:'#16233F'},
+  ].map(c=>`<div class="col-6 col-lg-3"><div class="stat-card"><div class="stat-icon"><i class="bi ${c.icon}"></i></div><div class="stat-num" style="font-size:1.3rem;color:${c.color};">${c.num}</div><div class="stat-label">${c.label}</div></div></div>`).join('');
+
+  document.getElementById('presenceHistoryBody').innerHTML = list.length ? list.slice(0,300).map(p=>{
+    const cls = {present:'badge-statut-actif',retard:'badge-statut-partiel',absent:'badge-statut-abandon'}[p.statut];
+    return `<tr>
+      <td>${fmtDate(p.date)}</td>
+      <td class="d-none d-md-table-cell">${getFiliere(p.filiereId)?.nom||'—'}</td>
+      <td>${nomComplet(getEtudiant(p.etudiantId))}</td>
+      <td><span class="badge ${cls}">${p.statut}</span></td>
+      <td class="d-none d-lg-table-cell text-muted small">${p.motif||'—'}</td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="5"><div class="empty-state"><i class="bi bi-calendar-x"></i><p>Aucun appel enregistré pour cette période</p></div></td></tr>`;
+}
+
+/* ---------- DOCUMENTS ---------- */
+function renderDocuments(){
+  const editable = canEdit('documents');
+  document.getElementById('btnNewDocument').style.display = editable?'inline-block':'none';
+  let base = DB.documents;
+  if(state.role==='etudiant'){
+    const u = currentUser();
+    base = base.filter(d=>u && d.etudiantId===u.etudiantId);
+  } else {
+    const ids = scopedFiliereIds();
+    if(ids){ const etIds = DB.etudiants.filter(e=>ids.includes(e.filiereId)).map(e=>e.id); base = base.filter(d=>etIds.includes(d.etudiantId)); }
+  }
+  const list = [...base].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  document.getElementById('documentsBody').innerHTML = list.length ? list.map(d=>`
+    <tr>
+      <td>${nomComplet(getEtudiant(d.etudiantId))}</td>
+      <td>${d.nom}</td>
+      <td class="d-none d-md-table-cell"><span class="badge bg-light text-dark border">${d.type}</span></td>
+      <td class="d-none d-lg-table-cell">${fmtDate(d.date)}</td>
+      <td class="text-end">
+        ${d.fichier ? `<a class="btn btn-sm btn-outline-secondary" href="${d.fichier}" target="_blank" download="${d.nom}"><i class="bi bi-download"></i></a>` : ''}
+        ${editable ? `<button class="btn btn-sm btn-icon text-danger" onclick="askDelete('documents','${d.id}')"><i class="bi bi-trash"></i></button>` : ''}
+      </td>
+    </tr>`).join('') : `<tr><td colspan="5"><div class="empty-state"><i class="bi bi-folder2-open"></i><p>Aucun document enregistré</p></div></td></tr>`;
+}
+document.getElementById('btnNewDocument').addEventListener('click', ()=>{
+  document.getElementById('formDocument').reset();
+  document.getElementById('documentFileInput').value='';
+  document.getElementById('formDocument').elements['date'].value = new Date().toISOString().slice(0,10);
+  new bootstrap.Modal(document.getElementById('modalDocument')).show();
+});
+document.getElementById('formDocument').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(e.target).entries());
+  data.id = uid();
+  const file = document.getElementById('documentFileInput').files[0];
+  if(file){
+    data.fichier = await new Promise(res=>{
+      const reader = new FileReader();
+      reader.onload = ev => res(ev.target.result);
+      reader.readAsDataURL(file);
+    });
+  }
+  DB.documents.push(data);
+  await saveDB();
+  bootstrap.Modal.getInstance(document.getElementById('modalDocument')).hide();
+  toast('Document enregistré');
+  renderDocuments();
+});
+
+/* ---------- ANNONCES ---------- */
+function renderAnnonces(){
+  const editable = canEdit('annonces');
+  document.getElementById('btnNewAnnonce').style.display = editable?'inline-block':'none';
+  const list = [...DB.annonces].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  document.getElementById('annoncesList').innerHTML = list.length ? list.map(a=>`
+    <div class="card-clean p-3 mb-3">
+      <div class="d-flex justify-content-between align-items-start">
+        <h6 class="fw-bold mb-1"><i class="bi bi-megaphone-fill me-1" style="color:var(--amber);"></i> ${a.titre}</h6>
+        <div class="d-flex align-items-center gap-2">
+          <span class="text-muted small">${fmtDate(a.date)}</span>
+          ${editable ? `<button class="btn btn-sm btn-icon text-danger" onclick="askDelete('annonces','${a.id}')"><i class="bi bi-trash"></i></button>` : ''}
+        </div>
+      </div>
+      <p class="small mb-1">${a.contenu}</p>
+      <div class="text-muted" style="font-size:.76rem;">Publié par ${a.auteur||'—'}</div>
+    </div>`).join('') : `<div class="empty-state"><i class="bi bi-megaphone"></i><p>Aucune annonce publiée</p></div>`;
+}
+document.getElementById('btnNewAnnonce').addEventListener('click', ()=>{
+  document.getElementById('formAnnonce').reset();
+  new bootstrap.Modal(document.getElementById('modalAnnonce')).show();
+});
+document.getElementById('formAnnonce').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(e.target).entries());
+  data.id = uid();
+  data.date = new Date().toISOString().slice(0,10);
+  data.auteur = state.userName;
+  DB.annonces.push(data);
+  await saveDB();
+  bootstrap.Modal.getInstance(document.getElementById('modalAnnonce')).hide();
+  toast('Annonce publiée');
+  renderAnnonces();
+});
+
+/* ---------- MESSAGERIE ---------- */
+function renderMessagerie(){
+  const list = DB.messages.filter(m=>m.expediteurId===state.userId || m.destinataireId===state.userId)
+    .sort((a,b)=>new Date(b.date)-new Date(a.date));
+  document.getElementById('messagerieList').innerHTML = list.length ? list.map(m=>{
+    const isSent = m.expediteurId===state.userId;
+    const autre = DB.users.find(u=>u.id===(isSent?m.destinataireId:m.expediteurId));
+    return `<div class="p-3" style="border-bottom:1px solid var(--border);">
+      <div class="d-flex justify-content-between align-items-center mb-1">
+        <span class="fw-semibold small">${isSent?'À '+ (autre?autre.nom:'—') : 'De '+(autre?autre.nom:'—')}</span>
+        <span class="text-muted" style="font-size:.72rem;">${new Date(m.date).toLocaleString('fr-FR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</span>
+      </div>
+      <div class="small">${m.contenu}</div>
+    </div>`;
+  }).join('') : `<div class="empty-state"><i class="bi bi-chat"></i><p>Aucun message</p></div>`;
+}
+document.getElementById('formMessage').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(e.target).entries());
+  data.id = uid();
+  data.expediteurId = state.userId;
+  data.date = new Date().toISOString();
+  DB.messages.push(data);
+  await saveDB();
+  e.target.reset();
+  toast('Message envoyé');
+  renderMessagerie();
+});
+
+/* ---------- UTILISATEURS (création des profils par la direction) ---------- */
+function renderUtilisateurs(){
+  document.getElementById('usersBody').innerHTML = DB.users.length ? DB.users.map(u=>`
+    <tr>
+      <td><div class="d-flex align-items-center gap-2"><div class="avatar-circ">${initials(u.nom,'')}</div>${u.nom}</div></td>
+      <td class="text-mono d-none d-md-table-cell">${u.identifiant||'—'}</td>
+      <td><span class="role-badge rb-${u.role}">${ROLES.find(r=>r.id===u.role)?.label||u.role}</span></td>
+      <td class="text-end">
+        <button class="btn btn-sm btn-icon" onclick="editUser('${u.id}')" title="Modifier"><i class="bi bi-pencil"></i></button>
+        <button class="btn btn-sm btn-icon text-danger" onclick="askDelete('users','${u.id}')" title="Supprimer"><i class="bi bi-trash"></i></button>
+      </td>
+    </tr>`).join('') : `<tr><td colspan="4"><div class="empty-state"><i class="bi bi-person-x"></i><p>Aucun compte créé</p></div></td></tr>`;
+}
+function fillUserRoleSelect(){
+  document.getElementById('selectUserRole').innerHTML = ROLES.map(r=>`<option value="${r.id}">${r.label}</option>`).join('');
+}
+function fillUserLinkSelects(){
+  document.getElementById('selectUserFormateurLink').innerHTML = '<option value="">—</option>' + DB.formateurs.map(f=>`<option value="${f.id}">${nomComplet(f)}</option>`).join('');
+  document.getElementById('selectUserEtudiantLink').innerHTML = '<option value="">—</option>' + DB.etudiants.slice().sort((a,b)=>nomComplet(a).localeCompare(nomComplet(b),'fr',{sensitivity:'base'})).map(e=>`<option value="${e.id}">${nomComplet(e)} — ${e.matricule}</option>`).join('');
+}
+function renderPermsGrid(role, perms){
+  const isDirection = role==='direction';
+  document.getElementById('userPermsWrap').style.display = isDirection ? 'none' : 'block';
+  const effective = perms || defaultPermsForRole(role);
+  document.getElementById('userPermsBody').innerHTML = PERMISSION_MODULES.map(n=>{
+    const p = effective[n.section] || {view:false,manage:false};
+    const manageApplicable = MANAGE_MODULES.includes(n.section);
+    return `<tr>
+      <td><i class="bi ${n.icon} me-1 text-muted"></i>${n.label}</td>
+      <td class="text-center"><input type="checkbox" class="form-check-input perm-view" data-module="${n.section}" ${p.view?'checked':''}></td>
+      <td class="text-center">${manageApplicable ? `<input type="checkbox" class="form-check-input perm-manage" data-module="${n.section}" ${p.manage?'checked':''}>` : ''}</td>
+    </tr>`;
+  }).join('');
+}
+function toggleUserLinkFields(role){
+  document.getElementById('userFormateurLinkWrap').style.display = role==='formateur' ? 'block' : 'none';
+  document.getElementById('userEtudiantLinkWrap').style.display = role==='etudiant' ? 'block' : 'none';
+}
+document.getElementById('selectUserRole').addEventListener('change', e=>{
+  const role = e.target.value;
+  toggleUserLinkFields(role);
+  renderPermsGrid(role, defaultPermsForRole(role));
+});
+document.getElementById('btnNewUser').addEventListener('click', ()=>{
+  fillUserRoleSelect();
+  fillUserLinkSelects();
+  document.getElementById('formUser').reset();
+  document.getElementById('formUser').elements['id'].value='';
+  document.getElementById('modalUserTitle').textContent='Nouveau compte';
+  const initialRole = document.getElementById('selectUserRole').value;
+  toggleUserLinkFields(initialRole);
+  renderPermsGrid(initialRole, defaultPermsForRole(initialRole));
+  new bootstrap.Modal(document.getElementById('modalUser')).show();
+});
+function editUser(id){
+  fillUserRoleSelect();
+  fillUserLinkSelects();
+  const u = DB.users.find(x=>x.id===id);
+  const f = document.getElementById('formUser');
+  Object.keys(u).forEach(k=>{ if(f.elements[k]) f.elements[k].value = u[k]; });
+  toggleUserLinkFields(u.role);
+  renderPermsGrid(u.role, u.perms);
+  document.getElementById('modalUserTitle').textContent='Modifier le compte';
+  new bootstrap.Modal(document.getElementById('modalUser')).show();
+}
+document.getElementById('formUser').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(e.target).entries());
+  const identifiant = data.identifiant.trim().toLowerCase();
+  const conflict = DB.users.find(u => (u.identifiant||'').toLowerCase()===identifiant && u.id!==data.id);
+  if(conflict){ toast("Cet identifiant est déjà utilisé par un autre compte"); return; }
+  // Construction des autorisations à partir des cases cochées
+  const perms = defaultPermsForRole(data.role);
+  if(data.role!=='direction'){
+    PERMISSION_MODULES.forEach(n=>{ perms[n.section] = {view:false, manage:false}; });
+    document.querySelectorAll('#userPermsBody .perm-view').forEach(cb=>{
+      perms[cb.dataset.module].view = cb.checked;
+    });
+    document.querySelectorAll('#userPermsBody .perm-manage').forEach(cb=>{
+      perms[cb.dataset.module].manage = cb.checked;
+    });
+  }
+  data.perms = perms;
+  if(data.role!=='formateur') delete data.formateurId;
+  if(data.role!=='etudiant') delete data.etudiantId;
+  if(data.id){
+    const idx = DB.users.findIndex(x=>x.id===data.id);
+    DB.users[idx] = {...DB.users[idx], ...data};
+    if(!data.formateurId) delete DB.users[idx].formateurId;
+    if(!data.etudiantId) delete DB.users[idx].etudiantId;
+  } else {
+    data.id = uid();
+    DB.users.push(data);
+  }
+  await saveDB();
+  bootstrap.Modal.getInstance(document.getElementById('modalUser')).hide();
+  toast('Compte utilisateur enregistré');
+  if(data.id===state.userId){ state.role = data.role; renderNav(); } // si la direction modifie son propre compte (rare)
+  renderUtilisateurs();
+});
+
+/* ---------- DELETE ---------- */
+function askDelete(collection, id){
+  pendingDelete = {collection, id};
+  new bootstrap.Modal(document.getElementById('modalConfirm')).show();
+}
+document.getElementById('btnConfirmDelete').addEventListener('click', async ()=>{
+  if(pendingDelete){
+    if(pendingDelete.collection==='modules'){
+      // Retire le module des inscriptions des étudiants
+      DB.etudiants.forEach(e=>{ if(e.moduleIds) e.moduleIds = e.moduleIds.filter(id=>id!==pendingDelete.id); });
+    }
+    if(pendingDelete.collection==='formateurs'){
+      // Détache le formateur des modules qui lui étaient confiés
+      DB.modules.forEach(m=>{ if(m.formateurId===pendingDelete.id) m.formateurId=''; });
+    }
+    if(pendingDelete.collection==='filieres'){
+      // Supprime aussi les modules de cette filière et les inscriptions correspondantes
+      const modIds = modulesOfFiliere(pendingDelete.id).map(m=>m.id);
+      DB.modules = DB.modules.filter(m=>m.filiereId!==pendingDelete.id);
+      DB.etudiants.forEach(e=>{ if(e.moduleIds) e.moduleIds = e.moduleIds.filter(id=>!modIds.includes(id)); });
+    }
+    DB[pendingDelete.collection] = DB[pendingDelete.collection].filter(x=>x.id!==pendingDelete.id);
+    await saveDB();
+    toast('Élément supprimé');
+    populateAllSelects();
+    renderSection(state.section);
+    if(document.getElementById('modalModules').classList.contains('show')) renderModulesList();
+  }
+  bootstrap.Modal.getInstance(document.getElementById('modalConfirm')).hide();
+  pendingDelete = null;
+});
+
+/* ---------- INIT ---------- */
+(async function init(){
+  await loadDB();
+  renderPublicSite();
+  document.getElementById('publicSite').style.display='block';
+})();
+</script>
+</body>
+</html>
