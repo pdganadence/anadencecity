@@ -193,10 +193,11 @@ table.table td{vertical-align:middle;font-size:.87rem;}
 }
 .fiche-banner::after{
   content:"";position:absolute;right:-40px;top:-40px;width:160px;height:160px;border-radius:50%;
-  background:radial-gradient(circle,var(--amber) 0%, transparent 70%);opacity:.28;
+  background:radial-gradient(circle,var(--amber) 0%, transparent 70%);opacity:.28;pointer-events:none;
 }
 .fiche-banner .fiche-name{font-family:'Poppins';font-weight:700;font-size:1.25rem;}
 .fiche-banner .fiche-sub{color:#B9C2DC;font-size:.85rem;}
+.fiche-actions{position:relative;z-index:1;}
 .fiche-actions .btn{white-space:nowrap;}
 .fiche-section{
   background:var(--card);border:1px solid var(--border);border-radius:14px;
@@ -216,6 +217,20 @@ table.table td{vertical-align:middle;font-size:.87rem;}
 .empty-state i{font-size:2.4rem;color:#C9CFDA;}
 .chantier-card{border:1px solid var(--border);border-radius:12px;padding:16px 18px;background:#fff;}
 .chantier-card .tag{background:var(--navy);color:var(--amber);font-size:.68rem;padding:2px 8px;border-radius:6px;font-weight:600;}
+/* ===== Formulaire étudiant en 3 étapes ===== */
+.wizard-steps{display:flex;gap:6px;margin-bottom:20px;}
+.wizard-step-item{flex:1;text-align:center;padding-bottom:10px;border-bottom:3px solid var(--border);color:var(--muted);}
+.wizard-step-item .wizard-step-num{
+  width:26px;height:26px;border-radius:50%;background:var(--border);color:#fff;
+  display:inline-flex;align-items:center;justify-content:center;font-size:.76rem;font-weight:700;margin-bottom:4px;
+}
+.wizard-step-label{font-size:.74rem;font-weight:600;display:block;}
+.wizard-step-item.active{border-color:var(--amber);color:var(--navy);}
+.wizard-step-item.active .wizard-step-num{background:var(--amber);color:var(--navy);}
+.wizard-step-item.done .wizard-step-num{background:var(--teal);color:#fff;}
+.wizard-step-item.done{color:var(--teal);}
+.wizard-step{display:none;}
+.wizard-step.active{display:block;animation:fadein .15s ease;}
 .filiere-visitor-card{border:1px solid var(--border);border-radius:14px;overflow:hidden;background:#fff;height:100%;}
 .filiere-visitor-card .top{background:var(--navy);color:#fff;padding:18px;}
 .filiere-visitor-card .top .price{color:var(--amber);font-family:'Poppins';font-weight:700;font-size:1.3rem;}
@@ -224,6 +239,36 @@ table.table td{vertical-align:middle;font-size:.87rem;}
 @media (max-width: 991px){
   #sidebar{display:none;}
   #mainWrap{margin-left:0;}
+}
+/* ===== Ajustements mobile : évite les débordements et réduit certaines tailles ===== */
+.stat-num, .fiche-mini-stat .stat-num, .fiche-name, .fiche-sub, .chantier-card h6, .note-pill{
+  overflow-wrap:anywhere; word-break:break-word;
+}
+@media (max-width: 576px){
+  #content{padding:14px;}
+  #topbar{padding:10px 14px;gap:10px;}
+  #topbar #pageTitle{font-size:1rem;}
+  .stat-card{padding:14px 16px;}
+  .stat-card .stat-num{font-size:1.25rem;}
+  .stat-card .stat-icon{width:30px;height:30px;font-size:13px;top:12px;right:12px;}
+  .stat-card .stat-label{font-size:.68rem;}
+  .fiche-banner{padding:16px;}
+  .fiche-banner .fiche-name{font-size:1.05rem;}
+  .fiche-mini-stat{padding:10px 4px;}
+  .fiche-mini-stat .stat-num{font-size:.92rem;}
+  .fiche-mini-stat .stat-label{font-size:.6rem;}
+  .fiche-section{padding:14px;}
+  .chantier-card{padding:14px;}
+  .card-clean .card-header{font-size:.85rem;padding:.65rem .9rem;}
+  table.table td, table.table th{font-size:.78rem;}
+  .search-input{max-width:100%;}
+  .public-hero{padding:48px 0 56px;}
+  .public-hero h1{font-size:1.55rem;}
+  .public-hero p{font-size:.9rem;}
+  .public-section{padding:38px 0;}
+  h5, .modal-title{font-size:1.02rem;}
+  .btn{font-size:.86rem;}
+  .wizard-steps .wizard-step-label{display:none;}
 }
 .toast-container{z-index:2000;}
 </style>
@@ -574,7 +619,7 @@ table.table td{vertical-align:middle;font-size:.87rem;}
       <div class="section-panel" id="panel-rapports">
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h6 class="fw-bold mb-0"><i class="bi bi-clipboard-data-fill me-1"></i> Rapports de chantier / séance pratique</h6>
-          <button class="btn btn-amber btn-sm" id="btnNewRapport"><i class="bi bi-plus-lg"></i> Nouveau rapport</button>
+          <button class="btn btn-amber btn-sm" id="btnNewRapport"><i class="bi bi-plus-lg"></i> Nouveau chantier</button>
         </div>
         <div class="row g-3" id="rapportsGrid"></div>
       </div>
@@ -615,6 +660,7 @@ table.table td{vertical-align:middle;font-size:.87rem;}
               <div><label class="form-label small mb-0">Du</label><input type="date" class="form-control form-control-sm" id="presenceHistFrom"></div>
               <div><label class="form-label small mb-0">Au</label><input type="date" class="form-control form-control-sm" id="presenceHistTo"></div>
               <select class="form-select form-select-sm" id="presenceHistFiliere" style="width:auto;"></select>
+              <button class="btn btn-outline-secondary btn-sm" id="btnExportPresencePdf"><i class="bi bi-file-earmark-pdf"></i> Exporter PDF</button>
             </div>
           </div>
           <div class="card-body p-0">
@@ -764,54 +810,119 @@ table.table td{vertical-align:middle;font-size:.87rem;}
         <div class="modal-body">
           <input type="hidden" name="id">
           <input type="hidden" name="photo" id="etudiantPhotoData">
-          <div class="d-flex align-items-center gap-3 mb-3">
-            <div class="photo-upload-box" id="photoUploadBox">
-              <img id="photoPreview" style="display:none;">
-              <i class="bi bi-camera-fill" id="photoPlaceholderIcon"></i>
+
+          <div class="wizard-steps" id="etudiantWizardSteps">
+            <div class="wizard-step-item" data-step-indicator="1"><span class="wizard-step-num">1</span><span class="wizard-step-label">Informations générales</span></div>
+            <div class="wizard-step-item" data-step-indicator="2"><span class="wizard-step-num">2</span><span class="wizard-step-label">Parent / Tuteur</span></div>
+            <div class="wizard-step-item" data-step-indicator="3"><span class="wizard-step-num">3</span><span class="wizard-step-label">Formation</span></div>
+          </div>
+
+          <!-- Étape 1 : Informations générales sur l'étudiant -->
+          <div class="wizard-step" data-step="1">
+            <h6 class="fw-bold small text-muted mb-3"><i class="bi bi-person-vcard me-1"></i> Informations générales sur l'étudiant</h6>
+            <div class="d-flex align-items-center flex-wrap gap-3 mb-3">
+              <div class="photo-upload-box" id="photoUploadBox">
+                <img id="photoPreview" style="display:none;">
+                <i class="bi bi-camera-fill" id="photoPlaceholderIcon"></i>
+              </div>
+              <div>
+                <div class="fw-semibold small mb-1">Photo d'identité</div>
+                <div class="text-muted mb-2" style="font-size:.78rem;">Cliquez sur le cadre pour ajouter ou changer la photo (optionnel).</div>
+                <input type="file" accept="image/*" id="photoInput" class="form-control form-control-sm" style="max-width:220px;">
+              </div>
             </div>
-            <div>
-              <div class="fw-semibold small mb-1">Photo d'identité</div>
-              <div class="text-muted mb-2" style="font-size:.78rem;">Cliquez sur le cadre pour ajouter ou changer la photo (optionnel).</div>
-              <input type="file" accept="image/*" id="photoInput" class="form-control form-control-sm" style="max-width:220px;">
+            <div class="row g-3">
+              <div class="col-md-6"><label class="form-label small">Nom</label><input required class="form-control" name="nom"></div>
+              <div class="col-md-6"><label class="form-label small">Prénom</label><input required class="form-control" name="prenom"></div>
+              <div class="col-md-4"><label class="form-label small">Sexe</label>
+                <select class="form-select" name="sexe"><option value="F">Féminin</option><option value="M">Masculin</option></select>
+              </div>
+              <div class="col-md-4"><label class="form-label small">Date de naissance</label><input type="date" class="form-control" name="dateNaissance"></div>
+              <div class="col-md-4"><label class="form-label small">Date d'inscription</label><input type="date" class="form-control" name="dateInscription" required></div>
+              <div class="col-md-6"><label class="form-label small">Téléphone</label><input required class="form-control" name="telephone"></div>
+              <div class="col-md-6"><label class="form-label small">Email</label><input type="email" class="form-control" name="email"></div>
+              <div class="col-12"><label class="form-label small">Lieu de résidence</label><input class="form-control" name="adresse" placeholder="Quartier, ville..."></div>
+              <div class="col-md-6"><label class="form-label small">Niveau d'étude</label><input class="form-control" name="niveauEtude" placeholder="Ex: BEPC, Terminale, BAC, Licence..."></div>
+              <div class="col-12"><label class="form-label small">Compétences professionnelles / formations suivies</label><textarea class="form-control" name="competences" rows="2" placeholder="Ex: notions en couture, stage en électricité..."></textarea></div>
             </div>
           </div>
-          <div class="row g-3">
-            <div class="col-md-6"><label class="form-label small">Nom</label><input required class="form-control" name="nom"></div>
-            <div class="col-md-6"><label class="form-label small">Prénom</label><input required class="form-control" name="prenom"></div>
-            <div class="col-md-4"><label class="form-label small">Sexe</label>
-              <select class="form-select" name="sexe"><option value="F">Féminin</option><option value="M">Masculin</option></select>
-            </div>
-            <div class="col-md-4"><label class="form-label small">Date de naissance</label><input type="date" class="form-control" name="dateNaissance"></div>
-            <div class="col-md-4"><label class="form-label small">Date d'inscription</label><input type="date" class="form-control" name="dateInscription" required></div>
-            <div class="col-md-6"><label class="form-label small">Téléphone</label><input required class="form-control" name="telephone"></div>
-            <div class="col-md-6"><label class="form-label small">Email</label><input type="email" class="form-control" name="email"></div>
-            <div class="col-12"><label class="form-label small">Adresse</label><input class="form-control" name="adresse"></div>
-            <div class="col-md-6"><label class="form-label small">Filière</label><select required class="form-select" name="filiereId" id="selectFiliereEtudiant"></select></div>
-            <div class="col-md-6"><label class="form-label small">Statut</label>
-              <select class="form-select" name="statut">
-                <option value="actif">Actif</option><option value="diplome">Diplômé</option><option value="abandon">Abandon</option>
-              </select>
-            </div>
-            <div class="col-12">
-              <label class="form-label small">Modules suivis <span class="text-muted">(l'étudiant peut ne pas s'inscrire à tous les modules de sa filière)</span></label>
-              <div id="etudiantModulesList" class="border rounded p-2" style="max-height:160px; overflow:auto;"></div>
+
+          <!-- Étape 2 : Informations sur le parent ou tuteur -->
+          <div class="wizard-step" data-step="2">
+            <h6 class="fw-bold small text-muted mb-3"><i class="bi bi-people-fill me-1"></i> Informations sur le parent ou tuteur</h6>
+            <div class="row g-3">
+              <div class="col-md-6"><label class="form-label small">Nom du tuteur / parent</label><input class="form-control" name="nomTuteur"></div>
+              <div class="col-md-6"><label class="form-label small">Téléphone du tuteur</label><input class="form-control" name="telephoneTuteur"></div>
+              <div class="col-md-6"><label class="form-label small">Lien</label>
+                <select class="form-select" name="lienTuteur">
+                  <option value="Parent">Parent</option><option value="Père">Père</option><option value="Mère">Mère</option><option value="Tuteur">Tuteur</option><option value="Autre">Autre</option>
+                </select>
+              </div>
+              <div class="col-md-6"><label class="form-label small">Adresse du tuteur / parent</label><input class="form-control" name="adresseTuteur"></div>
             </div>
           </div>
-          <hr class="my-3">
-          <h6 class="fw-bold small text-muted mb-2"><i class="bi bi-people-fill me-1"></i> Tuteur / Parent</h6>
-          <div class="row g-3">
-            <div class="col-md-5"><label class="form-label small">Nom du tuteur / parent</label><input class="form-control" name="nomTuteur"></div>
-            <div class="col-md-4"><label class="form-label small">Téléphone du tuteur</label><input class="form-control" name="telephoneTuteur"></div>
-            <div class="col-md-3"><label class="form-label small">Lien</label>
-              <select class="form-select" name="lienTuteur">
-                <option value="Parent">Parent</option><option value="Père">Père</option><option value="Mère">Mère</option><option value="Tuteur">Tuteur</option><option value="Autre">Autre</option>
-              </select>
+
+          <!-- Étape 3 : Informations sur la formation -->
+          <div class="wizard-step" data-step="3">
+            <h6 class="fw-bold small text-muted mb-3"><i class="bi bi-mortarboard-fill me-1"></i> Informations sur la formation</h6>
+            <div class="row g-3">
+              <div class="col-md-6"><label class="form-label small">Filière</label><select required class="form-select" name="filiereId" id="selectFiliereEtudiant"></select></div>
+              <div class="col-md-6"><label class="form-label small">Statut</label>
+                <select class="form-select" name="statut">
+                  <option value="actif">Actif</option><option value="diplome">Diplômé</option><option value="abandon">Abandon</option>
+                </select>
+              </div>
+              <div class="col-12">
+                <label class="form-label small">Modules suivis <span class="text-muted">(l'étudiant peut ne pas s'inscrire à tous les modules de sa filière)</span></label>
+                <div id="etudiantModulesList" class="border rounded p-2" style="max-height:160px; overflow:auto;"></div>
+              </div>
+              <div class="col-md-4"><label class="form-label small">Coût de la formation (F)</label><input type="number" min="0" class="form-control" name="coutFormation" id="etudiantCoutFormation" placeholder="À écrire"></div>
+              <div class="col-md-4"><label class="form-label small">Frais d'inscription (F)</label><input type="number" min="0" class="form-control" name="fraisInscription"></div>
+              <div class="col-md-4"><label class="form-label small">Frais d'uniforme (F)</label><input type="number" min="0" class="form-control" name="fraisUniforme"></div>
+              <div class="col-md-8"><label class="form-label small">Autres frais <span class="text-muted">(préciser)</span></label><input class="form-control" name="autresFraisLibelle" placeholder="Ex: frais de kit, carte d'étudiant..."></div>
+              <div class="col-md-4"><label class="form-label small">Montant des autres frais (F)</label><input type="number" min="0" class="form-control" name="autresFraisMontant"></div>
+              <div class="col-md-6"><label class="form-label small">Date de démarrage</label><input type="date" class="form-control" name="dateDemarrage"></div>
+              <div class="col-md-6"><label class="form-label small">Durée de la formation</label><input class="form-control" name="dureeFormation" id="etudiantDureeFormation" placeholder="Ex: 6 mois"></div>
+
+              <div class="col-12" id="blocAbandon" style="display:none;">
+                <div class="alert alert-light border mb-0">
+                  <h6 class="fw-bold small mb-3"><i class="bi bi-x-octagon me-1 text-danger"></i> Détails de l'abandon</h6>
+                  <div class="row g-3">
+                    <div class="col-12"><label class="form-label small">Motif de l'abandon</label><textarea class="form-control" name="motifAbandon" rows="2" placeholder="Raison de l'abandon..."></textarea></div>
+                    <div class="col-12">
+                      <label class="form-label small">Preuve <span class="text-muted">(jusqu'à 3 images)</span></label>
+                      <input type="file" accept="image/*" multiple class="form-control form-control-sm mb-2" id="preuveAbandonInput">
+                      <input type="hidden" name="preuveAbandon" id="preuveAbandonData">
+                      <div class="d-flex flex-wrap gap-2" id="preuveAbandonPreview"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-12" id="blocDiplome" style="display:none;">
+                <div class="alert alert-light border mb-0">
+                  <h6 class="fw-bold small mb-3"><i class="bi bi-award me-1 text-primary"></i> Détails du diplôme</h6>
+                  <div class="row g-3">
+                    <div class="col-md-6"><label class="form-label small">Date de fin de formation</label><input type="date" class="form-control" name="dateFin" id="etudiantDateFin"></div>
+                    <div class="col-12">
+                      <label class="form-label small">Fichiers diplôme <span class="text-muted">(jusqu'à 3 images)</span></label>
+                      <input type="file" accept="image/*" multiple class="form-control form-control-sm mb-2" id="diplomeFichiersInput">
+                      <input type="hidden" name="diplomeFichiers" id="diplomeFichiersData">
+                      <div class="d-flex flex-wrap gap-2" id="diplomeFichiersPreview"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-        <div class="modal-footer">
+        <div class="modal-footer d-flex flex-wrap justify-content-between">
           <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
-          <button type="submit" class="btn btn-amber">Enregistrer</button>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-secondary" id="btnEtudiantWizardPrev" style="display:none;"><i class="bi bi-arrow-left"></i> Précédent</button>
+            <button type="button" class="btn btn-amber" id="btnEtudiantWizardNext">Suivant <i class="bi bi-arrow-right"></i></button>
+            <button type="submit" class="btn btn-amber" id="btnEtudiantWizardSubmit" style="display:none;">Enregistrer</button>
+          </div>
         </div>
       </form>
     </div>
@@ -1046,34 +1157,68 @@ table.table td{vertical-align:middle;font-size:.87rem;}
 
 <!-- Rapport chantier modal -->
 <div class="modal fade" id="modalRapport" tabindex="-1">
-  <div class="modal-dialog modal-lg">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
-      <div class="modal-header"><h5 class="modal-title">Nouveau rapport de chantier</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-header"><h5 class="modal-title">Nouveau chantier / séance pratique</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
       <form id="formRapport">
         <div class="modal-body">
           <div class="row g-3">
-            <div class="col-md-6"><label class="form-label small">Titre</label><input required class="form-control" name="titre" placeholder="Ex: Montage tableau électrique"></div>
+            <div class="col-md-6"><label class="form-label small">Intitulé du chantier</label><input required class="form-control" name="titre" placeholder="Ex: Montage tableau électrique"></div>
             <div class="col-md-6"><label class="form-label small">Filière concernée</label><select required class="form-select" name="filiereId" id="selectFiliereRapport"></select></div>
-            <div class="col-md-6"><label class="form-label small">Étudiant concerné</label><select required class="form-select" name="etudiantId" id="selectEtudiantRapport"></select></div>
             <div class="col-md-6"><label class="form-label small">Formateur encadrant / responsable de chantier</label><input required class="form-control" name="formateurNom" placeholder="Nom du formateur encadrant ou du responsable de chantier"></div>
-            <div class="col-md-6"><label class="form-label small">Date de début</label><input required type="date" class="form-control" name="dateDebut"></div>
-            <div class="col-md-6"><label class="form-label small">Date de fin</label><input required type="date" class="form-control" name="dateFin"></div>
-            <div class="col-md-6"><label class="form-label small">Lieu / chantier</label><input class="form-control" name="lieu"></div>
-            <div class="col-md-6"><label class="form-label small">Nombre de participants</label><input type="number" min="0" class="form-control" name="participants"></div>
-            <div class="col-12"><label class="form-label small">Description des travaux réalisés</label><textarea class="form-control" name="description" rows="3"></textarea></div>
-            <div class="col-12"><label class="form-label small">Incidents / observations</label><textarea class="form-control" name="incidents" rows="2"></textarea></div>
-            <div class="col-12"><label class="form-label small">Recommandations</label><textarea class="form-control" name="recommandations" rows="2"></textarea></div>
+            <div class="col-md-3"><label class="form-label small">Date de début</label><input required type="date" class="form-control" name="dateDebut"></div>
+            <div class="col-md-3"><label class="form-label small">Date de fin</label><input required type="date" class="form-control" name="dateFin"></div>
+            <div class="col-12"><label class="form-label small">Lieu / chantier</label><input class="form-control" name="lieu"></div>
             <div class="col-12">
-              <label class="form-label small">Photos justificatives <span class="text-muted">(optionnel, 5 images maximum)</span></label>
-              <input type="file" accept="image/*" multiple class="form-control" id="rapportImagesInput">
-              <div class="form-text" id="rapportImagesCount"></div>
-              <div class="d-flex flex-wrap gap-2 mt-2" id="rapportImagesPreview"></div>
+              <label class="form-label small mb-1">Participation des étudiants</label>
+              <div class="form-text mt-0 mb-2">Cochez la participation de chaque étudiant. En cas de non-participation <strong>sans motif</strong>, la note 0 est attribuée automatiquement ; <strong>avec motif</strong>, l'étudiant n'est pas noté pour ce chantier.</div>
+              <div class="table-responsive" style="max-height:320px;overflow-y:auto;">
+                <table class="table table-hover align-middle mb-0">
+                  <thead><tr><th>Étudiant</th><th>Participation</th><th>Motif (si non participant)</th></tr></thead>
+                  <tbody id="chantierParticipantsBody"></tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
-          <button type="submit" class="btn btn-amber">Enregistrer le rapport</button>
+          <button type="submit" class="btn btn-amber">Créer le chantier</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Complétion du rapport par l'étudiant -->
+<div class="modal fade" id="modalRapportEtudiant" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Compléter le rapport de chantier</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <form id="formRapportEtudiant">
+        <input type="hidden" id="rapportEtudiantRapportId">
+        <div class="modal-body">
+          <div class="alert alert-warning py-2 px-3 small" id="rapportEtudiantDeadlineInfo"></div>
+          <div class="row g-3">
+            <div class="col-12"><label class="form-label small">Description des travaux réalisés (d'après la fiche de rapport journalier)</label><textarea class="form-control" id="reDescription" rows="3" required></textarea></div>
+            <div class="col-12"><label class="form-label small">Incidents / observations</label><textarea class="form-control" id="reIncidents" rows="2"></textarea></div>
+            <div class="col-12"><label class="form-label small">Recommandations</label><textarea class="form-control" id="reRecommandations" rows="2"></textarea></div>
+            <div class="col-12">
+              <label class="form-label small">Photo de la fiche de rapport <span class="text-muted">(référence)</span></label>
+              <input type="file" accept="image/*" class="form-control" id="reFichePhotoInput">
+              <div class="d-flex flex-wrap gap-2 mt-2" id="reFichePhotoPreview"></div>
+            </div>
+            <div class="col-12">
+              <label class="form-label small">Photos de l'étudiant sur le chantier <span class="text-muted">(optionnel — au moins 2 recommandées)</span></label>
+              <input type="file" accept="image/*" multiple class="form-control" id="reSitePhotosInput">
+              <div class="form-text" id="reSitePhotosCount"></div>
+              <div class="d-flex flex-wrap gap-2 mt-2" id="reSitePhotosPreview"></div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button type="submit" class="btn btn-amber">Soumettre le rapport</button>
         </div>
       </form>
     </div>
@@ -1337,6 +1482,19 @@ function avatarHTML(o, size){
   if(o && o.photo){ return `<img src="${o.photo}" class="avatar-img" style="width:${size}px;height:${size}px;">`; }
   return `<div class="avatar-circ" style="width:${size}px;height:${size}px;font-size:${size<40?'.7rem':'1rem'};">${initials(o?o.prenom:'',o?o.nom:'')}</div>`;
 }
+// Numéro d'inscription / matricule au format: <n° d'ordre sur 3 chiffres>CF<mois d'inscription>-<année d'inscription>
+// Exemple : le 5e étudiant inscrit en février 2022 => 005CF02-2022
+function genMatricule(dateInscription){
+  const d = dateInscription ? new Date(dateInscription) : new Date();
+  const annee = d.getFullYear();
+  const mois = String(d.getMonth()+1).padStart(2,'0');
+  const ordre = DB.etudiants.filter(et=>{
+    if(!et.dateInscription) return false;
+    const ed = new Date(et.dateInscription);
+    return ed.getFullYear()===annee && String(ed.getMonth()+1).padStart(2,'0')===mois;
+  }).length + 1;
+  return `${String(ordre).padStart(3,'0')}CF${mois}-${annee}`;
+}
 function toast(msg){ document.getElementById('toastMsg').textContent = msg; new bootstrap.Toast(document.getElementById('mainToast')).show(); }
 function getFiliere(id){ return DB.filieres.find(f=>f.id===id); }
 function getFormateur(id){ return DB.formateurs.find(f=>f.id===id); }
@@ -1355,8 +1513,10 @@ function waLink(phone){
 
 function etudiantFinance(etId){
   const et = getEtudiant(etId);
-  const fil = et ? getFiliere(et.filiereId) : null;
-  const total = fil ? Number(fil.prixTotal)||0 : 0;
+  // Le montant dû est la somme des montants enregistrés lors de l'inscription de l'étudiant
+  // (coût de la formation + frais d'inscription + frais d'uniforme + autres frais), et non le
+  // prix générique de la filière : chaque étudiant peut avoir des montants négociés différents.
+  const total = et ? (Number(et.coutFormation)||0) + (Number(et.fraisInscription)||0) + (Number(et.fraisUniforme)||0) + (Number(et.autresFraisMontant)||0) : 0;
   const paye = DB.paiements.filter(p=>p.etudiantId===etId).reduce((s,p)=>s+Number(p.montant),0);
   const reste = Math.max(total-paye,0);
   let statut = 'Impayé';
@@ -1438,13 +1598,152 @@ function pdfFooter(doc, font){
   }
 }
 
+/* ---------- Rubriques stylées pour les fiches PDF (cartes bordées, contenu en 2 colonnes, sans grille de tableau) ---------- */
+function pdfImgFormat(dataUrl){
+  const m = /^data:image\/(\w+);base64,/i.exec(dataUrl||'');
+  const t = m ? m[1].toLowerCase() : '';
+  if(t==='png') return 'PNG';
+  if(t==='webp') return 'WEBP';
+  return 'JPEG';
+}
+function pdfParseImages(jsonStr){
+  try{ const arr = JSON.parse(jsonStr||'[]'); return Array.isArray(arr) ? arr.slice(0,3) : []; }catch(err){ return []; }
+}
+function pdfStatBox(doc,x,y,w,h,label,value,color,font){
+  doc.setDrawColor(228,231,236); doc.setLineWidth(0.15);
+  doc.setFillColor(248,249,251);
+  doc.roundedRect(x,y,w,h,2,2,'FD');
+  doc.setFont(font,'bold'); doc.setFontSize(11.5);
+  doc.setTextColor.apply(doc,color||[26,29,35]);
+  doc.text(String(value), x+w/2, y+h/2+0.5, {align:'center'});
+  doc.setFont(font,'normal'); doc.setFontSize(6.6);
+  doc.setTextColor(107,114,128);
+  doc.text(String(label).toUpperCase(), x+w/2, y+h-3, {align:'center'});
+}
+function pdfStatsRow(doc, x, y, w, stats, font){
+  const gap=4, h=17.5;
+  const bw=(w-gap*(stats.length-1))/stats.length;
+  stats.forEach((s,i)=>pdfStatBox(doc,x+i*(bw+gap),y,bw,h,s.label,s.value,s.color,font));
+  return y+h;
+}
+// Carte bordée avec titre + une rangée de mini-statistiques (ex: "État financier", "Présence")
+function pdfStatsSection(doc, x, y, w, title, stats, font){
+  const pad = 5, titleH = 10, statsH = 17.5, boxH = titleH + statsH + pad;
+  if(y + boxH > 283){ doc.addPage(); y = 20; }
+  doc.setDrawColor(228,231,236); doc.setLineWidth(0.2); doc.setFillColor(255,255,255);
+  doc.roundedRect(x, y, w, boxH, 2.5, 2.5, 'S');
+  doc.setFont(font,'bold'); doc.setFontSize(9.5); doc.setTextColor(22,35,63);
+  doc.text(title.toUpperCase(), x+pad, y+7);
+  doc.setDrawColor(228,231,236); doc.setLineWidth(0.2);
+  doc.line(x+pad, y+9.5, x+w-pad, y+9.5);
+  pdfStatsRow(doc, x+pad, y+titleH+1, w-pad*2, stats, font);
+  return y+boxH;
+}
+// Carte bordée : titre + champs affichés en 2 colonnes, chaque libellé suivi directement de sa valeur sur la même ligne ("Sexe : Masculin")
+function pdfSection(doc, x, y, w, title, fields, font){
+  const pad = 5, colGap = 6, titleH = 10, lineH = 4.2, fs = 8.6;
+  const colW = (w - pad*2 - colGap) / 2;
+  const rows = [];
+  for(let i=0;i<fields.length;i+=2) rows.push([fields[i], fields[i+1]||null]);
+
+  // Pré-calcul : libellé (normal) + valeur (grasse) qui continue sur la même ligne, avec retour à la ligne si trop long
+  // Même taille de police pour le libellé et la valeur afin que les deux restent parfaitement alignés sur la ligne de base
+  const prepRows = rows.map(pair=>pair.map(f=>{
+    if(!f) return null;
+    const label = String(f[0]).toUpperCase()+' : ';
+    doc.setFont(font,'normal'); doc.setFontSize(fs);
+    const labelW = doc.getTextWidth(label);
+    const valText = String(f[1]===0?'0':(f[1]||'—'));
+    doc.setFont(font,'bold'); doc.setFontSize(fs);
+    const firstLineW = Math.max(colW - labelW, 15);
+    const words = valText.split(' ');
+    let acc = '', i2 = 0;
+    for(; i2<words.length; i2++){
+      const trial = acc ? acc+' '+words[i2] : words[i2];
+      if(doc.getTextWidth(trial) <= firstLineW || !acc){ acc = trial; } else break;
+    }
+    const firstLine = acc;
+    const rest = words.slice(i2).join(' ');
+    const restLines = rest ? doc.splitTextToSize(rest, colW) : [];
+    return {label, labelW, firstLine, restLines};
+  }));
+
+  const rowHeights = prepRows.map(pair=>{
+    let maxLines = 1;
+    pair.forEach(f=>{ if(f){ maxLines = Math.max(maxLines, 1+f.restLines.length); } });
+    return maxLines*lineH + 2.6;
+  });
+  const contentH = rowHeights.reduce((a,b)=>a+b,0);
+  const boxH = titleH + contentH + pad - 1.5;
+  if(y + boxH > 283){ doc.addPage(); y = 20; }
+  doc.setDrawColor(228,231,236); doc.setLineWidth(0.2); doc.setFillColor(255,255,255);
+  doc.roundedRect(x, y, w, boxH, 2.5, 2.5, 'S');
+  doc.setFont(font,'bold'); doc.setFontSize(9.5); doc.setTextColor(22,35,63);
+  doc.text(title.toUpperCase(), x+pad, y+7);
+  doc.setDrawColor(228,231,236); doc.setLineWidth(0.2);
+  doc.line(x+pad, y+9.5, x+w-pad, y+9.5);
+  let cy = y + titleH + 3;
+  rows.forEach((pair,idx)=>{
+    prepRows[idx].forEach((f,ci)=>{
+      if(!f) return;
+      const cx = x+pad + ci*(colW+colGap);
+      doc.setFont(font,'normal'); doc.setFontSize(fs); doc.setTextColor(107,114,128);
+      doc.text(f.label, cx, cy);
+      doc.setFont(font,'bold'); doc.setFontSize(fs); doc.setTextColor(26,29,35);
+      doc.text(f.firstLine, cx+f.labelW, cy);
+      if(f.restLines.length) doc.text(f.restLines, cx, cy+lineH);
+    });
+    cy += rowHeights[idx];
+  });
+  return y + boxH;
+}
+// Carte bordée : titre + paragraphe de texte libre (ex: Modules suivis)
+function pdfTextSection(doc,x,y,w,title,text,font){
+  const pad = 5, titleH = 10;
+  doc.setFont(font,'normal'); doc.setFontSize(8.8);
+  const lines = doc.splitTextToSize(text||'—', w-pad*2);
+  const boxH = titleH + lines.length*4.0 + pad - 1;
+  if(y + boxH > 283){ doc.addPage(); y = 20; }
+  doc.setDrawColor(228,231,236); doc.setLineWidth(0.2); doc.setFillColor(255,255,255);
+  doc.roundedRect(x, y, w, boxH, 2.5, 2.5, 'S');
+  doc.setFont(font,'bold'); doc.setFontSize(9.5); doc.setTextColor(22,35,63);
+  doc.text(title.toUpperCase(), x+pad, y+7);
+  doc.setDrawColor(228,231,236); doc.setLineWidth(0.2);
+  doc.line(x+pad, y+9.5, x+w-pad, y+9.5);
+  doc.setFont(font,'normal'); doc.setFontSize(8.8); doc.setTextColor(26,29,35);
+  doc.text(lines, x+pad, y+titleH+2.5);
+  return y + boxH;
+}
+// Carte bordée : titre + champs (comme pdfSection) + vignettes d'images jointes (preuve, diplômes...)
+function pdfSectionWithImages(doc, x, y, w, title, fields, images, font){
+  y = pdfSection(doc, x, y, w, title, fields, font);
+  images = (images||[]).slice(0,3);
+  if(images.length){
+    const imgW = 42, imgH = 32, gap = 4;
+    if(y + imgH + 8 > 283){ doc.addPage(); y = 20; }
+    doc.setFont(font,'normal'); doc.setFontSize(6.6); doc.setTextColor(107,114,128);
+    doc.text('PIÈCES JOINTES', x, y+8);
+    y += 11;
+    images.forEach((img,i)=>{
+      const ix = x + i*(imgW+gap);
+      try{
+        doc.setDrawColor(228,231,236); doc.setLineWidth(0.2);
+        doc.roundedRect(ix, y, imgW, imgH, 2, 2, 'S');
+        doc.addImage(img, pdfImgFormat(img), ix+1, y+1, imgW-2, imgH-2);
+      }catch(err){ /* image illisible : on l'ignore silencieusement */ }
+    });
+    y += imgH + 6;
+  }
+  return y;
+}
+
 async function exportEtudiantsListPdf(){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   const font = await ensurePdfFont(doc);
   const search = (document.getElementById('searchEtudiant').value||'').toLowerCase();
   const filFilter = document.getElementById('filterFiliereEtudiant').value;
-  const statutFilter = document.getElementById('filterStatutEtudiant').value;
+  const statutFilter = etudiantStatutFilter;
   const list = scopeEtudiants(DB.etudiants).filter(e=>{
     const matchSearch = (nomComplet(e)+e.matricule).toLowerCase().includes(search);
     const matchFil = !filFilter || e.filiereId===filFilter;
@@ -1490,22 +1789,16 @@ async function exportFinancierPdf(){
     filterStatut ? 'Statut : '+filterStatut : null,
   ].filter(Boolean);
   const sousTitre = `${finances.length} étudiant(s)` + (sousTitreParts.length ? ' — '+sousTitreParts.join(' — ') : '');
+  const M = 14, W = 182;
   pdfHeader(doc, 'État des paiements des étudiants', sousTitre, font);
+  let y = pdfStatsSection(doc, M, 48, W, 'Récapitulatif', [
+    {label:'Montant dû', value:fmtCFA(totalDu), color:[22,35,63]},
+    {label:'Collecté', value:fmtCFA(totalCollecte), color:[28,122,70]},
+    {label:'Reste à recouvrer', value:fmtCFA(totalReste), color:[176,51,39]},
+    {label:'Taux', value:taux+'%', color:[22,35,63]},
+  ], font) + 6;
   doc.autoTable({
-    startY: 48,
-    theme:'plain',
-    body:[
-      ['Montant total dû', fmtCFA(totalDu)],
-      ['Montant total collecté', fmtCFA(totalCollecte)],
-      ['Reste à recouvrer', fmtCFA(totalReste)],
-      ['Taux de recouvrement', taux+'%'],
-    ],
-    styles:{font},
-    bodyStyles:{fontSize:10, fontStyle:'bold', font},
-    columnStyles:{0:{cellWidth:100}},
-  });
-  doc.autoTable({
-    startY: doc.lastAutoTable.finalY + 8,
+    startY: y,
     head: [['Étudiant','Filière','Montant dû','Payé','Reste','Statut']],
     body: finances.map(x=>[nomComplet(x.e), getFiliere(x.e.filiereId)?.nom||'—', fmtCFA(x.fin.total), fmtCFA(x.fin.paye), fmtCFA(x.fin.reste), x.fin.statut]),
     styles:{font},
@@ -1578,53 +1871,77 @@ async function exportHistoriquePeriodePdf(){
 }
 document.getElementById('btnExportHistoriquePeriodePdf').addEventListener('click', exportHistoriquePeriodePdf);
 
-async function exportRapportPdf(id){
+async function exportRapportPdf(id, etudiantId){
   const r = DB.rapports.find(x=>x.id===id);
   if(!r) return;
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   const font = await ensurePdfFont(doc);
+  const participants = r.participants||[];
+  if(etudiantId){
+    // Export du rapport d'un seul étudiant participant au chantier
+    const p = getParticipant(r, etudiantId);
+    if(!p) return;
+    const M = 14, W = 182;
+    pdfHeader(doc, 'Rapport de chantier / séance pratique', r.titre, font);
+    const st = participantStatus(r, p);
+    let y = pdfSection(doc, M, 48, W, 'Informations générales', [
+      ['Filière', getFiliere(r.filiereId)?.nom||'—'],
+      ['Formateur encadrant / responsable de chantier', r.formateurNom || nomComplet(getFormateur(r.formateurId))],
+      ['Étudiant', nomComplet(getEtudiant(etudiantId))],
+      ['Période', fmtPeriodeRapport(r)],
+      ['Lieu / chantier', r.lieu||'—'],
+      ['Participation', p.participation==='oui' ? 'A participé' : ('N\'a pas participé'+(p.motif?` (motif : ${p.motif})`:' (sans motif)'))],
+      ['Statut / note', st.label],
+    ], font) + 6;
+    if(p.lockReason==='valide' && Array.isArray(p.appreciationsDetail) && p.appreciationsDetail.length){
+      doc.autoTable({
+        startY: y,
+        head: [['Appréciations du responsable','Niveau']],
+        body: p.appreciationsDetail.map(a=>[a.critere, APPRECIATION_LABELS[a.niveau]||a.niveau]),
+        styles:{font, fontSize:9},
+        headStyles:{fillColor:[22,35,63], textColor:255, font},
+        bodyStyles:{font},
+      });
+      y = doc.lastAutoTable.finalY + 8;
+    }
+    const addBlock = (titre, texte) => {
+      doc.setFont(font,'bold'); doc.setFontSize(11);
+      doc.text(titre, 14, y); y += 6;
+      doc.setFont(font,'normal'); doc.setFontSize(9.5);
+      const lines = doc.splitTextToSize(texte || 'Néant', 180);
+      doc.text(lines, 14, y); y += lines.length*5 + 8;
+    };
+    addBlock('Description des travaux réalisés', p.description);
+    addBlock('Incidents / observations', p.incidents);
+    addBlock('Recommandations', p.recommandations);
+    if(p.appreciationRapport) addBlock('Commentaire du responsable', p.appreciationRapport);
+    pdfFooter(doc, font);
+    doc.save(`rapport-chantier-${(r.titre||'sans-titre').toLowerCase().replace(/[^a-z0-9]+/g,'-').slice(0,40)}-${(nomComplet(getEtudiant(etudiantId))||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').slice(0,30)}.pdf`);
+    return;
+  }
+  // Export récapitulatif de tous les participants du chantier
+  const M2 = 14, W2 = 182;
   pdfHeader(doc, 'Rapport de chantier / séance pratique', r.titre, font);
-  const body = [
+  const yRecap = pdfSection(doc, M2, 48, W2, 'Informations générales', [
     ['Filière', getFiliere(r.filiereId)?.nom||'—'],
     ['Formateur encadrant / responsable de chantier', r.formateurNom || nomComplet(getFormateur(r.formateurId))],
-  ];
-  if(r.etudiantId) body.push(['Étudiant', nomComplet(getEtudiant(r.etudiantId))]);
-  body.push(
     ['Période', fmtPeriodeRapport(r)],
     ['Lieu / chantier', r.lieu||'—'],
-    ['Nombre de participants', r.participants||0],
-  );
-  if(r.etudiantId) body.push(['Note / validation', r.valide ? `${r.note}/19 — validé le ${fmtDate(r.dateValidation)}` : 'En attente de validation']);
+    ['Nombre de participants', participants.length],
+  ], font) + 6;
   doc.autoTable({
-    startY: 48,
-    theme:'plain',
-    body,
-    styles:{font},
-    bodyStyles:{fontSize:10, font},
-    columnStyles:{0:{cellWidth:60, fontStyle:'bold'}},
+    startY: yRecap,
+    head: [['Étudiant','Participation','Statut / Note']],
+    body: participants.map(p=>[
+      nomComplet(getEtudiant(p.etudiantId)),
+      p.participation==='oui' ? 'Oui' : ('Non'+(p.motif?` (motif : ${p.motif})`:' (sans motif)')),
+      participantStatus(r,p).label,
+    ]),
+    styles:{font, fontSize:9},
+    headStyles:{fillColor:[22,35,63], textColor:255, font},
+    bodyStyles:{font},
   });
-  if(r.valide && Array.isArray(r.appreciationsDetail) && r.appreciationsDetail.length){
-    doc.autoTable({
-      startY: doc.lastAutoTable.finalY + 4,
-      head: [['Appréciations du responsable','Niveau']],
-      body: r.appreciationsDetail.map(a=>[a.critere, APPRECIATION_LABELS[a.niveau]||a.niveau]),
-      styles:{font, fontSize:9},
-      headStyles:{fillColor:[22,35,63], textColor:255, font},
-      bodyStyles:{font},
-    });
-  }
-  let y = doc.lastAutoTable.finalY + 8;
-  const addBlock = (titre, texte) => {
-    doc.setFont(font,'bold'); doc.setFontSize(11);
-    doc.text(titre, 14, y); y += 6;
-    doc.setFont(font,'normal'); doc.setFontSize(9.5);
-    const lines = doc.splitTextToSize(texte || 'Néant', 180);
-    doc.text(lines, 14, y); y += lines.length*5 + 8;
-  };
-  addBlock('Description des travaux réalisés', r.description);
-  addBlock('Incidents / observations', r.incidents);
-  addBlock('Recommandations', r.recommandations);
   pdfFooter(doc, font);
   doc.save(`rapport-chantier-${(r.titre||'sans-titre').toLowerCase().replace(/[^a-z0-9]+/g,'-').slice(0,40)}.pdf`);
 }
@@ -1710,7 +2027,8 @@ function seedData(){
     {id:modId.coutModele, nom:'Création de modèles', filiereId:filiereIds.couture, formateurId:formateurIds.f3, description:"Conception de modèles originaux."},
     {id:modId.plombInstall, nom:'Installation sanitaire', filiereId:filiereIds.plomberie, formateurId:formateurIds.f1, description:"Installation et dépannage sanitaire."},
   ];
-  const etu = (nom,prenom,sexe,fil,modIds,statut='actif') => ({id:uid(),matricule:'CF-'+Math.floor(1000+Math.random()*9000),nom,prenom,sexe,dateNaissance:'2002-03-14',dateInscription:'2026-02-10',telephone:'01'+Math.floor(10000000+Math.random()*89999999),email:prenom.toLowerCase()+'.'+nom.toLowerCase()+'@mail.com',adresse:'Cotonou',filiereId:fil,statut,moduleIds:modIds||[],nomTuteur:'Parent de '+prenom,telephoneTuteur:'01'+Math.floor(10000000+Math.random()*89999999),lienTuteur:'Parent'});
+  let seedOrdreMatricule = 0;
+  const etu = (nom,prenom,sexe,fil,modIds,statut='actif') => ({id:uid(),matricule:`${String(++seedOrdreMatricule).padStart(3,'0')}CF02-2026`,nom,prenom,sexe,dateNaissance:'2002-03-14',dateInscription:'2026-02-10',telephone:'01'+Math.floor(10000000+Math.random()*89999999),email:prenom.toLowerCase()+'.'+nom.toLowerCase()+'@mail.com',adresse:'Cotonou',filiereId:fil,statut,moduleIds:modIds||[],nomTuteur:'Parent de '+prenom,telephoneTuteur:'01'+Math.floor(10000000+Math.random()*89999999),lienTuteur:'Parent'});
   const etudiants = [
     // Chantal suit les deux modules de sa filière
     etu('ALAPINI','Chantal','F',filiereIds.elec,[modId.elecCab, modId.elecSec]),
@@ -1735,7 +2053,22 @@ function seedData(){
     {id:uid(), etudiantId:etudiants[2].id, filiereId:filiereIds.couture, module:'Coupe de base', formateurId:formateurIds.f3, note:17, appreciation:'Excellent travail', date:'2026-05-12'},
   ];
   const rapports = [
-    {id:uid(), titre:'Installation tableau électrique — Atelier', filiereId:filiereIds.elec, formateurNom:'Adjovi HOUNSOU', etudiantId:etudiants[0].id, dateDebut:'2026-05-15', dateFin:'2026-05-16', lieu:'Atelier ANADENCE CITY, Cotonou', participants:8, description:"Montage et câblage d'un tableau électrique domestique par groupes de 2.", incidents:"Aucun incident majeur.", recommandations:"Prévoir plus de disjoncteurs pour la prochaine session.", valide:false},
+    (()=>{
+      const r = {
+        id:uid(), titre:'Installation tableau électrique — Atelier', filiereId:filiereIds.elec,
+        formateurNom:'Adjovi HOUNSOU', formateurId:formateurIds.f1,
+        dateDebut:'2026-05-15', dateFin:'2026-05-16', lieu:'Atelier ANADENCE CITY, Cotonou',
+        auteurId:'', auteurNom:'Adjovi HOUNSOU', dateCreation:'2026-05-15T08:00:00.000Z',
+        participants: [ creerParticipant(etudiants[0].id, 'oui', '') ],
+      };
+      const p = r.participants[0];
+      p.soumis = true;
+      p.dateSoumission = '2026-05-16';
+      p.description = "Montage et câblage d'un tableau électrique domestique par groupes de 2.";
+      p.incidents = "Aucun incident majeur.";
+      p.recommandations = "Prévoir plus de disjoncteurs pour la prochaine session.";
+      return r;
+    })(),
   ];
   const users = [
     {id:uid(), nom:'Directeur Général', role:'direction', identifiant:'direction', motDePasse:'direction123', perms:defaultPermsForRole('direction')},
@@ -1930,7 +2263,6 @@ function populateAllSelects(){
 
   document.getElementById('selectFiliereEtudiant').innerHTML = filOpts;
   document.getElementById('selectEtudiantPaiement').innerHTML = etOpts;
-  document.getElementById('selectEtudiantRapport').innerHTML = etOpts;
   document.getElementById('evalBulkFiliere').innerHTML = filOpts;
   document.getElementById('evalBulkFormateur').innerHTML = scopedForm!==null ? scopedForm : forOpts;
   document.getElementById('selectFiliereRapport').innerHTML = filOpts;
@@ -2120,6 +2452,56 @@ document.getElementById('photoInput').addEventListener('change', e=>{
   reader.onload = ev => setPhotoBox(ev.target.result);
   reader.readAsDataURL(file);
 });
+/* ---------- Upload multi-images (preuve d'abandon / fichiers diplôme), limité à 3 fichiers ---------- */
+const MULTI_UPLOADS = {};
+function setupMultiImageUpload(inputId, hiddenId, previewId, max){
+  const input = document.getElementById(inputId);
+  const hidden = document.getElementById(hiddenId);
+  const preview = document.getElementById(previewId);
+  const getFiles = () => { try{ return JSON.parse(hidden.value||'[]'); }catch(err){ return []; } };
+  const render = () => {
+    const files = getFiles();
+    preview.innerHTML = files.map((f,i)=>`
+      <div class="position-relative">
+        <img src="${f}" style="width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--border);">
+        <button type="button" class="btn-close btn-close-white position-absolute" style="top:-4px;right:-4px;width:8px;height:8px;padding:4px;background-color:var(--danger);border-radius:50%;" title="Retirer" onclick="removeMultiImage('${hiddenId}',${i})"></button>
+      </div>`).join('') + (files.length<max ? `<div class="d-flex align-items-center text-muted" style="font-size:.72rem;">${files.length}/${max} image(s)</div>` : '');
+  };
+  input.addEventListener('change', ()=>{
+    const files = getFiles();
+    const toAdd = Array.from(input.files).slice(0, Math.max(0, max-files.length));
+    if(!toAdd.length){ input.value=''; return; }
+    let pending = toAdd.length;
+    toAdd.forEach(file=>{
+      const reader = new FileReader();
+      reader.onload = ev=>{
+        files.push(ev.target.result);
+        pending--;
+        if(pending===0){ hidden.value = JSON.stringify(files.slice(0,max)); render(); input.value=''; }
+      };
+      reader.readAsDataURL(file);
+    });
+  });
+  const api = { render, reset: ()=>{ hidden.value=''; input.value=''; render(); } };
+  MULTI_UPLOADS[hiddenId] = api;
+  return api;
+}
+function removeMultiImage(hiddenId, idx){
+  const hidden = document.getElementById(hiddenId);
+  let files = []; try{ files = JSON.parse(hidden.value||'[]'); }catch(err){}
+  files.splice(idx,1);
+  hidden.value = JSON.stringify(files);
+  MULTI_UPLOADS[hiddenId] && MULTI_UPLOADS[hiddenId].render();
+}
+setupMultiImageUpload('preuveAbandonInput','preuveAbandonData','preuveAbandonPreview',3);
+setupMultiImageUpload('diplomeFichiersInput','diplomeFichiersData','diplomeFichiersPreview',3);
+/* Affiche le bloc "Abandon" ou "Diplôme" selon le statut sélectionné */
+function updateEtudiantStatutBlocs(){
+  const v = document.querySelector('#formEtudiant [name="statut"]').value;
+  document.getElementById('blocAbandon').style.display = v==='abandon' ? '' : 'none';
+  document.getElementById('blocDiplome').style.display = v==='diplome' ? '' : 'none';
+}
+document.querySelector('#formEtudiant [name="statut"]').addEventListener('change', updateEtudiantStatutBlocs);
 /* Un étudiant peut ne pas s'inscrire à tous les modules de sa filière : on affiche
    les modules de la filière choisie sous forme de cases à cocher, sans obligation de tout cocher. */
 function renderEtudiantModulesCheckboxes(filId, selectedIds){
@@ -2134,21 +2516,71 @@ function renderEtudiantModulesCheckboxes(filId, selectedIds){
 }
 document.getElementById('selectFiliereEtudiant').addEventListener('change', e=>{
   renderEtudiantModulesCheckboxes(e.target.value, []);
+  // Pré-remplit le coût et la durée depuis la filière (l'utilisateur peut ensuite les modifier librement).
+  const fil = getFiliere(e.target.value);
+  if(fil){
+    const coutEl = document.getElementById('etudiantCoutFormation');
+    const dureeEl = document.getElementById('etudiantDureeFormation');
+    if(coutEl && !coutEl.value) coutEl.value = fil.prixTotal || '';
+    if(dureeEl && !dureeEl.value) dureeEl.value = fil.duree || '';
+  }
+});
+
+/* ---- Assistant en 3 étapes du formulaire étudiant ---- */
+const ETUDIANT_WIZARD_STEPS = 3;
+let etudiantWizardStep = 1;
+function goToEtudiantWizardStep(step){
+  etudiantWizardStep = step;
+  document.querySelectorAll('#formEtudiant .wizard-step').forEach(el=>{
+    el.classList.toggle('active', Number(el.dataset.step)===step);
+  });
+  document.querySelectorAll('#etudiantWizardSteps .wizard-step-item').forEach(el=>{
+    const n = Number(el.dataset.stepIndicator);
+    el.classList.toggle('active', n===step);
+    el.classList.toggle('done', n<step);
+  });
+  document.getElementById('btnEtudiantWizardPrev').style.display = step>1 ? 'inline-block' : 'none';
+  document.getElementById('btnEtudiantWizardNext').style.display = step<ETUDIANT_WIZARD_STEPS ? 'inline-block' : 'none';
+  document.getElementById('btnEtudiantWizardSubmit').style.display = step===ETUDIANT_WIZARD_STEPS ? 'inline-block' : 'none';
+  const body = document.querySelector('#modalEtudiant .modal-body');
+  if(body) body.scrollTop = 0;
+}
+function validateEtudiantWizardStep(step){
+  const stepEl = document.querySelector(`#formEtudiant .wizard-step[data-step="${step}"]`);
+  const invalid = [...stepEl.querySelectorAll('[required]')].find(el=>!el.checkValidity());
+  if(invalid){ invalid.reportValidity(); invalid.focus(); return false; }
+  return true;
+}
+document.getElementById('btnEtudiantWizardNext').addEventListener('click', ()=>{
+  if(!validateEtudiantWizardStep(etudiantWizardStep)) return;
+  goToEtudiantWizardStep(Math.min(etudiantWizardStep+1, ETUDIANT_WIZARD_STEPS));
+});
+document.getElementById('btnEtudiantWizardPrev').addEventListener('click', ()=>{
+  goToEtudiantWizardStep(Math.max(etudiantWizardStep-1, 1));
 });
 document.getElementById('btnNewEtudiant').addEventListener('click', ()=>{
   document.getElementById('formEtudiant').reset();
   document.getElementById('formEtudiant').elements['id'].value='';
   resetPhotoBox();
+  MULTI_UPLOADS['preuveAbandonData'].reset();
+  MULTI_UPLOADS['diplomeFichiersData'].reset();
+  updateEtudiantStatutBlocs();
   renderEtudiantModulesCheckboxes(document.getElementById('selectFiliereEtudiant').value, []);
+  goToEtudiantWizardStep(1);
   document.getElementById('modalEtudiantTitle').textContent='Nouvel étudiant';
   new bootstrap.Modal(document.getElementById('modalEtudiant')).show();
 });
 function editEtudiant(id){
   const e = getEtudiant(id);
   const f = document.getElementById('formEtudiant');
+  f.reset();
   Object.keys(e).forEach(k=>{ if(f.elements[k]) f.elements[k].value = e[k]; });
   setPhotoBox(e.photo || '');
+  MULTI_UPLOADS['preuveAbandonData'].render();
+  MULTI_UPLOADS['diplomeFichiersData'].render();
+  updateEtudiantStatutBlocs();
   renderEtudiantModulesCheckboxes(e.filiereId, e.moduleIds||[]);
+  goToEtudiantWizardStep(1);
   document.getElementById('modalEtudiantTitle').textContent='Modifier étudiant';
   new bootstrap.Modal(document.getElementById('modalEtudiant')).show();
 }
@@ -2208,7 +2640,9 @@ function viewEtudiant(id){
             <div class="col-6 fiche-field"><span class="fiche-label">Date de naissance</span><span class="fiche-value">${fmtDate(e.dateNaissance)}</span></div>
             <div class="col-6 fiche-field"><span class="fiche-label">Téléphone</span><span class="fiche-value">${e.telephone||'—'}</span></div>
             <div class="col-6 fiche-field"><span class="fiche-label">Email</span><span class="fiche-value">${e.email||'—'}</span></div>
-            <div class="col-12 fiche-field mb-0"><span class="fiche-label">Adresse</span><span class="fiche-value">${e.adresse||'—'}</span></div>
+            <div class="col-6 fiche-field"><span class="fiche-label">Lieu de résidence</span><span class="fiche-value">${e.adresse||'—'}</span></div>
+            <div class="col-6 fiche-field"><span class="fiche-label">Niveau d'étude</span><span class="fiche-value">${e.niveauEtude||'—'}</span></div>
+            <div class="col-12 fiche-field mb-0"><span class="fiche-label">Compétences / formations suivies</span><span class="fiche-value">${e.competences||'—'}</span></div>
           </div>
         </div>
       </div>
@@ -2218,14 +2652,15 @@ function viewEtudiant(id){
           <div class="row g-2">
             <div class="col-6 fiche-field"><span class="fiche-label">Nom</span><span class="fiche-value">${e.nomTuteur||'—'}</span></div>
             <div class="col-6 fiche-field"><span class="fiche-label">Lien</span><span class="fiche-value">${e.lienTuteur||'—'}</span></div>
-            <div class="col-12 fiche-field mb-0">
+            <div class="col-12 fiche-field">
               <span class="fiche-label">Téléphone</span>
-              <div class="d-flex align-items-center gap-2">
+              <div class="d-flex align-items-center flex-wrap gap-2">
                 <span class="fiche-value">${e.telephoneTuteur||'—'}</span>
                 ${e.telephoneTuteur ? `<a class="btn btn-sm btn-icon" href="tel:${e.telephoneTuteur}" title="Appeler le tuteur"><i class="bi bi-telephone-fill"></i></a>
                 <a class="btn btn-sm btn-icon text-success" href="${waLink(e.telephoneTuteur)}" target="_blank" title="WhatsApp tuteur"><i class="bi bi-whatsapp"></i></a>` : ''}
               </div>
             </div>
+            <div class="col-12 fiche-field mb-0"><span class="fiche-label">Adresse du tuteur</span><span class="fiche-value">${e.adresseTuteur||'—'}</span></div>
           </div>
         </div>
       </div>
@@ -2238,6 +2673,12 @@ function viewEtudiant(id){
         <div class="col-6 col-md-3 fiche-field mb-0"><span class="fiche-label">Modules suivis</span><span class="fiche-value">${modsEt.length}/${modsFil.length}</span></div>
         <div class="col-6 col-md-3 fiche-field mb-0"><span class="fiche-label">Date d'inscription</span><span class="fiche-value">${fmtDate(e.dateInscription)}</span></div>
         <div class="col-6 col-md-3 fiche-field mb-0"><span class="fiche-label">Moyenne générale</span><span class="fiche-value">${moy}/20</span></div>
+        <div class="col-6 col-md-3 fiche-field mb-0"><span class="fiche-label">Date de démarrage</span><span class="fiche-value">${e.dateDemarrage?fmtDate(e.dateDemarrage):'—'}</span></div>
+        <div class="col-6 col-md-3 fiche-field mb-0"><span class="fiche-label">Durée de la formation</span><span class="fiche-value">${e.dureeFormation||'—'}</span></div>
+        <div class="col-6 col-md-3 fiche-field mb-0"><span class="fiche-label">Coût de la formation</span><span class="fiche-value">${e.coutFormation?fmtCFA(e.coutFormation):'—'}</span></div>
+        <div class="col-6 col-md-3 fiche-field mb-0"><span class="fiche-label">Frais d'inscription</span><span class="fiche-value">${e.fraisInscription?fmtCFA(e.fraisInscription):'—'}</span></div>
+        <div class="col-6 col-md-3 fiche-field mb-0"><span class="fiche-label">Frais d'uniforme</span><span class="fiche-value">${e.fraisUniforme?fmtCFA(e.fraisUniforme):'—'}</span></div>
+        <div class="col-6 col-md-3 fiche-field mb-0"><span class="fiche-label">${e.autresFraisLibelle||'Autres frais'}</span><span class="fiche-value">${e.autresFraisMontant?fmtCFA(e.autresFraisMontant):'—'}</span></div>
       </div>
     </div>
 
@@ -2246,13 +2687,26 @@ function viewEtudiant(id){
       ${modsEt.length ? `<div class="d-flex flex-wrap gap-2">${modsEt.map(m=>`<span class="badge bg-light text-dark border">${m.nom}${m.formateurId?' — '+nomComplet(getFormateur(m.formateurId)):''}</span>`).join('')}</div>` : '<p class="text-muted small mb-0">Aucun module sélectionné pour le moment.</p>'}
     </div>
 
+    ${e.statut==='abandon' ? `
+    <div class="fiche-section">
+      <h6><i class="bi bi-x-octagon-fill me-1"></i> Détails de l'abandon</h6>
+      <div class="fiche-field mb-2"><span class="fiche-label">Motif</span><span class="fiche-value">${e.motifAbandon||'—'}</span></div>
+      ${(()=>{ const imgs = (()=>{try{return JSON.parse(e.preuveAbandon||'[]');}catch(err){return [];}})(); return imgs.length ? `<span class="fiche-label d-block mb-1">Preuve</span><div class="d-flex flex-wrap gap-2">${imgs.map(src=>`<img src="${src}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--border);">`).join('')}</div>` : '<p class="text-muted small mb-0">Aucune preuve jointe.</p>'; })()}
+    </div>` : ''}
+    ${e.statut==='diplome' ? `
+    <div class="fiche-section">
+      <h6><i class="bi bi-award-fill me-1"></i> Détails du diplôme</h6>
+      <div class="fiche-field mb-2"><span class="fiche-label">Date de fin de formation</span><span class="fiche-value">${e.dateFin?fmtDate(e.dateFin):'—'}</span></div>
+      ${(()=>{ const imgs = (()=>{try{return JSON.parse(e.diplomeFichiers||'[]');}catch(err){return [];}})(); return imgs.length ? `<span class="fiche-label d-block mb-1">Fichiers diplôme</span><div class="d-flex flex-wrap gap-2">${imgs.map(src=>`<img src="${src}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--border);">`).join('')}</div>` : '<p class="text-muted small mb-0">Aucun fichier joint.</p>'; })()}
+    </div>` : ''}
+
     <div class="fiche-section">
       <h6><i class="bi bi-calendar-check-fill me-1"></i> État de présence</h6>
       <div class="row g-2">
-        <div class="col-3"><div class="fiche-mini-stat"><div class="stat-num" style="color:#1C7A46;">${nbPresent}</div><div class="stat-label">Présences</div></div></div>
-        <div class="col-3"><div class="fiche-mini-stat"><div class="stat-num" style="color:#B4700B;">${nbRetard}</div><div class="stat-label">Retards</div></div></div>
-        <div class="col-3"><div class="fiche-mini-stat"><div class="stat-num" style="color:#B03327;">${nbAbsent}</div><div class="stat-label">Absences</div></div></div>
-        <div class="col-3"><div class="fiche-mini-stat"><div class="stat-num">${tauxPres}%</div><div class="stat-label">Taux présence</div></div></div>
+        <div class="col-6 col-md-3"><div class="fiche-mini-stat"><div class="stat-num" style="color:#1C7A46;">${nbPresent}</div><div class="stat-label">Présences</div></div></div>
+        <div class="col-6 col-md-3"><div class="fiche-mini-stat"><div class="stat-num" style="color:#B4700B;">${nbRetard}</div><div class="stat-label">Retards</div></div></div>
+        <div class="col-6 col-md-3"><div class="fiche-mini-stat"><div class="stat-num" style="color:#B03327;">${nbAbsent}</div><div class="stat-label">Absences</div></div></div>
+        <div class="col-6 col-md-3"><div class="fiche-mini-stat"><div class="stat-num">${tauxPres}%</div><div class="stat-label">Taux présence</div></div></div>
       </div>
     </div>
 
@@ -2280,42 +2734,125 @@ async function exportFicheEtudiantPdf(id){
   const tauxPres = totalPres>0 ? Math.round((nbPresent/totalPres)*100) : 0;
   const fil = getFiliere(e.filiereId);
   const modsEt = (e.moduleIds||[]).map(getModule).filter(Boolean);
+  const M = 14, W = 182; // marge gauche & largeur utile de la page A4
 
-  pdfHeader(doc, 'Fiche étudiant', `${nomComplet(e)} — ${e.matricule}`, font);
-  const body = [
+  pdfHeader(doc, 'Fiche étudiant', `Document généré le ${new Date().toLocaleDateString('fr-FR')}`, font);
+
+  // ----- Bandeau d'identité (photo, nom, matricule, filière, statut) -----
+  let y = 32;
+  doc.setFillColor(22,35,63);
+  doc.roundedRect(M, y, W, 22, 3, 3, 'F');
+  let photoDrawn = false;
+  if(e.photo){
+    try{
+      doc.setFillColor(255,255,255);
+      doc.roundedRect(M+6, y+3, 16, 16, 2.5, 2.5, 'F');
+      doc.addImage(e.photo, pdfImgFormat(e.photo), M+6.8, y+3.8, 14.4, 14.4);
+      photoDrawn = true;
+    }catch(err){ photoDrawn = false; }
+  }
+  if(!photoDrawn){
+    doc.setFillColor(232,163,61);
+    doc.circle(M+14, y+11, 8, 'F');
+    doc.setFont(font,'bold'); doc.setFontSize(10.5); doc.setTextColor(22,35,63);
+    doc.text(initials(e.prenom,e.nom), M+14, y+13, {align:'center'});
+  }
+  doc.setFont(font,'bold'); doc.setFontSize(13); doc.setTextColor(255,255,255);
+  doc.text(nomComplet(e), M+28, y+9.5);
+  doc.setFont(font,'normal'); doc.setFontSize(9); doc.setTextColor(190,198,220);
+  doc.text(`${e.matricule}  ·  ${fil?.nom||'—'}`, M+28, y+15.5);
+  const statutLabel = {actif:'Actif',diplome:'Diplômé',abandon:'Abandon'}[e.statut]||e.statut||'—';
+  const statutColor = {actif:[28,122,70],diplome:[46,78,166],abandon:[176,51,39]}[e.statut]||[22,35,63];
+  doc.setFont(font,'bold'); doc.setFontSize(8);
+  const badgeW = doc.getTextWidth(statutLabel)+10;
+  doc.setFillColor(255,255,255);
+  doc.roundedRect(M+W-badgeW-6, y+7, badgeW, 8, 4, 4, 'F');
+  doc.setTextColor.apply(doc, statutColor);
+  doc.text(statutLabel, M+W-badgeW-6+badgeW/2, y+12.3, {align:'center'});
+  y += 22 + 7;
+
+  // ----- Rubriques -----
+  y = pdfSection(doc, M, y, W, 'Informations personnelles', [
     ['Sexe', e.sexe==='F'?'Féminin':'Masculin'],
     ['Date de naissance', fmtDate(e.dateNaissance)],
     ['Téléphone', e.telephone||'—'],
     ['Email', e.email||'—'],
-    ['Adresse', e.adresse||'—'],
-    ['Tuteur / Parent', `${e.nomTuteur||'—'} (${e.lienTuteur||'—'}) — ${e.telephoneTuteur||'—'}`],
+    ['Lieu de résidence', e.adresse||'—'],
+    ["Niveau d'étude", e.niveauEtude||'—'],
+    ['Compétences / formations suivies', e.competences||'—'],
+  ], font) + 6;
+
+  y = pdfSection(doc, M, y, W, 'Tuteur / Parent', [
+    ['Nom', e.nomTuteur||'—'],
+    ['Lien', e.lienTuteur||'—'],
+    ['Téléphone', e.telephoneTuteur||'—'],
+    ['Adresse', e.adresseTuteur||'—'],
+  ], font) + 6;
+
+  y = pdfSection(doc, M, y, W, 'Formation', [
     ['Filière', fil?.nom||'—'],
-    ['Modules suivis', modsEt.length ? modsEt.map(m=>m.nom).join(', ') : '—'],
     ["Date d'inscription", fmtDate(e.dateInscription)],
-    ['Statut', e.statut],
+    ['Date de démarrage', e.dateDemarrage?fmtDate(e.dateDemarrage):'—'],
+    ['Durée de la formation', e.dureeFormation||'—'],
+    ['Coût de la formation', e.coutFormation?fmtCFA(e.coutFormation):'—'],
+    ["Frais d'inscription", e.fraisInscription?fmtCFA(e.fraisInscription):'—'],
+    ["Frais d'uniforme", e.fraisUniforme?fmtCFA(e.fraisUniforme):'—'],
+    [e.autresFraisLibelle||'Autres frais', e.autresFraisMontant?fmtCFA(e.autresFraisMontant):'—'],
     ['Moyenne générale', moy+'/20'],
-    ['Présences / Retards / Absences', `${nbPresent} / ${nbRetard} / ${nbAbsent} (taux : ${tauxPres}%)`],
-  ];
-  if(showFinance) body.push(['Montant dû / Payé / Reste', `${fmtCFA(fin.total)} / ${fmtCFA(fin.paye)} / ${fmtCFA(fin.reste)} (${fin.statut})`]);
-  doc.autoTable({
-    startY: 48,
-    theme:'plain',
-    body,
-    styles:{font},
-    bodyStyles:{fontSize:9.5, font},
-    columnStyles:{0:{cellWidth:60, fontStyle:'bold'}},
-  });
-  if(notes.length){
-    doc.autoTable({
-      startY: doc.lastAutoTable.finalY + 8,
-      head: [['Module','Note /20','Appréciation','Date']],
-      body: notes.map(n=>[n.module, n.note, n.appreciation||'—', fmtDate(n.date)]),
-      styles:{font},
-      headStyles:{fillColor:[22,35,63], textColor:255, fontSize:9, font},
-      bodyStyles:{fontSize:8.5, font},
-      alternateRowStyles:{fillColor:[245,246,248]},
-    });
+  ], font) + 6;
+
+  y = pdfTextSection(doc, M, y, W, 'Modules suivis',
+    modsEt.length ? modsEt.map(m=>`${m.nom}${m.formateurId?' — '+nomComplet(getFormateur(m.formateurId)):''}`).join('   •   ') : 'Aucun module sélectionné pour le moment.',
+    font) + 6;
+
+  // ----- Rubrique conditionnelle selon le statut -----
+  if(e.statut==='abandon'){
+    y = pdfSectionWithImages(doc, M, y, W, "Détails de l'abandon", [
+      ['Motif', e.motifAbandon||'—'],
+    ], pdfParseImages(e.preuveAbandon), font) + 6;
+  } else if(e.statut==='diplome'){
+    y = pdfSectionWithImages(doc, M, y, W, 'Détails du diplôme', [
+      ['Date de fin de formation', e.dateFin?fmtDate(e.dateFin):'—'],
+    ], pdfParseImages(e.diplomeFichiers), font) + 6;
   }
+
+  // ----- Présence -----
+  y = pdfStatsSection(doc, M, y, W, 'Présence', [
+    {label:'Présences', value:nbPresent, color:[28,122,70]},
+    {label:'Retards', value:nbRetard, color:[180,112,11]},
+    {label:'Absences', value:nbAbsent, color:[176,51,39]},
+    {label:'Taux présence', value:tauxPres+'%', color:[22,35,63]},
+  ], font) + 6;
+
+  // ----- Évaluations -----
+  if(notes.length){
+    if(y > 255){ doc.addPage(); y = 20; }
+    doc.autoTable({
+      startY: y,
+      margin:{left:M,right:210-M-W},
+      tableWidth:W,
+      theme:'grid',
+      head: [
+        [{content:'ÉVALUATIONS', colSpan:4, styles:{fillColor:[22,35,63], textColor:255, fontStyle:'bold', fontSize:9, halign:'left', cellPadding:{top:3.2,bottom:3.2,left:4,right:4}}}],
+        ['Module','Note /20','Appréciation','Date'].map(t=>({content:t, styles:{fillColor:[240,241,244], textColor:[90,95,105], fontStyle:'bold', fontSize:7.3}})),
+      ],
+      body: notes.map(n=>[n.module, n.note, n.appreciation||'—', fmtDate(n.date)]),
+      styles:{font, lineColor:[228,231,236], lineWidth:0.15, cellPadding:{top:2.8,bottom:2.8,left:4,right:3}},
+      bodyStyles:{fontSize:8.5, textColor:[26,29,35]},
+      alternateRowStyles:{fillColor:[248,249,251]},
+    });
+    y = doc.lastAutoTable.finalY + 6;
+  }
+
+  // ----- État financier : toujours affiché tout en bas de la fiche -----
+  if(showFinance){
+    y = pdfStatsSection(doc, M, y, W, 'État financier', [
+      {label:'Montant dû', value:fmtCFA(fin.total), color:[22,35,63]},
+      {label:'Payé', value:fmtCFA(fin.paye), color:[28,122,70]},
+      {label:'Reste à payer', value:fmtCFA(fin.reste), color:[176,51,39]},
+    ], font);
+  }
+
   pdfFooter(doc, font);
   doc.save(`fiche-${e.matricule}.pdf`);
 }
@@ -2330,7 +2867,7 @@ document.getElementById('formEtudiant').addEventListener('submit', async e=>{
     DB.etudiants[idx] = {...DB.etudiants[idx], ...data};
   } else {
     data.id = uid();
-    data.matricule = 'CF-'+Math.floor(1000+Math.random()*9000);
+    data.matricule = genMatricule(data.dateInscription);
     DB.etudiants.push(data);
   }
   await saveDB();
@@ -2567,23 +3104,25 @@ async function exportFicheFormateurPdf(id){
   const f = getFormateur(id);
   if(!f) return;
   const mods = modulesOfFormateur(f.id);
+  const M = 14, W = 182; // marge gauche & largeur utile de la page A4
   pdfHeader(doc, 'Fiche formateur', nomComplet(f), font);
-  const body = [
+
+  let y = 48;
+  y = pdfSection(doc, M, y, W, 'Informations personnelles', [
     ['Spécialité', f.specialite||'—'],
     ['Téléphone', f.telephone||'—'],
     ['Email', f.email||'—'],
+  ], font) + 6;
+
+  y = pdfSection(doc, M, y, W, 'Contrat', [
     ['Date de démarrage', f.dateDebut?fmtDate(f.dateDebut):'—'],
     ['Durée du contrat', f.dureeContrat||'—'],
-    ['Modules confiés', mods.length ? mods.map(m=>m.nom).join(', ') : '—'],
-  ];
-  doc.autoTable({
-    startY: 48,
-    theme:'plain',
-    body,
-    styles:{font},
-    bodyStyles:{fontSize:9.5, font},
-    columnStyles:{0:{cellWidth:60, fontStyle:'bold'}},
-  });
+  ], font) + 6;
+
+  y = pdfTextSection(doc, M, y, W, 'Modules confiés',
+    mods.length ? mods.map(m=>m.nom).join('   •   ') : 'Aucun module confié pour le moment.',
+    font);
+
   pdfFooter(doc, font);
   doc.save(`fiche-formateur-${(f.nom||'formateur').toLowerCase()}.pdf`);
 }
@@ -2696,22 +3235,16 @@ async function exportHistoriqueEtudiantPdf(etId){
   const fin = etudiantFinance(etId);
   const fil = e ? getFiliere(e.filiereId) : null;
   const list = DB.paiements.filter(p=>p.etudiantId===etId).sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const M = 14, W = 182;
   pdfHeader(doc, 'État de paiement', `${e?nomComplet(e):''} — ${e?.matricule||''}${fil?' — '+fil.nom:''}`, font);
+  let y = pdfStatsSection(doc, M, 48, W, 'État financier', [
+    {label:'Montant dû', value:fmtCFA(fin.total), color:[22,35,63]},
+    {label:'Payé', value:fmtCFA(fin.paye), color:[28,122,70]},
+    {label:'Reste à payer', value:fmtCFA(fin.reste), color:[176,51,39]},
+    {label:'Statut', value:fin.statut, color:[22,35,63]},
+  ], font) + 6;
   doc.autoTable({
-    startY: 48,
-    theme:'plain',
-    body:[
-      ['Montant total dû', fmtCFA(fin.total)],
-      ['Montant payé', fmtCFA(fin.paye)],
-      ['Reste à payer', fmtCFA(fin.reste)],
-      ['Statut', fin.statut],
-    ],
-    styles:{font},
-    bodyStyles:{fontSize:10, fontStyle:'bold', font},
-    columnStyles:{0:{cellWidth:100}},
-  });
-  doc.autoTable({
-    startY: doc.lastAutoTable.finalY + 8,
+    startY: y,
     head: [['Date','Type','Mode','Montant']],
     body: list.map(p=>[fmtDate(p.date), p.type||'—', p.mode||'—', fmtCFA(p.montant)]),
     foot: [['','','Total payé', fmtCFA(fin.paye)]],
@@ -2839,27 +3372,28 @@ const APPRECIATION_CRITERES = [
 const APPRECIATION_NIVEAUX = ['EXCE','SATIS','INSU','T-INSU'];
 const APPRECIATION_BAREME = { EXCE:19, SATIS:15, INSU:10, 'T-INSU':7 };
 const APPRECIATION_LABELS = { EXCE:'Excellent (19)', SATIS:'Satisfaisant (15)', INSU:'Insuffisant (10)', 'T-INSU':'Très insuffisant (7)' };
+// Délai laissé à l'étudiant pour finaliser son rapport une fois le chantier initié par le formateur/la direction.
+const RAPPORT_DEADLINE_MS = 72 * 60 * 60 * 1000;
+const RAPPORT_MAX_IMAGES = 5;
 
 function canValidateRapport(r){
   if(state.role==='direction') return true;
   if(state.role==='formateur'){
     const u = currentUser();
     if(!(u && u.formateurId)) return false;
-    // Le formateur encadrant est désormais saisi en texte libre par l'étudiant ;
-    // la validation reste ouverte à tout formateur rattaché à la filière du rapport.
     const ids = scopedFiliereIds();
     return ids ? ids.includes(r.filiereId) : true;
   }
   return false;
 }
-function apprGridHTML(rapportId){
+function apprGridHTML(rapportId, etudiantId){
   return `
     <div class="d-flex flex-column gap-2 mb-2">
       ${APPRECIATION_CRITERES.map((c,i)=>`
         <div class="row g-2 align-items-center">
           <div class="col-8 col-md-9 small">${c}</div>
           <div class="col-4 col-md-3">
-            <select class="form-select form-select-sm appr-select" id="apprRow_${rapportId}_${i}">
+            <select class="form-select form-select-sm appr-select" id="apprRow_${rapportId}_${etudiantId}_${i}">
               <option value="">—</option>
               ${APPRECIATION_NIVEAUX.map(n=>`<option value="${n}">${n}</option>`).join('')}
             </select>
@@ -2872,115 +3406,341 @@ function fmtPeriodeRapport(r){
   if(r.dateDebut && r.dateFin && r.dateDebut !== r.dateFin) return `${fmtDate(r.dateDebut)} → ${fmtDate(r.dateFin)}`;
   return fmtDate(r.dateDebut || r.dateFin || r.date);
 }
+function getParticipant(r, etudiantId){
+  return (r.participants||[]).find(p=>p.etudiantId===etudiantId);
+}
+function creerParticipant(etudiantId, participation, motif){
+  const p = {
+    etudiantId, participation, motif: motif||'',
+    soumis:false, dateSoumission:null,
+    description:'', incidents:'', recommandations:'',
+    fichePhoto:null, photosEtudiant:[],
+    appreciationsDetail:null, note:null, appreciationRapport:'',
+    locked:false, lockReason:null, evalPushed:false,
+    dateValidation:null, valideParId:null,
+  };
+  if(participation==='non' && !motif){
+    p.note = 0; p.locked = true; p.lockReason = 'non-sans-motif';
+    p.dateValidation = new Date().toISOString().slice(0,10);
+  }
+  return p;
+}
+// Pousse une note finale (auto ou validée) dans le registre des évaluations, une seule fois par participant.
+function pushEvaluationForParticipant(r, p){
+  if(p.evalPushed) return;
+  DB.evaluations.push({
+    id:uid(), etudiantId:p.etudiantId, filiereId:r.filiereId,
+    module:'Rapport de chantier — '+r.titre, formateurId:r.formateurId, formateurNom:r.formateurNom,
+    note:p.note, appreciation:p.appreciationRapport||'', date:p.dateValidation||new Date().toISOString().slice(0,10)
+  });
+  p.evalPushed = true;
+}
+// Vérifie les délais de 72h : tout participant "oui" non finalisé après le délai bascule automatiquement à la note 0 et se verrouille.
+function applyAutoExpirations(){
+  let changed = false;
+  (DB.rapports||[]).forEach(r=>{
+    if(!r.dateCreation) return;
+    const deadlinePassed = (Date.now() - new Date(r.dateCreation).getTime()) > RAPPORT_DEADLINE_MS;
+    if(!deadlinePassed) return;
+    (r.participants||[]).forEach(p=>{
+      if(p.participation==='oui' && !p.soumis && !p.locked){
+        p.note = 0; p.locked = true; p.lockReason = 'expire';
+        p.dateValidation = new Date().toISOString().slice(0,10);
+        pushEvaluationForParticipant(r, p);
+        changed = true;
+      }
+    });
+  });
+  return changed;
+}
+function participantStatus(r, p){
+  if(p.participation==='non'){
+    if(p.motif) return {code:'dispense', label:'Dispensé (motif fourni)', cls:'secondary'};
+    return {code:'non-sans-motif', label:'Non-participation sans motif — Note 0/19', cls:'danger'};
+  }
+  if(p.locked && p.lockReason==='expire') return {code:'expire', label:'Délai de 72h dépassé — Note 0/19', cls:'danger'};
+  if(p.locked && p.lockReason==='valide') return {code:'valide', label:'Rapport validé — Note '+p.note+'/19', cls:'success'};
+  if(p.soumis) return {code:'attente', label:'Rapport soumis — en attente de validation', cls:'warning'};
+  return {code:'a-remplir', label:'À compléter par l\'étudiant', cls:'info'};
+}
+function deadlineRemainingHTML(r){
+  if(!r.dateCreation) return '';
+  const remaining = RAPPORT_DEADLINE_MS - (Date.now() - new Date(r.dateCreation).getTime());
+  if(remaining <= 0) return `<span class="text-danger">Délai de 72h dépassé</span>`;
+  const h = Math.floor(remaining/3600000);
+  return `Il vous reste environ <strong>${h} heure(s)</strong> pour finaliser ce rapport avant l'attribution automatique de la note 0.`;
+}
+// Le chantier entier ne peut être supprimé/modifié par un formateur qu'avant toute validation formelle par un responsable.
+function canDeleteChantier(r){
+  if(!canEdit('rapports')) return false;
+  if(state.role==='direction') return true;
+  if(state.role==='etudiant') return false;
+  return !(r.participants||[]).some(p=>p.lockReason==='valide');
+}
 function renderRapports(){
+  if(applyAutoExpirations()) saveDB();
   const editable = canEdit('rapports');
-  document.getElementById('btnNewRapport').style.display = editable?'inline-block':'none';
-  const list = scopeByFiliereId([...DB.rapports]).sort((a,b)=>new Date(b.dateDebut||b.date)-new Date(a.dateDebut||a.date));
-  document.getElementById('rapportsGrid').innerHTML = list.length ? list.map(r=>{
-    // Une fois le rapport validé par le formateur, l'étudiant ne peut plus le modifier ni le supprimer.
-    const canDelete = editable && (state.role!=='etudiant' || (r.auteurId===state.userId && !r.valide));
-    const photos = Array.isArray(r.photos) ? r.photos : [];
-    const et = r.etudiantId ? getEtudiant(r.etudiantId) : null;
-    let noteBlockHTML = '';
-    if(r.valide){
-      const detail = Array.isArray(r.appreciationsDetail) ? r.appreciationsDetail : [];
-      const counts = {};
-      detail.forEach(a=>{ counts[a.niveau] = (counts[a.niveau]||0)+1; });
-      const summary = APPRECIATION_NIVEAUX.filter(n=>counts[n]).map(n=>`${counts[n]} ${n}`).join(' · ');
-      noteBlockHTML = `
-        <div class="alert alert-success py-2 px-3 small mb-2">
-          <div class="d-flex justify-content-between align-items-center flex-wrap gap-1"><span><i class="bi bi-check-circle-fill me-1"></i> Rapport validé</span><strong>Note : ${r.note}/19</strong></div>
-          ${summary ? `<div class="text-muted mt-1" style="font-size:.76rem;">${summary}</div>` : ''}
-        </div>
-        ${r.appreciationRapport ? `<div class="small text-muted mb-2"><strong>Commentaire :</strong> ${r.appreciationRapport}</div>` : ''}`;
-    } else if(canValidateRapport(r) && r.etudiantId){
-      noteBlockHTML = `
-        <div class="border rounded p-2 mb-2" style="background:#F8F9FB;">
+  document.getElementById('btnNewRapport').style.display = (editable && state.role!=='etudiant')?'inline-block':'none';
+  let list = scopeByFiliereId([...DB.rapports]);
+  if(state.role==='etudiant'){
+    const u = currentUser();
+    list = list.filter(r=>u && getParticipant(r, u.etudiantId));
+  }
+  list.sort((a,b)=>new Date(b.dateDebut||b.date)-new Date(a.dateDebut||a.date));
+  document.getElementById('rapportsGrid').innerHTML = list.length ? list.map(r=>
+    state.role==='etudiant' ? rapportCardEtudiantHTML(r) : rapportCardAdminHTML(r)
+  ).join('') : `<div class="col-12"><div class="empty-state"><i class="bi bi-clipboard"></i><p>Aucun rapport de chantier</p></div></div>`;
+}
+function rapportHeaderHTML(r){
+  return `
+    <div class="d-flex justify-content-between align-items-start mb-2">
+      <span class="tag">${getFiliere(r.filiereId)?.nom||'—'}</span>
+      <span class="text-muted small">${fmtPeriodeRapport(r)}</span>
+    </div>
+    <h6 class="fw-bold">${r.titre}</h6>
+    <div class="small text-muted mb-2"><i class="bi bi-geo-alt"></i> ${r.lieu||'—'} · <i class="bi bi-person-badge"></i> ${r.formateurNom || nomComplet(getFormateur(r.formateurId))}</div>`;
+}
+// Vue direction / secrétariat / formateur : liste des chantiers avec le récapitulatif de chaque participant.
+function rapportCardAdminHTML(r){
+  const participants = r.participants||[];
+  const canDelete = canDeleteChantier(r);
+  const rows = participants.map(p=>{
+    const et = getEtudiant(p.etudiantId);
+    const st = participantStatus(r, p);
+    let gradeBlock = '';
+    if(st.code==='attente' && canValidateRapport(r)){
+      gradeBlock = `
+        <div class="border rounded p-2 mt-2" style="background:#F8F9FB;">
           <div class="fw-semibold small mb-2"><i class="bi bi-clipboard-check me-1"></i> Appréciations du responsable</div>
-          ${apprGridHTML(r.id)}
+          ${apprGridHTML(r.id, p.etudiantId)}
           <label class="form-label small mb-1">Commentaire (optionnel)</label>
-          <input type="text" class="form-control form-control-sm" id="rapportAppr_${r.id}" placeholder="Optionnel">
-          <button class="btn btn-amber btn-sm mt-2" onclick="validerRapport('${r.id}')"><i class="bi bi-check2-circle"></i> Noter et valider</button>
+          <input type="text" class="form-control form-control-sm" id="rapportAppr_${r.id}_${p.etudiantId}" placeholder="Optionnel">
+          <button class="btn btn-amber btn-sm mt-2" onclick="validerParticipantRapport('${r.id}','${p.etudiantId}')"><i class="bi bi-check2-circle"></i> Noter et valider</button>
         </div>`;
-    } else if(r.etudiantId){
-      noteBlockHTML = `<div class="small text-muted mb-2"><i class="bi bi-hourglass-split me-1"></i> En attente de validation par le formateur</div>`;
     }
+    const photosFiche = p.fichePhoto ? `<img src="${p.fichePhoto}" style="width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:pointer;" onclick="window.open('${p.fichePhoto}','_blank')">` : '';
+    const photosSite = (p.photosEtudiant||[]).map(ph=>`<img src="${ph}" style="width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:pointer;" onclick="window.open('${ph}','_blank')">`).join('');
+    const resetBtn = (state.role==='direction' && (p.soumis || p.locked)) ? `<button class="btn btn-outline-secondary btn-sm" title="Réinitialiser (Direction)" onclick="resetParticipantDirection('${r.id}','${p.etudiantId}')"><i class="bi bi-arrow-counterclockwise"></i></button>` : '';
     return `
+      <div class="border rounded p-2 mb-2">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-1">
+          <div class="d-flex align-items-center gap-2">${avatarHTML(et,28)}<span class="small fw-semibold">${nomComplet(et)}</span></div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-${st.cls}">${st.label}</span>
+            <button class="btn btn-outline-secondary btn-sm" onclick="exportRapportPdf('${r.id}','${p.etudiantId}')" title="PDF de ce rapport"><i class="bi bi-file-earmark-pdf"></i></button>
+            ${resetBtn}
+          </div>
+        </div>
+        ${p.participation==='non' && p.motif ? `<div class="small text-muted mt-1"><strong>Motif :</strong> ${p.motif}</div>` : ''}
+        ${p.description ? `<div class="small mt-2"><strong>Travaux :</strong> ${p.description}</div>` : ''}
+        ${p.incidents ? `<div class="small text-muted"><strong>Observations :</strong> ${p.incidents}</div>` : ''}
+        ${p.appreciationRapport ? `<div class="small text-muted"><strong>Commentaire :</strong> ${p.appreciationRapport}</div>` : ''}
+        ${(photosFiche||photosSite) ? `<div class="d-flex flex-wrap gap-2 mt-2">${photosFiche}${photosSite}</div>` : ''}
+        ${gradeBlock}
+      </div>`;
+  }).join('');
+  return `
     <div class="col-md-6">
       <div class="chantier-card h-100">
-        <div class="d-flex justify-content-between align-items-start mb-2">
-          <span class="tag">${getFiliere(r.filiereId)?.nom||'—'}</span>
-          <span class="text-muted small">${fmtPeriodeRapport(r)}</span>
-        </div>
-        <h6 class="fw-bold">${r.titre}</h6>
-        <div class="small text-muted mb-2"><i class="bi bi-geo-alt"></i> ${r.lieu||'—'} · <i class="bi bi-people"></i> ${r.participants||0} participants · <i class="bi bi-person-badge"></i> ${r.formateurNom || nomComplet(getFormateur(r.formateurId))}</div>
-        ${et ? `<div class="small text-muted mb-2"><i class="bi bi-mortarboard"></i> Étudiant : ${nomComplet(et)}</div>` : ''}
-        <p class="small mb-2">${r.description||''}</p>
-        ${r.incidents?`<div class="small mb-1"><strong>Observations :</strong> ${r.incidents}</div>`:''}
-        ${r.recommandations?`<div class="small text-muted mb-2"><strong>Recommandations :</strong> ${r.recommandations}</div>`:''}
-        ${r.auteurNom?`<div class="text-muted" style="font-size:.74rem;">Ajouté par ${r.auteurNom}</div>`:''}
-        ${photos.length ? `<div class="d-flex flex-wrap gap-2 my-2">${photos.map(p=>`<img src="${p}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:pointer;" onclick="window.open('${p}','_blank')">`).join('')}</div>` : ''}
-        ${noteBlockHTML}
-        <div class="d-flex gap-2 mt-1">
-          <button class="btn btn-outline-secondary btn-sm" onclick="exportRapportPdf('${r.id}')"><i class="bi bi-file-earmark-pdf"></i> Télécharger le PDF</button>
-          ${canDelete ? `<button class="btn btn-outline-danger btn-sm" onclick="askDelete('rapports','${r.id}')"><i class="bi bi-trash"></i></button>` : ''}
+        ${rapportHeaderHTML(r)}
+        <div class="small text-muted mb-2"><i class="bi bi-people"></i> ${participants.length} étudiant(s) concerné(s)</div>
+        ${r.auteurNom?`<div class="text-muted mb-2" style="font-size:.74rem;">Chantier initié par ${r.auteurNom}</div>`:''}
+        ${rows || '<div class="empty-state py-3"><p class="mb-0 small">Aucun étudiant sélectionné</p></div>'}
+        <div class="d-flex gap-2 flex-wrap mt-1">
+          ${canDelete ? `<button class="btn btn-outline-danger btn-sm" onclick="askDelete('rapports','${r.id}')"><i class="bi bi-trash"></i> Supprimer le chantier</button>` : ''}
         </div>
       </div>
     </div>`;
-  }).join('') : `<div class="col-12"><div class="empty-state"><i class="bi bi-clipboard"></i><p>Aucun rapport de chantier</p></div></div>`;
 }
-async function validerRapport(id){
-  const r = DB.rapports.find(x=>x.id===id);
-  if(!r || !canValidateRapport(r)) return;
+// Vue étudiant : uniquement sa propre participation à chaque chantier.
+function rapportCardEtudiantHTML(r){
+  const u = currentUser();
+  const p = getParticipant(r, u.etudiantId);
+  if(!p) return '';
+  const st = participantStatus(r, p);
+  let body = '';
+  if(st.code==='dispense'){
+    body = `<div class="alert alert-secondary py-2 px-3 small mb-0"><i class="bi bi-slash-circle me-1"></i> Vous n'avez pas participé à ce chantier — Motif : ${p.motif} — aucune note attribuée.</div>`;
+  } else if(st.code==='non-sans-motif'){
+    body = `<div class="alert alert-danger py-2 px-3 small mb-0"><i class="bi bi-x-circle me-1"></i> Non-participation enregistrée sans motif — Note : 0/19.</div>`;
+  } else if(st.code==='expire'){
+    body = `<div class="alert alert-danger py-2 px-3 small mb-0"><i class="bi bi-hourglass-bottom me-1"></i> Le délai de 72h pour finaliser ce rapport est dépassé — Note : 0/19.</div>`;
+  } else if(st.code==='a-remplir'){
+    body = `
+      <div class="alert alert-info py-2 px-3 small">${deadlineRemainingHTML(r)}</div>
+      <button class="btn btn-amber btn-sm" onclick="openRapportEtudiantModal('${r.id}')"><i class="bi bi-pencil-square"></i> Compléter le rapport</button>`;
+  } else if(st.code==='attente'){
+    body = `
+      <div class="small text-muted mb-2"><i class="bi bi-hourglass-split me-1"></i> Rapport soumis le ${fmtDate(p.dateSoumission)} — en attente de validation par le formateur.</div>
+      ${p.description ? `<div class="small mb-1"><strong>Travaux :</strong> ${p.description}</div>` : ''}`;
+  } else if(st.code==='valide'){
+    const detail = Array.isArray(p.appreciationsDetail) ? p.appreciationsDetail : [];
+    const counts = {};
+    detail.forEach(a=>{ counts[a.niveau] = (counts[a.niveau]||0)+1; });
+    const summary = APPRECIATION_NIVEAUX.filter(n=>counts[n]).map(n=>`${counts[n]} ${n}`).join(' · ');
+    body = `
+      <div class="alert alert-success py-2 px-3 small mb-2">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-1"><span><i class="bi bi-check-circle-fill me-1"></i> Rapport validé</span><strong>Note : ${p.note}/19</strong></div>
+        ${summary ? `<div class="text-muted mt-1" style="font-size:.76rem;">${summary}</div>` : ''}
+      </div>
+      ${p.appreciationRapport ? `<div class="small text-muted mb-2"><strong>Commentaire :</strong> ${p.appreciationRapport}</div>` : ''}`;
+  }
+  return `
+    <div class="col-md-6">
+      <div class="chantier-card h-100">
+        ${rapportHeaderHTML(r)}
+        ${body}
+        <div class="d-flex gap-2 flex-wrap mt-2">
+          <button class="btn btn-outline-secondary btn-sm" onclick="exportRapportPdf('${r.id}','${u.etudiantId}')"><i class="bi bi-file-earmark-pdf"></i> Télécharger le PDF</button>
+        </div>
+      </div>
+    </div>`;
+}
+async function validerParticipantRapport(rapportId, etudiantId){
+  const r = DB.rapports.find(x=>x.id===rapportId);
+  const p = r && getParticipant(r, etudiantId);
+  if(!r || !p || !canValidateRapport(r)) return;
   const detail = [];
   for(let i=0;i<APPRECIATION_CRITERES.length;i++){
-    const sel = document.getElementById(`apprRow_${id}_${i}`);
+    const sel = document.getElementById(`apprRow_${rapportId}_${etudiantId}_${i}`);
     if(!sel || !sel.value){ toast('Veuillez évaluer chaque critère avant de valider'); return; }
     detail.push({ critere: APPRECIATION_CRITERES[i], niveau: sel.value });
   }
   const moyenne = detail.reduce((s,a)=>s+APPRECIATION_BAREME[a.niveau],0)/detail.length;
-  const apprInput = document.getElementById('rapportAppr_'+id);
-  r.appreciationsDetail = detail;
-  r.note = Math.round(moyenne*10)/10;
-  r.appreciationRapport = apprInput ? (apprInput.value||'') : '';
-  r.valide = true;
-  r.dateValidation = new Date().toISOString().slice(0,10);
-  r.valideParId = state.userId;
-  if(r.etudiantId){
-    DB.evaluations.push({
-      id:uid(), etudiantId:r.etudiantId, filiereId:r.filiereId,
-      module:'Rapport de chantier — '+r.titre, formateurId:r.formateurId, formateurNom:r.formateurNom,
-      note:r.note, appreciation:r.appreciationRapport, date:r.dateValidation
-    });
-  }
+  const apprInput = document.getElementById(`rapportAppr_${rapportId}_${etudiantId}`);
+  p.appreciationsDetail = detail;
+  p.note = Math.round(moyenne*10)/10;
+  p.appreciationRapport = apprInput ? (apprInput.value||'') : '';
+  p.locked = true;
+  p.lockReason = 'valide';
+  p.dateValidation = new Date().toISOString().slice(0,10);
+  p.valideParId = state.userId;
+  pushEvaluationForParticipant(r, p);
   await saveDB();
-  toast('Rapport validé — note calculée : '+r.note+'/19');
+  toast('Rapport validé — note calculée : '+p.note+'/19');
   renderRapports();
   if(document.getElementById('panel-evaluations').classList.contains('active')) renderEvaluations();
 }
-const RAPPORT_MAX_IMAGES = 5;
+// Réinitialisation réservée à la direction : seule la direction peut rouvrir un rapport verrouillé.
+async function resetParticipantDirection(rapportId, etudiantId){
+  if(state.role!=='direction') return;
+  const r = DB.rapports.find(x=>x.id===rapportId);
+  const p = r && getParticipant(r, etudiantId);
+  if(!r || !p) return;
+  Object.assign(p, {
+    soumis:false, dateSoumission:null, description:'', incidents:'', recommandations:'',
+    fichePhoto:null, photosEtudiant:[], appreciationsDetail:null, note: p.participation==='non' && !p.motif ? 0 : null,
+    appreciationRapport:'', locked: p.participation==='non' && !p.motif, lockReason: p.participation==='non' && !p.motif ? 'non-sans-motif' : null,
+    evalPushed:false, dateValidation:null, valideParId:null,
+  });
+  DB.evaluations = DB.evaluations.filter(ev=>!(ev.etudiantId===etudiantId && ev.module==='Rapport de chantier — '+r.titre));
+  await saveDB();
+  toast('Rapport réinitialisé par la direction');
+  renderRapports();
+}
+function populateChantierParticipantsBody(){
+  const fid = document.getElementById('selectFiliereRapport').value;
+  const students = DB.etudiants.filter(e=>e.filiereId===fid && e.statut==='actif').sort((a,b)=>nomComplet(a).localeCompare(nomComplet(b),'fr',{sensitivity:'base'}));
+  document.getElementById('chantierParticipantsBody').innerHTML = students.length ? students.map(e=>`
+    <tr data-student="${e.id}">
+      <td><div class="d-flex align-items-center gap-2">${avatarHTML(e,28)}${nomComplet(e)}</div></td>
+      <td>
+        <div class="btn-group btn-group-sm chantier-toggle" role="group">
+          <button type="button" class="btn btn-success" data-val="oui">Oui</button>
+          <button type="button" class="btn btn-outline-danger" data-val="non">Non</button>
+        </div>
+      </td>
+      <td><input type="text" class="form-control form-control-sm chantier-motif" style="display:none;max-width:220px;" placeholder="Motif (optionnel)"></td>
+    </tr>`).join('') : `<tr><td colspan="3"><div class="empty-state"><i class="bi bi-people"></i><p>Aucun étudiant actif dans cette filière</p></div></td></tr>`;
+  document.querySelectorAll('.chantier-toggle').forEach(grp=>{
+    grp.querySelectorAll('button').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        grp.querySelectorAll('button').forEach(b=>{ b.className = 'btn ' + (b.dataset.val==='oui'?'btn-outline-success':'btn-outline-danger'); });
+        btn.className = 'btn ' + (btn.dataset.val==='oui'?'btn-success':'btn-danger');
+        const motifInput = grp.closest('tr').querySelector('.chantier-motif');
+        motifInput.style.display = btn.dataset.val==='non' ? 'inline-block' : 'none';
+        if(btn.dataset.val==='oui') motifInput.value = '';
+      });
+    });
+  });
+}
 document.getElementById('btnNewRapport').addEventListener('click', ()=>{
   document.getElementById('formRapport').reset();
   document.getElementById('formRapport').elements['dateDebut'].value = new Date().toISOString().slice(0,10);
   document.getElementById('formRapport').elements['dateFin'].value = new Date().toISOString().slice(0,10);
-  document.getElementById('rapportImagesInput').value='';
-  document.getElementById('rapportImagesPreview').innerHTML='';
-  document.getElementById('rapportImagesCount').textContent='';
+  populateChantierParticipantsBody();
   new bootstrap.Modal(document.getElementById('modalRapport')).show();
 });
-document.getElementById('rapportImagesInput').addEventListener('change', e=>{
-  const preview = document.getElementById('rapportImagesPreview');
-  const countEl = document.getElementById('rapportImagesCount');
-  preview.innerHTML='';
+document.getElementById('selectFiliereRapport').addEventListener('change', populateChantierParticipantsBody);
+document.getElementById('formRapport').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(e.target).entries());
+  if(data.dateDebut && data.dateFin && data.dateFin < data.dateDebut){
+    toast('La date de fin doit être postérieure ou égale à la date de début');
+    return;
+  }
+  data.id = uid();
+  data.auteurId = state.userId;
+  data.auteurNom = state.userName;
+  data.dateCreation = new Date().toISOString();
+  data.participants = [];
+  document.querySelectorAll('#chantierParticipantsBody tr[data-student]').forEach(row=>{
+    const etudiantId = row.dataset.student;
+    const activeBtn = row.querySelector('.chantier-toggle .btn-success, .chantier-toggle .btn-danger');
+    const participation = activeBtn ? activeBtn.dataset.val : 'oui';
+    const motif = participation==='non' ? (row.querySelector('.chantier-motif').value||'') : '';
+    data.participants.push(creerParticipant(etudiantId, participation, motif));
+  });
+  if(!data.participants.length){ toast('Aucun étudiant actif trouvé dans cette filière'); return; }
+  DB.rapports.push(data);
+  await saveDB();
+  bootstrap.Modal.getInstance(document.getElementById('modalRapport')).hide();
+  toast('Chantier créé — les étudiants participants doivent compléter leur rapport');
+  renderRapports();
+});
+
+/* ---- Complétion du rapport côté étudiant ---- */
+const RE_MAX_SITE_PHOTOS = 5;
+function openRapportEtudiantModal(rapportId){
+  const r = DB.rapports.find(x=>x.id===rapportId);
+  const u = currentUser();
+  const p = r && u && getParticipant(r, u.etudiantId);
+  if(!r || !p) return;
+  document.getElementById('formRapportEtudiant').reset();
+  document.getElementById('rapportEtudiantRapportId').value = rapportId;
+  document.getElementById('rapportEtudiantDeadlineInfo').innerHTML = deadlineRemainingHTML(r);
+  document.getElementById('reFichePhotoPreview').innerHTML = '';
+  document.getElementById('reSitePhotosPreview').innerHTML = '';
+  document.getElementById('reSitePhotosCount').textContent = '';
+  new bootstrap.Modal(document.getElementById('modalRapportEtudiant')).show();
+}
+document.getElementById('reFichePhotoInput').addEventListener('change', e=>{
+  const preview = document.getElementById('reFichePhotoPreview');
+  preview.innerHTML = '';
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev=>{
+    const img = document.createElement('img');
+    img.src = ev.target.result;
+    img.style.cssText = 'width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--border);';
+    preview.appendChild(img);
+  };
+  reader.readAsDataURL(file);
+});
+document.getElementById('reSitePhotosInput').addEventListener('change', e=>{
+  const preview = document.getElementById('reSitePhotosPreview');
+  const countEl = document.getElementById('reSitePhotosCount');
+  preview.innerHTML = '';
   let files = [...e.target.files];
-  if(files.length > RAPPORT_MAX_IMAGES){
-    toast(`Maximum ${RAPPORT_MAX_IMAGES} images — seules les ${RAPPORT_MAX_IMAGES} premières ont été gardées`);
+  if(files.length > RE_MAX_SITE_PHOTOS){
+    toast(`Maximum ${RE_MAX_SITE_PHOTOS} photos — seules les ${RE_MAX_SITE_PHOTOS} premières ont été gardées`);
     const dt = new DataTransfer();
-    files.slice(0, RAPPORT_MAX_IMAGES).forEach(f=>dt.items.add(f));
+    files.slice(0, RE_MAX_SITE_PHOTOS).forEach(f=>dt.items.add(f));
     e.target.files = dt.files;
     files = [...e.target.files];
   }
-  countEl.textContent = files.length ? `${files.length}/${RAPPORT_MAX_IMAGES} image(s) sélectionnée(s)` : '';
+  countEl.textContent = files.length ? `${files.length}/${RE_MAX_SITE_PHOTOS} photo(s) — ${files.length<2?'au moins 2 photos sont recommandées':'merci !'}` : '';
   files.forEach(file=>{
     const reader = new FileReader();
     reader.onload = ev=>{
@@ -2992,29 +3752,44 @@ document.getElementById('rapportImagesInput').addEventListener('change', e=>{
     reader.readAsDataURL(file);
   });
 });
-document.getElementById('formRapport').addEventListener('submit', async e=>{
+document.getElementById('formRapportEtudiant').addEventListener('submit', async e=>{
   e.preventDefault();
-  const data = Object.fromEntries(new FormData(e.target).entries());
-  if(data.dateDebut && data.dateFin && data.dateFin < data.dateDebut){
-    toast('La date de fin doit être postérieure ou égale à la date de début');
+  const rapportId = document.getElementById('rapportEtudiantRapportId').value;
+  const r = DB.rapports.find(x=>x.id===rapportId);
+  const u = currentUser();
+  const p = r && u && getParticipant(r, u.etudiantId);
+  if(!r || !p){ toast('Rapport introuvable'); return; }
+  if(p.locked || p.soumis){ toast("Ce rapport n'est plus modifiable"); return; }
+  if((Date.now() - new Date(r.dateCreation).getTime()) > RAPPORT_DEADLINE_MS){
+    toast('Le délai de 72h est dépassé pour ce rapport');
+    renderRapports();
+    bootstrap.Modal.getInstance(document.getElementById('modalRapportEtudiant')).hide();
     return;
   }
-  data.id = uid();
-  data.auteurId = state.userId;
-  data.auteurNom = state.userName;
-  data.valide = false;
-  const files = [...document.getElementById('rapportImagesInput').files].slice(0, RAPPORT_MAX_IMAGES);
-  if(files.length){
-    data.photos = await Promise.all(files.map(file => new Promise(res=>{
+  p.description = document.getElementById('reDescription').value;
+  p.incidents = document.getElementById('reIncidents').value;
+  p.recommandations = document.getElementById('reRecommandations').value;
+  const ficheFile = document.getElementById('reFichePhotoInput').files[0];
+  if(ficheFile){
+    p.fichePhoto = await new Promise(res=>{
+      const reader = new FileReader();
+      reader.onload = ev => res(ev.target.result);
+      reader.readAsDataURL(ficheFile);
+    });
+  }
+  const siteFiles = [...document.getElementById('reSitePhotosInput').files].slice(0, RE_MAX_SITE_PHOTOS);
+  if(siteFiles.length){
+    p.photosEtudiant = await Promise.all(siteFiles.map(file => new Promise(res=>{
       const reader = new FileReader();
       reader.onload = ev => res(ev.target.result);
       reader.readAsDataURL(file);
     })));
   }
-  DB.rapports.push(data);
+  p.soumis = true;
+  p.dateSoumission = new Date().toISOString().slice(0,10);
   await saveDB();
-  bootstrap.Modal.getInstance(document.getElementById('modalRapport')).hide();
-  toast('Rapport de chantier enregistré');
+  bootstrap.Modal.getInstance(document.getElementById('modalRapportEtudiant')).hide();
+  toast('Rapport soumis — en attente de validation par le formateur');
   renderRapports();
 });
 
@@ -3091,7 +3866,7 @@ document.getElementById('btnSavePresence').addEventListener('click', async ()=>{
 document.getElementById('presenceHistFrom').addEventListener('change', renderPresenceHistory);
 document.getElementById('presenceHistTo').addEventListener('change', renderPresenceHistory);
 document.getElementById('presenceHistFiliere').addEventListener('change', renderPresenceHistory);
-function renderPresenceHistory(){
+function filteredPresenceHistory(){
   const from = document.getElementById('presenceHistFrom').value;
   const to = document.getElementById('presenceHistTo').value;
   const filFilter = document.getElementById('presenceHistFiliere').value;
@@ -3104,6 +3879,10 @@ function renderPresenceHistory(){
   if(from) list = list.filter(p=>p.date>=from);
   if(to) list = list.filter(p=>p.date<=to);
   list.sort((a,b)=> b.date.localeCompare(a.date));
+  return list;
+}
+function renderPresenceHistory(){
+  const list = filteredPresenceHistory();
 
   // résumé de la période
   const total = list.length;
@@ -3129,6 +3908,54 @@ function renderPresenceHistory(){
     </tr>`;
   }).join('') : `<tr><td colspan="5"><div class="empty-state"><i class="bi bi-calendar-x"></i><p>Aucun appel enregistré pour cette période</p></div></td></tr>`;
 }
+async function exportPresenceRapportPdf(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const font = await ensurePdfFont(doc);
+  const M = 14, W = 182;
+  const from = document.getElementById('presenceHistFrom').value;
+  const to = document.getElementById('presenceHistTo').value;
+  const filFilter = document.getElementById('presenceHistFiliere').value;
+  const list = filteredPresenceHistory();
+
+  const total = list.length;
+  const present = list.filter(p=>p.statut==='present').length;
+  const retard = list.filter(p=>p.statut==='retard').length;
+  const absent = list.filter(p=>p.statut==='absent').length;
+  const taux = total>0 ? Math.round((present/total)*100) : 0;
+
+  const periodeLabel = (from||to) ? `Période du ${from?fmtDate(from):'—'} au ${to?fmtDate(to):'—'}` : 'Toutes périodes';
+  const filiereLabel = filFilter ? getFiliere(filFilter)?.nom||'' : 'Toutes les filières';
+  pdfHeader(doc, 'Rapport de présence', `${periodeLabel} — ${filiereLabel} — ${total} appel(s)`, font);
+
+  let y = pdfStatsSection(doc, M, 48, W, 'Récapitulatif', [
+    {label:'Présences', value:present, color:[28,122,70]},
+    {label:'Retards', value:retard, color:[180,112,11]},
+    {label:'Absences', value:absent, color:[176,51,39]},
+    {label:'Taux présence', value:taux+'%', color:[22,35,63]},
+  ], font) + 6;
+
+  if(y > 265){ doc.addPage(); y = 20; }
+  doc.autoTable({
+    startY: y,
+    head: [['Date','Filière','Étudiant','Statut','Motif']],
+    body: list.map(p=>[
+      fmtDate(p.date),
+      getFiliere(p.filiereId)?.nom||'—',
+      nomComplet(getEtudiant(p.etudiantId)),
+      {present:'Présent',retard:'Retard',absent:'Absent'}[p.statut]||p.statut,
+      p.motif||'—',
+    ]),
+    styles:{font},
+    headStyles:{fillColor:[22,35,63], textColor:255, fontSize:9, font},
+    bodyStyles:{fontSize:8.5, font},
+    alternateRowStyles:{fillColor:[245,246,248]},
+  });
+
+  pdfFooter(doc, font);
+  doc.save(`rapport-presence-${(from||'debut')}-au-${(to||'fin')}.pdf`);
+}
+document.getElementById('btnExportPresencePdf').addEventListener('click', exportPresenceRapportPdf);
 
 /* ---------- DOCUMENTS ---------- */
 function renderDocuments(){
