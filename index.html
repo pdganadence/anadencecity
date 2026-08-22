@@ -450,6 +450,13 @@ table.table td{vertical-align:middle;font-size:.87rem;}
       <div class="avatar-circ d-none d-sm-flex" id="topAvatar">--</div>
     </div>
     <div id="content">
+      <div class="alert alert-warning d-none align-items-center justify-content-between flex-wrap gap-2 mb-3" id="backupReminderBanner" role="alert">
+        <div><i class="bi bi-exclamation-triangle-fill me-2"></i><span id="backupReminderText"></span></div>
+        <div class="d-flex gap-2">
+          <button class="btn btn-sm btn-warning" id="btnBackupReminderNow"><i class="bi bi-download"></i> Télécharger maintenant</button>
+          <button type="button" class="btn-close" id="btnBackupReminderDismiss" aria-label="Fermer"></button>
+        </div>
+      </div>
       <!-- ===== DASHBOARD ===== -->
       <div class="section-panel" id="panel-dashboard">
         <div class="row g-3 mb-3" id="statCards"></div>
@@ -789,6 +796,32 @@ table.table td{vertical-align:middle;font-size:.87rem;}
                 <thead><tr><th>Nom</th><th class="d-none d-md-table-cell">Identifiant</th><th>Rôle</th><th class="text-end">Actions</th></tr></thead>
                 <tbody id="usersBody"></tbody>
               </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-clean mt-3">
+          <div class="card-header"><i class="bi bi-download me-1"></i> Sauvegarde générale de l'application</div>
+          <div class="card-body">
+            <p class="text-muted small mb-2">Télécharge un fichier unique (.json) contenant l'intégralité des données de l'application (étudiants, formateurs, paiements, présences, filières, modules, documents, comptes, etc.). Conservez ce fichier en lieu sûr (ordinateur, clé USB, Google Drive) pour pouvoir tout restaurer en cas de problème.</p>
+            <button class="btn btn-outline-secondary btn-sm" id="btnExportBackup"><i class="bi bi-download"></i> Télécharger une sauvegarde</button>
+
+            <hr class="my-3">
+
+            <p class="text-muted small mb-2"><strong>Restaurer une sauvegarde</strong> — remplace <strong>toutes</strong> les données actuelles de l'application par celles du fichier choisi. À utiliser uniquement pour revenir à un état antérieur ou récupérer après un incident. Cette action est irréversible.</p>
+            <input type="file" accept="application/json,.json" class="form-control form-control-sm" id="backupRestoreInput" style="max-width:320px;">
+          </div>
+        </div>
+
+        <div class="card-clean mt-3">
+          <div class="card-header"><i class="bi bi-cloud-arrow-up-fill me-1"></i> Maintenance — Migration des fichiers vers Cloudinary</div>
+          <div class="card-body">
+            <p class="text-muted small mb-2">Envoie vers Cloudinary toutes les photos, preuves, CV et documents encore stockés directement dans la base (ancien format), puis remplace leur valeur par l'URL Cloudinary correspondante. Réduit la taille de la base et accélère l'ouverture/sauvegarde de l'application. Peut être relancé sans risque : les fichiers déjà migrés sont automatiquement ignorés.</p>
+            <button class="btn btn-outline-secondary btn-sm" id="btnMigrateCloudinary"><i class="bi bi-cloud-arrow-up"></i> Lancer la migration</button>
+            <div id="migrationProgressWrap" style="display:none;" class="mt-3">
+              <div class="progress" style="height:8px;"><div class="progress-bar bg-success" id="migrationProgressBar" style="width:0%"></div></div>
+              <div class="small text-muted mt-1" id="migrationProgressLabel"></div>
+              <div class="small mt-2" id="migrationLog" style="max-height:180px;overflow-y:auto;font-family:monospace;font-size:.72rem;"></div>
             </div>
           </div>
         </div>
@@ -1361,6 +1394,33 @@ firebase.initializeApp(firebaseConfig);
 const firestore = firebase.firestore();
 // Un seul document contient toute la base (même logique que l'ancien stockage local)
 const dbDocRef = firestore.collection('anadence').doc('centre-formation');
+
+/* ---------- Upload de fichiers vers Cloudinary (photos, preuves, CV, documents) -----------
+   On stocke uniquement l'URL renvoyée par Cloudinary dans Firestore, au lieu du fichier
+   encodé en base64 : le document Firestore reste léger, donc l'ouverture et la sauvegarde
+   de l'application restent rapides même quand beaucoup de photos/fichiers sont ajoutés. */
+const CLOUDINARY_CLOUD_NAME = 'izzv5vj3';
+const CLOUDINARY_UPLOAD_PRESET = 'anadence_files';
+async function uploadToCloudinary(file){
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`, { method:'POST', body: fd });
+  if(!res.ok) throw new Error("Échec de l'envoi vers Cloudinary");
+  const data = await res.json();
+  return data.secure_url;
+}
+// Suivi des envois en cours : les formulaires attendent la fin de l'upload avant d'enregistrer,
+// pour ne jamais sauvegarder une URL locale temporaire (blob:) qui ne survivrait pas au rechargement.
+const pendingUploads = new Map();
+function trackPendingUpload(key, promise){
+  pendingUploads.set(key, promise);
+  promise.finally(()=>{ if(pendingUploads.get(key)===promise) pendingUploads.delete(key); });
+}
+async function resolvePendingUpload(key){
+  const p = pendingUploads.get(key);
+  if(p){ try{ await p; }catch(err){ /* déjà signalé par l'appelant d'origine */ } }
+}
 
 const ROLES = [
   {id:'direction', label:'Direction', icon:'bi-briefcase-fill'},
@@ -2191,6 +2251,7 @@ function enterApp(user, skipSave){
   // Par défaut, on n'affiche que les étudiants actifs (abandon/diplômé accessibles via les boutons dédiés)
   etudiantStatutFilter = 'actif';
   document.querySelectorAll('#filterStatutEtudiantGroup [data-statut]').forEach(b=>b.classList.toggle('active', b.dataset.statut==='actif'));
+  checkBackupReminder();
   goSection('dashboard');
 }
 
@@ -2448,9 +2509,12 @@ document.getElementById('photoUploadBox').addEventListener('click', ()=> documen
 document.getElementById('photoInput').addEventListener('change', e=>{
   const file = e.target.files[0];
   if(!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => setPhotoBox(ev.target.result);
-  reader.readAsDataURL(file);
+  setPhotoBox(URL.createObjectURL(file)); // aperçu instantané en local
+  document.getElementById('etudiantPhotoData').value = '';
+  const uploadPromise = uploadToCloudinary(file)
+    .then(url => { document.getElementById('etudiantPhotoData').value = url; })
+    .catch(err => { console.error(err); toast("Échec de l'envoi de la photo — réessayez"); resetPhotoBox(); });
+  trackPendingUpload('etudiantPhotoData', uploadPromise);
 });
 /* ---------- Upload multi-images (preuve d'abandon / fichiers diplôme), limité à 3 fichiers ---------- */
 const MULTI_UPLOADS = {};
@@ -2471,16 +2535,27 @@ function setupMultiImageUpload(inputId, hiddenId, previewId, max){
     const files = getFiles();
     const toAdd = Array.from(input.files).slice(0, Math.max(0, max-files.length));
     if(!toAdd.length){ input.value=''; return; }
-    let pending = toAdd.length;
-    toAdd.forEach(file=>{
-      const reader = new FileReader();
-      reader.onload = ev=>{
-        files.push(ev.target.result);
-        pending--;
-        if(pending===0){ hidden.value = JSON.stringify(files.slice(0,max)); render(); input.value=''; }
-      };
-      reader.readAsDataURL(file);
-    });
+    // Aperçus locaux instantanés, remplacés par les URL Cloudinary une fois l'envoi terminé
+    const startIdx = files.length;
+    const merged = files.concat(toAdd.map(file=>URL.createObjectURL(file)));
+    hidden.value = JSON.stringify(merged.slice(0,max));
+    render();
+    input.value = '';
+    const uploadPromise = Promise.all(toAdd.map(file=>uploadToCloudinary(file)))
+      .then(urls=>{
+        const current = getFiles();
+        urls.forEach((url,i)=>{ if(current[startIdx+i]!==undefined) current[startIdx+i] = url; });
+        hidden.value = JSON.stringify(current.slice(0,max));
+        render();
+      })
+      .catch(err=>{
+        console.error(err);
+        toast("Échec de l'envoi d'une image — réessayez");
+        const current = getFiles().filter((_,i)=> i<startIdx || i>=startIdx+toAdd.length);
+        hidden.value = JSON.stringify(current);
+        render();
+      });
+    trackPendingUpload(hiddenId, uploadPromise);
   });
   const api = { render, reset: ()=>{ hidden.value=''; input.value=''; render(); } };
   MULTI_UPLOADS[hiddenId] = api;
@@ -2859,6 +2934,9 @@ async function exportFicheEtudiantPdf(id){
 document.getElementById('formEtudiant').addEventListener('submit', async e=>{
   e.preventDefault();
   const f = e.target;
+  await resolvePendingUpload('etudiantPhotoData');
+  await resolvePendingUpload('preuveAbandonData');
+  await resolvePendingUpload('diplomeFichiersData');
   const fd = new FormData(f);
   const data = Object.fromEntries(fd.entries());
   data.moduleIds = fd.getAll('moduleIds'); // plusieurs cases peuvent être cochées (ou aucune)
@@ -3032,9 +3110,12 @@ document.getElementById('formateurPhotoUploadBox').addEventListener('click', ()=
 document.getElementById('formateurPhotoInput').addEventListener('change', e=>{
   const file = e.target.files[0];
   if(!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => setFormateurPhotoBox(ev.target.result);
-  reader.readAsDataURL(file);
+  setFormateurPhotoBox(URL.createObjectURL(file));
+  document.getElementById('formateurPhotoData').value = '';
+  const uploadPromise = uploadToCloudinary(file)
+    .then(url => { document.getElementById('formateurPhotoData').value = url; })
+    .catch(err => { console.error(err); toast("Échec de l'envoi de la photo — réessayez"); resetFormateurPhotoBox(); });
+  trackPendingUpload('formateurPhotoData', uploadPromise);
 });
 document.getElementById('btnNewFormateur').addEventListener('click', ()=>{
   document.getElementById('formFormateur').reset();
@@ -3128,6 +3209,7 @@ async function exportFicheFormateurPdf(id){
 }
 document.getElementById('formFormateur').addEventListener('submit', async e=>{
   e.preventDefault();
+  await resolvePendingUpload('formateurPhotoData');
   const data = Object.fromEntries(new FormData(e.target).entries());
   if(data.id){
     const idx = DB.formateurs.findIndex(x=>x.id===data.id);
@@ -3771,19 +3853,23 @@ document.getElementById('formRapportEtudiant').addEventListener('submit', async 
   p.recommandations = document.getElementById('reRecommandations').value;
   const ficheFile = document.getElementById('reFichePhotoInput').files[0];
   if(ficheFile){
-    p.fichePhoto = await new Promise(res=>{
-      const reader = new FileReader();
-      reader.onload = ev => res(ev.target.result);
-      reader.readAsDataURL(ficheFile);
-    });
+    try{
+      p.fichePhoto = await uploadToCloudinary(ficheFile);
+    }catch(err){
+      console.error(err);
+      toast("Échec de l'envoi de la photo de fiche — réessayez");
+      return;
+    }
   }
   const siteFiles = [...document.getElementById('reSitePhotosInput').files].slice(0, RE_MAX_SITE_PHOTOS);
   if(siteFiles.length){
-    p.photosEtudiant = await Promise.all(siteFiles.map(file => new Promise(res=>{
-      const reader = new FileReader();
-      reader.onload = ev => res(ev.target.result);
-      reader.readAsDataURL(file);
-    })));
+    try{
+      p.photosEtudiant = await Promise.all(siteFiles.map(file => uploadToCloudinary(file)));
+    }catch(err){
+      console.error(err);
+      toast("Échec de l'envoi des photos de chantier — réessayez");
+      return;
+    }
   }
   p.soumis = true;
   p.dateSoumission = new Date().toISOString().slice(0,10);
@@ -3994,11 +4080,13 @@ document.getElementById('formDocument').addEventListener('submit', async e=>{
   data.id = uid();
   const file = document.getElementById('documentFileInput').files[0];
   if(file){
-    data.fichier = await new Promise(res=>{
-      const reader = new FileReader();
-      reader.onload = ev => res(ev.target.result);
-      reader.readAsDataURL(file);
-    });
+    try{
+      data.fichier = await uploadToCloudinary(file);
+    }catch(err){
+      console.error(err);
+      toast("Échec de l'envoi du fichier — réessayez");
+      return;
+    }
   }
   DB.documents.push(data);
   await saveDB();
@@ -4090,19 +4178,28 @@ let profilCvPending = null;
 document.getElementById('profilPhotoInput').addEventListener('change', e=>{
   const file = e.target.files[0];
   if(!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => { profilPhotoPending = ev.target.result; setProfilPhotoBox(profilPhotoPending); };
-  reader.readAsDataURL(file);
+  setProfilPhotoBox(URL.createObjectURL(file));
+  profilPhotoPending = null;
+  const uploadPromise = uploadToCloudinary(file)
+    .then(url => { profilPhotoPending = url; })
+    .catch(err => { console.error(err); toast("Échec de l'envoi de la photo — réessayez"); resetProfilPhotoBox(); });
+  trackPendingUpload('profilPhoto', uploadPromise);
 });
 document.getElementById('profilCvInput').addEventListener('change', e=>{
   const file = e.target.files[0];
   if(!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    profilCvPending = ev.target.result;
-    document.getElementById('profilCvCurrent').innerHTML = `<span class="text-success small"><i class="bi bi-check-circle-fill me-1"></i> Nouveau fichier prêt : ${file.name}</span>`;
-  };
-  reader.readAsDataURL(file);
+  document.getElementById('profilCvCurrent').innerHTML = `<span class="text-muted small"><i class="bi bi-arrow-repeat me-1"></i> Envoi de ${file.name} en cours…</span>`;
+  const uploadPromise = uploadToCloudinary(file)
+    .then(url => {
+      profilCvPending = url;
+      document.getElementById('profilCvCurrent').innerHTML = `<span class="text-success small"><i class="bi bi-check-circle-fill me-1"></i> Nouveau fichier prêt : ${file.name}</span>`;
+    })
+    .catch(err => {
+      console.error(err);
+      toast("Échec de l'envoi du CV — réessayez");
+      document.getElementById('profilCvCurrent').innerHTML = `<span class="text-danger small">Échec de l'envoi — réessayez</span>`;
+    });
+  trackPendingUpload('profilCv', uploadPromise);
 });
 function renderMonProfil(){
   const u = currentUser();
@@ -4125,6 +4222,8 @@ function renderMonProfil(){
 }
 document.getElementById('formMonProfil').addEventListener('submit', async e=>{
   e.preventDefault();
+  await resolvePendingUpload('profilPhoto');
+  await resolvePendingUpload('profilCv');
   const errBox = document.getElementById('profilError');
   errBox.style.display = 'none';
   const u = currentUser();
@@ -4276,6 +4375,187 @@ document.getElementById('formUser').addEventListener('submit', async e=>{
   if(data.id===state.userId){ state.role = data.role; renderNav(); } // si la direction modifie son propre compte (rare)
   renderUtilisateurs();
 });
+
+/* ---------- SAUVEGARDE GÉNÉRALE (export / restauration) ---------- */
+function exportBackup(){
+  DB.lastBackupAt = new Date().toISOString();
+  const payload = JSON.stringify(DB, null, 2);
+  const blob = new Blob([payload], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `anadence-sauvegarde-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  saveDB(); // enregistre discrètement la date de cette sauvegarde, pour le rappel automatique
+  checkBackupReminder();
+  toast('Sauvegarde téléchargée');
+}
+document.getElementById('btnExportBackup').addEventListener('click', exportBackup);
+
+/* Rappel automatique : alerte la Direction si aucune sauvegarde n'a été téléchargée depuis 7 jours (ou jamais) */
+const BACKUP_REMINDER_DAYS = 7;
+function checkBackupReminder(){
+  const banner = document.getElementById('backupReminderBanner');
+  const textEl = document.getElementById('backupReminderText');
+  if(state.role !== 'direction'){ banner.classList.add('d-none'); banner.classList.remove('d-flex'); return; }
+  const last = DB.lastBackupAt ? new Date(DB.lastBackupAt) : null;
+  const days = last ? Math.floor((Date.now()-last.getTime())/(24*3600*1000)) : null;
+  if(!last){
+    textEl.textContent = "Aucune sauvegarde de l'application n'a encore été téléchargée. Pensez à en créer une régulièrement pour protéger vos données.";
+  } else if(days >= BACKUP_REMINDER_DAYS){
+    textEl.textContent = `Dernière sauvegarde téléchargée il y a ${days} jour(s). Pensez à en refaire une.`;
+  } else {
+    banner.classList.add('d-none'); banner.classList.remove('d-flex');
+    return;
+  }
+  banner.classList.remove('d-none'); banner.classList.add('d-flex');
+}
+document.getElementById('btnBackupReminderNow').addEventListener('click', exportBackup);
+document.getElementById('btnBackupReminderDismiss').addEventListener('click', ()=>{
+  const banner = document.getElementById('backupReminderBanner');
+  banner.classList.add('d-none'); banner.classList.remove('d-flex');
+});
+
+document.getElementById('backupRestoreInput').addEventListener('change', async e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    const text = await file.text();
+    const parsed = JSON.parse(text);
+    // Vérification minimale : le fichier doit ressembler à une vraie sauvegarde de l'application
+    if(!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.etudiants) || !Array.isArray(parsed.formateurs) || !Array.isArray(parsed.users)){
+      toast('Ce fichier ne ressemble pas à une sauvegarde valide');
+      e.target.value = '';
+      return;
+    }
+    const ok = confirm(`Cette opération va REMPLACER toutes les données actuelles de l'application (étudiants, paiements, présences, comptes, etc.) par celles de ce fichier de sauvegarde.\n\nCette action est irréversible. Continuer ?`);
+    if(!ok){ e.target.value=''; return; }
+    DB = parsed;
+    migrateDB();
+    await saveDB();
+    toast('Sauvegarde restaurée avec succès — rechargement de l\'application...');
+    setTimeout(()=> location.reload(), 1200);
+  }catch(err){
+    console.error(err);
+    toast('Échec de la lecture du fichier — vérifiez qu\'il s\'agit bien d\'un fichier de sauvegarde .json');
+    e.target.value = '';
+  }
+});
+
+/* ---------- MIGRATION DES FICHIERS BASE64 VERS CLOUDINARY ---------- */
+// Convertit une chaîne "data:...;base64,...." en objet File exploitable par uploadToCloudinary
+function dataUrlToFile(dataUrl, filename){
+  const [header, b64] = dataUrl.split(',');
+  const mimeMatch = header.match(/data:(.*?);base64/);
+  const mime = mimeMatch ? mimeMatch[1] : 'application/octet-stream';
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+  return new File([bytes], filename, {type: mime});
+}
+function isBase64DataUrl(v){
+  return typeof v === 'string' && v.startsWith('data:') && v.includes('base64,');
+}
+// Construit la liste des fichiers encore stockés en base64 dans la base, avec de quoi lire/écrire chacun
+function buildMigrationTasks(){
+  const tasks = [];
+  DB.etudiants.forEach(e=>{
+    if(isBase64DataUrl(e.photo)){
+      tasks.push({ get:()=>e.photo, set:url=>{ e.photo=url; }, label:`Photo étudiant — ${nomComplet(e)}` });
+    }
+    ['preuveAbandon','diplomeFichiers'].forEach(field=>{
+      let arr; try{ arr = JSON.parse(e[field]||'[]'); }catch(err){ arr = []; }
+      arr.forEach((val,i)=>{
+        if(isBase64DataUrl(val)){
+          tasks.push({
+            get:()=>arr[i],
+            set:url=>{ arr[i]=url; e[field]=JSON.stringify(arr); },
+            label:`${field==='preuveAbandon'?"Preuve d'abandon":'Fichier diplôme'} — ${nomComplet(e)} (${i+1})`
+          });
+        }
+      });
+    });
+  });
+  DB.formateurs.forEach(f=>{
+    if(isBase64DataUrl(f.photo)) tasks.push({ get:()=>f.photo, set:url=>{ f.photo=url; }, label:`Photo formateur — ${nomComplet(f)}` });
+    if(isBase64DataUrl(f.cv)) tasks.push({ get:()=>f.cv, set:url=>{ f.cv=url; }, label:`CV — ${nomComplet(f)}` });
+  });
+  DB.documents.forEach(d=>{
+    if(isBase64DataUrl(d.fichier)) tasks.push({ get:()=>d.fichier, set:url=>{ d.fichier=url; }, label:`Document — ${d.nom||d.id}` });
+  });
+  (DB.rapports||[]).forEach(r=>{
+    (r.participants||[]).forEach(p=>{
+      const et = getEtudiant(p.etudiantId);
+      if(isBase64DataUrl(p.fichePhoto)){
+        tasks.push({ get:()=>p.fichePhoto, set:url=>{ p.fichePhoto=url; }, label:`Photo fiche rapport — ${nomComplet(et)}` });
+      }
+      if(Array.isArray(p.photosEtudiant)){
+        p.photosEtudiant.forEach((val,i)=>{
+          if(isBase64DataUrl(val)){
+            tasks.push({
+              get:()=>p.photosEtudiant[i],
+              set:url=>{ p.photosEtudiant[i]=url; },
+              label:`Photo chantier — ${nomComplet(et)} (${i+1})`
+            });
+          }
+        });
+      }
+    });
+  });
+  return tasks;
+}
+async function migratePhotosToCloudinary(){
+  const btn = document.getElementById('btnMigrateCloudinary');
+  const wrap = document.getElementById('migrationProgressWrap');
+  const bar = document.getElementById('migrationProgressBar');
+  const label = document.getElementById('migrationProgressLabel');
+  const logEl = document.getElementById('migrationLog');
+  const log = (html) => { logEl.insertAdjacentHTML('beforeend', `<div>${html}</div>`); logEl.scrollTop = logEl.scrollHeight; };
+
+  const tasks = buildMigrationTasks();
+  if(!tasks.length){
+    toast('Aucun fichier à migrer — tout est déjà sur Cloudinary');
+    return;
+  }
+  if(!confirm(`${tasks.length} fichier(s) à migrer vers Cloudinary.\nCela peut prendre plusieurs minutes selon votre connexion. Ne fermez pas cette page pendant l'opération.\n\nContinuer ?`)) return;
+
+  btn.disabled = true;
+  wrap.style.display = '';
+  logEl.innerHTML = '';
+  bar.style.width = '0%';
+  let done = 0, failed = 0;
+
+  for(const task of tasks){
+    label.textContent = `${done+failed+1}/${tasks.length} — ${task.label}`;
+    try{
+      const dataUrl = task.get();
+      const file = dataUrlToFile(dataUrl, task.label.replace(/[^a-z0-9]/gi,'_').toLowerCase() || 'fichier');
+      const url = await uploadToCloudinary(file);
+      task.set(url);
+      done++;
+      log(`<span class="text-success">✓</span> ${task.label}`);
+    }catch(err){
+      failed++;
+      console.error(err);
+      log(`<span class="text-danger">✗</span> ${task.label} — échec (${err.message||'erreur réseau'})`);
+    }
+    bar.style.width = Math.round(((done+failed)/tasks.length)*100)+'%';
+    // Sauvegarde périodique pour ne rien perdre en cas d'interruption en cours de route
+    if((done+failed) % 8 === 0){
+      try{ await saveDB(); }catch(err){ console.error(err); }
+    }
+  }
+
+  await saveDB();
+  label.textContent = `Terminé : ${done} fichier(s) migré(s)${failed?`, ${failed} échec(s) — relancez la migration pour réessayer`:''}.`;
+  btn.disabled = false;
+  toast(failed ? `Migration terminée avec ${failed} échec(s)` : 'Migration terminée avec succès — base allégée');
+  renderEtudiants(); renderFormateurs(); renderDocuments();
+}
+document.getElementById('btnMigrateCloudinary').addEventListener('click', migratePhotosToCloudinary);
 
 /* ---------- DELETE ---------- */
 function askDelete(collection, id){
