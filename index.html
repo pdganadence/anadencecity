@@ -40,16 +40,55 @@ h1,h2,h3,h4,h5,.brand,.nav-section-title{font-family:'Poppins',sans-serif;}
 }
 .public-navbar .nav-link-custom{color:#C6CDE0;font-weight:500;font-size:.9rem;text-decoration:none;}
 .public-navbar .nav-link-custom:hover{color:#fff;}
+.btn-public-burger{
+  width:38px;height:38px;padding:0;border-radius:9px;display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);color:#fff;font-size:1.2rem;
+}
+.btn-public-burger:hover{background:rgba(255,255,255,.16);color:#fff;}
+.public-offcanvas-link{
+  display:flex;align-items:center;padding:11px 12px;border-radius:9px;color:var(--text);text-decoration:none;
+  font-weight:500;font-size:.94rem;
+}
+.public-offcanvas-link:hover{background:#F5F6F9;color:var(--navy);}
 .public-hero{
   background:radial-gradient(circle at 15% 20%, rgba(232,163,61,0.14), transparent 45%),
              radial-gradient(circle at 85% 80%, rgba(44,120,115,0.22), transparent 45%),
              linear-gradient(135deg,var(--navy) 0%,#0D1730 100%);
-  color:#fff;padding:70px 0 80px;
+  color:#fff;
 }
-.public-hero h1{font-size:2.3rem;font-weight:800;max-width:640px;}
-.public-hero p{color:#C6CDE0;max-width:560px;}
 .public-section{padding:56px 0;}
 .public-footer{background:var(--navy);color:#8B96B4;padding:26px 0;font-size:.82rem;}
+
+/* ===== Carrousel d'accueil dynamique ===== */
+#heroCarousel{height:min(78vh,620px);min-height:380px;}
+#heroCarousel .carousel-inner,#heroCarousel .carousel-item{height:100%;}
+.hero-slide{
+  height:100%;width:100%;background-size:cover;background-position:center;position:relative;
+  display:flex;align-items:center;
+}
+.hero-slide::before{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(100deg, rgba(10,16,32,.92) 0%, rgba(10,16,32,.72) 42%, rgba(10,16,32,.35) 75%, rgba(10,16,32,.15) 100%);
+}
+.hero-slide-content{position:relative;z-index:1;color:#fff;padding:0 8px;}
+.hero-slide-eyebrow{
+  display:inline-block;background:rgba(232,163,61,0.16);border:1px solid rgba(232,163,61,0.5);color:var(--amber);
+  font-size:.72rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 14px;border-radius:20px;margin-bottom:14px;
+}
+.hero-slide-content h1{font-size:2.15rem;font-weight:800;max-width:640px;line-height:1.18;}
+.hero-slide-content p{color:#D5DAEA;max-width:520px;font-size:1rem;}
+#heroCarousel .carousel-indicators{margin-bottom:1.4rem;}
+#heroCarousel .carousel-indicators [data-bs-target]{
+  width:9px;height:9px;border-radius:50%;background-color:#fff;opacity:.45;margin:0 5px;
+}
+#heroCarousel .carousel-indicators .active{opacity:1;background-color:var(--amber);}
+#heroCarousel .carousel-control-prev,#heroCarousel .carousel-control-next{width:6%;opacity:.55;}
+#heroCarousel .carousel-control-prev:hover,#heroCarousel .carousel-control-next:hover{opacity:.9;}
+@media (max-width:576px){
+  #heroCarousel{height:74vh;min-height:420px;}
+  .hero-slide-content h1{font-size:1.5rem;}
+  .hero-slide-content p{font-size:.88rem;}
+}
 
 /* ===== Login modal ===== */
 .login-side{
@@ -83,15 +122,89 @@ h1,h2,h3,h4,h5,.brand,.nav-section-title{font-family:'Poppins',sans-serif;}
   color:#fff;font-size:.8rem;font-weight:600;
 }
 
+/* ===== Cartes "flyer" (formations / services) sur le site public ===== */
+.flyer-card{
+  border:1px solid var(--border);border-radius:16px;overflow:hidden;background:#fff;height:100%;
+  display:flex;flex-direction:column;transition:all .15s ease;
+}
+.flyer-card:hover{border-color:var(--amber);transform:translateY(-3px);box-shadow:0 12px 26px rgba(0,0,0,0.08);}
+.flyer-card .flyer-img-wrap{position:relative;aspect-ratio:4/3;background:#eee;overflow:hidden;}
+.flyer-card .flyer-img-wrap img{width:100%;height:100%;object-fit:cover;display:block;}
+.flyer-card .flyer-badge{
+  position:absolute;top:10px;left:10px;background:rgba(22,35,63,0.85);color:var(--amber);
+  font-size:.7rem;font-weight:700;padding:4px 10px;border-radius:20px;letter-spacing:.3px;
+}
+.flyer-card .flyer-body{padding:16px 16px 18px;display:flex;flex-direction:column;flex:1;}
+.flyer-card .flyer-title{font-weight:700;font-family:'Poppins';font-size:1.02rem;margin-bottom:6px;}
+.flyer-card .flyer-meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+.flyer-card .flyer-meta .badge{font-weight:600;font-size:.72rem;}
+.flyer-card .flyer-desc{color:var(--muted);font-size:.84rem;flex:1;margin-bottom:12px;}
+
+/* ===== Blog (site public) ===== */
+.blog-card{
+  border:1px solid var(--border);border-radius:16px;overflow:hidden;background:#fff;height:100%;
+  display:flex;flex-direction:column;transition:all .15s ease;
+}
+.blog-card:hover{border-color:var(--amber);transform:translateY(-3px);box-shadow:0 12px 26px rgba(0,0,0,0.08);}
+.blog-card .blog-img-wrap{aspect-ratio:16/10;background:#eee;overflow:hidden;}
+.blog-card .blog-img-wrap img{width:100%;height:100%;object-fit:cover;display:block;}
+.blog-card .blog-body{padding:16px;display:flex;flex-direction:column;flex:1;}
+.blog-card .blog-date{color:var(--amber-dark);font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;}
+.blog-card .blog-title{font-weight:700;font-family:'Poppins';font-size:1rem;margin-bottom:6px;}
+.blog-card .blog-excerpt{color:var(--muted);font-size:.84rem;flex:1;margin-bottom:12px;}
+
 /* ===== Photo étudiant ===== */
 .photo-upload-box{
-  width:96px;height:96px;border-radius:14px;border:2px dashed var(--border);
+  width:clamp(96px,26vw,120px);height:clamp(96px,26vw,120px);border-radius:14px;border:2px dashed var(--border);
   display:flex;align-items:center;justify-content:center;overflow:hidden;background:#F8F9FB;
   cursor:pointer;flex-shrink:0;position:relative;
 }
 .photo-upload-box img{width:100%;height:100%;object-fit:cover;}
 .photo-upload-box i{font-size:1.4rem;color:#B7BEC9;}
 .avatar-img{border-radius:50%;object-fit:cover;flex-shrink:0;}
+/* Icône "voir en grand" affichée sur les cadres photo contenant déjà une image */
+.photo-view-hint{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(22,35,63,0.0);color:#fff;font-size:1.1rem;opacity:0;transition:opacity .15s,background .15s;
+  pointer-events:none;
+}
+.photo-upload-box:hover .photo-view-hint,.photo-upload-box:active .photo-view-hint{
+  opacity:1;background:rgba(22,35,63,0.35);
+}
+/* Bouton "changer la photo" toujours visible, séparé du clic d'agrandissement */
+.photo-edit-btn{
+  position:absolute;right:4px;bottom:4px;width:26px;height:26px;border-radius:50%;
+  background:var(--amber);color:#fff;border:2px solid #fff;display:flex;align-items:center;justify-content:center;
+  font-size:.75rem;padding:0;line-height:1;z-index:2;box-shadow:0 1px 3px rgba(0,0,0,.25);
+}
+/* Cartes photo de la galerie personnelle : format carte carrée, responsive */
+.galerie-photo-card{
+  width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:10px;cursor:pointer;display:block;
+}
+/* Visionneuse plein écran pour agrandir une image sans dépasser l'écran (mobile compris) */
+.img-lightbox-overlay{
+  position:fixed;inset:0;background:rgba(10,14,26,0.88);z-index:2000;
+  display:none;align-items:center;justify-content:center;padding:20px;cursor:zoom-out;
+}
+.img-lightbox-overlay.show{display:flex;}
+.img-lightbox-overlay img{
+  max-width:92vw;max-height:88vh;width:auto;height:auto;border-radius:10px;
+  box-shadow:0 8px 30px rgba(0,0,0,.5);object-fit:contain;
+}
+.img-lightbox-close{
+  position:absolute;top:16px;right:16px;width:38px;height:38px;border-radius:50%;
+  background:rgba(255,255,255,.15);color:#fff;border:none;display:flex;align-items:center;justify-content:center;
+  font-size:1.2rem;
+}
+/* Bouton oeil pour afficher/masquer un mot de passe */
+.password-field-wrap{position:relative;}
+.password-field-wrap input{padding-right:42px;}
+.password-toggle-btn{
+  position:absolute;top:50%;right:6px;transform:translateY(-50%);border:none;background:transparent;
+  color:var(--muted);width:30px;height:30px;display:flex;align-items:center;justify-content:center;
+  border-radius:6px;padding:0;
+}
+.password-toggle-btn:hover{color:var(--text);background:#F0F1F4;}
 
 /* ===== Correctif défilement des fenêtres modales =====
    Quand modal-body/modal-footer sont enveloppés dans un <form>, ce <form>
@@ -263,10 +376,9 @@ table.table td{vertical-align:middle;font-size:.87rem;}
   .card-clean .card-header{font-size:.85rem;padding:.65rem .9rem;}
   table.table td, table.table th{font-size:.78rem;}
   .search-input{max-width:100%;}
-  .public-hero{padding:48px 0 56px;}
-  .public-hero h1{font-size:1.55rem;}
-  .public-hero p{font-size:.9rem;}
   .public-section{padding:38px 0;}
+  .flyer-card .flyer-title{font-size:.95rem;}
+  .blog-card .blog-title{font-size:.95rem;}
   h5, .modal-title{font-size:1.02rem;}
   .btn{font-size:.86rem;}
   .wizard-steps .wizard-step-label{display:none;}
@@ -286,28 +398,90 @@ table.table td{vertical-align:middle;font-size:.87rem;}
       </div>
       <div class="d-none d-md-flex align-items-center gap-4">
         <a href="#public-accueil" class="nav-link-custom">Accueil</a>
-        <a href="#public-services" class="nav-link-custom">Nos Services</a>
         <a href="#public-formations" class="nav-link-custom">Nos formations</a>
+        <a href="#public-services" class="nav-link-custom">Nos Services</a>
         <a href="#public-galerie" class="nav-link-custom">Galerie</a>
+        <a href="#public-blog" class="nav-link-custom">Blog</a>
         <a href="#public-contact" class="nav-link-custom">Contact</a>
       </div>
-      <button class="btn btn-amber btn-sm px-3" id="btnOpenLogin"><i class="bi bi-box-arrow-in-right me-1"></i> Connexion</button>
+      <div class="d-flex align-items-center gap-2">
+        <button class="btn btn-amber btn-sm px-3" id="btnOpenLogin"><i class="bi bi-box-arrow-in-right me-1"></i> <span class="d-none d-sm-inline">Connexion</span></button>
+        <button class="btn btn-public-burger d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#publicOffcanvasMenu" aria-controls="publicOffcanvasMenu" title="Menu">
+          <i class="bi bi-list"></i>
+        </button>
+      </div>
     </div>
   </nav>
 
-  <div class="public-hero" id="public-accueil">
-    <div class="container">
-      <h1>Le pilotage complet de votre centre de formation</h1>
-      <p>Inscriptions, paiements, évaluations, rapports de chantier et suivi pédagogique — réunis dans un seul espace pour la direction, le secrétariat, la comptabilité, les formateurs et les étudiants.</p>
-      <a href="#public-formations" class="btn btn-amber mt-2 px-4 py-2">Découvrir nos formations <i class="bi bi-arrow-down ms-1"></i></a>
+  <!-- Menu latéral mobile du site public -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="publicOffcanvasMenu">
+    <div class="offcanvas-header">
+      <div class="d-flex align-items-center gap-2">
+        <div class="logo-mark">NF</div>
+        <span class="brand fw-bold">ANADENCE CITY</span>
+      </div>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+      <div class="d-flex flex-column gap-1" id="publicOffcanvasLinks">
+        <a href="#public-accueil" class="public-offcanvas-link"><i class="bi bi-house-door-fill me-2"></i>Accueil</a>
+        <a href="#public-formations" class="public-offcanvas-link"><i class="bi bi-mortarboard-fill me-2"></i>Nos formations</a>
+        <a href="#public-services" class="public-offcanvas-link"><i class="bi bi-stars me-2"></i>Nos Services</a>
+        <a href="#public-galerie" class="public-offcanvas-link"><i class="bi bi-images me-2"></i>Galerie</a>
+        <a href="#public-blog" class="public-offcanvas-link"><i class="bi bi-newspaper me-2"></i>Blog</a>
+        <a href="#public-contact" class="public-offcanvas-link"><i class="bi bi-envelope-fill me-2"></i>Contact</a>
+      </div>
+      <hr>
+      <button class="btn btn-amber w-100" id="btnOpenLoginOffcanvas"><i class="bi bi-box-arrow-in-right me-1"></i> Connexion</button>
     </div>
   </div>
 
-  <div class="public-section" id="public-services" style="background:#fff;border-top:1px solid var(--border);">
-    <div class="container">
-      <h6 class="fw-bold mb-1" style="color:var(--amber);letter-spacing:.5px;text-transform:uppercase;font-size:.75rem;">Nos Services</h6>
-      <h3 class="fw-bold mb-4">Un accompagnement complet</h3>
-      <div class="row g-3" id="servicesGrid"></div>
+  <!-- Bandeau d'accueil dynamique : plusieurs visuels qui défilent automatiquement -->
+  <div id="public-accueil">
+    <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+      <div class="carousel-indicators">
+        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active"></button>
+        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1"></button>
+        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="2"></button>
+      </div>
+      <div class="carousel-inner">
+        <div class="carousel-item active">
+          <div class="hero-slide" style="background-image:url('https://picsum.photos/seed/anadence-hero-formations/1600/900');">
+            <div class="container hero-slide-content">
+              <span class="hero-slide-eyebrow"><i class="bi bi-mortarboard-fill me-1"></i> Nos formations</span>
+              <h1>Des filières concrètes pour un métier qui vous ressemble</h1>
+              <p>Électricité, informatique, couture, plomberie… apprenez sur des chantiers-écoles réels, encadré par des formateurs expérimentés, et obtenez une attestation reconnue.</p>
+              <a href="#public-formations" class="btn btn-amber mt-2 px-4 py-2">Découvrir nos formations <i class="bi bi-arrow-down ms-1"></i></a>
+            </div>
+          </div>
+        </div>
+        <div class="carousel-item">
+          <div class="hero-slide" style="background-image:url('https://picsum.photos/seed/anadence-hero-services/1600/900');">
+            <div class="container hero-slide-content">
+              <span class="hero-slide-eyebrow"><i class="bi bi-stars me-1"></i> Nos services</span>
+              <h1>Un accompagnement du premier jour jusqu'à l'emploi</h1>
+              <p>Orientation, ateliers pratiques, certification et aide à l'insertion professionnelle : le centre vous accompagne à chaque étape de votre parcours.</p>
+              <a href="#public-services" class="btn btn-amber mt-2 px-4 py-2">Voir nos services <i class="bi bi-arrow-down ms-1"></i></a>
+            </div>
+          </div>
+        </div>
+        <div class="carousel-item">
+          <div class="hero-slide" style="background-image:url('https://picsum.photos/seed/anadence-hero-boutique/1600/900');">
+            <div class="container hero-slide-content">
+              <span class="hero-slide-eyebrow"><i class="bi bi-shop me-1"></i> Notre boutique</span>
+              <h1>Le savoir-faire de nos ateliers, à portée de main</h1>
+              <p>Créations de nos filières couture et artisanat, kits et fournitures pour apprenants : notre boutique met en valeur le travail de nos étudiants et formateurs.</p>
+              <a href="#public-contact" class="btn btn-amber mt-2 px-4 py-2">Nous contacter <i class="bi bi-arrow-down ms-1"></i></a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon"></span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon"></span>
+      </button>
     </div>
   </div>
 
@@ -319,6 +493,14 @@ table.table td{vertical-align:middle;font-size:.87rem;}
     </div>
   </div>
 
+  <div class="public-section" id="public-services" style="background:#fff;border-top:1px solid var(--border);">
+    <div class="container">
+      <h6 class="fw-bold mb-1" style="color:var(--amber);letter-spacing:.5px;text-transform:uppercase;font-size:.75rem;">Nos Services</h6>
+      <h3 class="fw-bold mb-4">Un accompagnement complet</h3>
+      <div class="row g-3" id="servicesGrid"></div>
+    </div>
+  </div>
+
   <div class="public-section" id="public-galerie">
     <div class="container">
       <h6 class="fw-bold mb-1" style="color:var(--amber);letter-spacing:.5px;text-transform:uppercase;font-size:.75rem;">Galerie</h6>
@@ -327,7 +509,15 @@ table.table td{vertical-align:middle;font-size:.87rem;}
     </div>
   </div>
 
-  <div class="public-section" id="public-contact" style="background:#fff;border-top:1px solid var(--border);">
+  <div class="public-section" id="public-blog" style="background:#fff;border-top:1px solid var(--border);">
+    <div class="container">
+      <h6 class="fw-bold mb-1" style="color:var(--amber);letter-spacing:.5px;text-transform:uppercase;font-size:.75rem;">Blog</h6>
+      <h3 class="fw-bold mb-4">Actualités du centre</h3>
+      <div class="row g-3" id="blogGrid"></div>
+    </div>
+  </div>
+
+  <div class="public-section" id="public-contact" style="border-top:1px solid var(--border);">
     <div class="container">
       <div class="row g-4">
         <div class="col-lg-5">
@@ -352,7 +542,73 @@ table.table td{vertical-align:middle;font-size:.87rem;}
     </div>
   </div>
 
+
   <div class="public-footer text-center">© 2026 ANADENCE CITY — Centre de formation professionnelle, Cotonou</div>
+</div>
+
+<!-- ===================== MODALES DE DÉTAILS (site public) ===================== -->
+<!-- Détail d'une formation -->
+<div class="modal fade" id="modalFiliereDetail" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="filiereDetailTitle">Formation</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <img id="filiereDetailImg" src="" alt="" class="w-100 mb-3" style="border-radius:12px;aspect-ratio:16/9;object-fit:cover;">
+        <div class="d-flex flex-wrap gap-2 mb-3" id="filiereDetailBadges"></div>
+        <h6 class="fw-bold small text-uppercase" style="color:var(--navy);letter-spacing:.4px;">Description</h6>
+        <p class="text-muted small" id="filiereDetailDesc">—</p>
+        <h6 class="fw-bold small text-uppercase mt-3" style="color:var(--navy);letter-spacing:.4px;">Débouchés</h6>
+        <p class="text-muted small mb-0" id="filiereDetailDebouches">—</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fermer</button>
+        <button type="button" class="btn btn-amber" id="btnFiliereDetailInscrire"><i class="bi bi-pencil-square me-1"></i> S'inscrire</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Détail d'un service -->
+<div class="modal fade" id="modalServiceDetail" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="serviceDetailTitle">Service</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <img id="serviceDetailImg" src="" alt="" class="w-100 mb-3" style="border-radius:12px;aspect-ratio:16/9;object-fit:cover;">
+        <p class="text-muted small mb-0" id="serviceDetailDesc">—</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fermer</button>
+        <a href="#public-contact" class="btn btn-amber" data-bs-dismiss="modal"><i class="bi bi-send-fill me-1"></i> Nous contacter</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Détail d'un article de blog -->
+<div class="modal fade" id="modalBlogDetail" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="blogDetailTitle">Article</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <img id="blogDetailImg" src="" alt="" class="w-100 mb-3" style="border-radius:12px;aspect-ratio:16/9;object-fit:cover;">
+        <div class="text-muted small mb-2" id="blogDetailDate">—</div>
+        <p class="text-muted small mb-0" id="blogDetailContent" style="white-space:pre-line;">—</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fermer</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ===================== MODALE DE CONNEXION ===================== -->
@@ -385,7 +641,10 @@ table.table td{vertical-align:middle;font-size:.87rem;}
               </div>
               <div class="mb-2">
                 <label class="form-label small">Mot de passe</label>
-                <input required type="password" class="form-control" name="motDePasse" placeholder="••••••••">
+                <div class="password-field-wrap">
+                  <input required type="password" class="form-control" name="motDePasse" id="loginMotDePasse" placeholder="••••••••">
+                  <button type="button" class="password-toggle-btn" data-toggle-for="loginMotDePasse" title="Afficher / masquer"><i class="bi bi-eye"></i></button>
+                </div>
               </div>
               <p class="text-muted mb-0" style="font-size:.78rem;">Pas encore de compte ? Seule la direction peut créer un profil utilisateur.</p>
             </div>
@@ -488,6 +747,14 @@ table.table td{vertical-align:middle;font-size:.87rem;}
                   <tbody id="dashPaiementsBody"></tbody>
                 </table>
               </div>
+            </div>
+          </div>
+        </div>
+        <div class="row g-3 mt-1" id="dashGalerieRow" style="display:none;">
+          <div class="col-12">
+            <div class="card-clean p-3">
+              <h6 class="fw-bold mb-3"><i class="bi bi-images me-1"></i> Ma galerie</h6>
+              <div class="row g-2" id="dashGalerieContent"></div>
             </div>
           </div>
         </div>
@@ -605,6 +872,10 @@ table.table td{vertical-align:middle;font-size:.87rem;}
 
       <!-- ===== EVALUATIONS ===== -->
       <div class="section-panel" id="panel-evaluations">
+        <div class="alert alert-info d-none align-items-center gap-2 mb-3" id="evalMoyenneBanner">
+          <i class="bi bi-graph-up-arrow fs-5"></i>
+          <div>Ma moyenne générale (temps réel) : <span class="fw-bold" id="evalMoyenneValue">—</span>/20</div>
+        </div>
         <div class="card-clean">
           <div class="card-header d-flex flex-wrap gap-2 align-items-center justify-content-between">
             <span><i class="bi bi-clipboard-check-fill me-1"></i> Notes & évaluations</span>
@@ -662,6 +933,20 @@ table.table td{vertical-align:middle;font-size:.87rem;}
           </div>
         </div>
         <div class="row g-2 mb-3" id="presenceStatsRow"></div>
+        <div class="card-clean mb-3" id="appelsSessionsCard" style="display:none;">
+          <div class="card-header d-flex flex-wrap gap-2 align-items-center justify-content-between">
+            <span><i class="bi bi-calendar2-check-fill me-1"></i> Appels enregistrés</span>
+            <button class="btn btn-outline-danger btn-sm" id="btnDeleteAppelsPeriode"><i class="bi bi-trash"></i> Supprimer les appels de la période</button>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Date</th><th>Filière</th><th>Étudiants enregistrés</th><th class="d-none d-md-table-cell">Taux présence</th><th class="text-end">Actions</th></tr></thead>
+                <tbody id="appelsSessionsBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
         <div class="card-clean">
           <div class="card-header d-flex flex-wrap gap-2 align-items-center justify-content-between">
             <span><i class="bi bi-clock-history me-1"></i> Rapport de présence</span>
@@ -675,7 +960,7 @@ table.table td{vertical-align:middle;font-size:.87rem;}
           <div class="card-body p-0">
             <div class="table-responsive">
               <table class="table table-hover align-middle mb-0">
-                <thead><tr><th>Date</th><th class="d-none d-md-table-cell">Filière</th><th>Étudiant</th><th>Statut</th><th class="d-none d-lg-table-cell">Motif</th></tr></thead>
+                <thead><tr><th>Date</th><th class="d-none d-md-table-cell">Filière</th><th>Étudiant</th><th>Statut</th><th class="d-none d-lg-table-cell">Motif</th><th class="text-end">Actions</th></tr></thead>
                 <tbody id="presenceHistoryBody"></tbody>
               </table>
             </div>
@@ -732,10 +1017,10 @@ table.table td{vertical-align:middle;font-size:.87rem;}
         </div>
       </div>
 
-      <!-- ===== MON PROFIL (formateur) ===== -->
+      <!-- ===== MON PROFIL (formateur / étudiant) ===== -->
       <div class="section-panel" id="panel-monprofil">
         <div class="row g-3">
-          <div class="col-lg-7">
+          <div class="col-lg-8 col-xl-7">
             <div class="card-clean p-3">
               <h6 class="fw-bold mb-3"><i class="bi bi-person-badge-fill me-1"></i> Mes informations</h6>
               <form id="formMonProfil">
@@ -743,14 +1028,16 @@ table.table td{vertical-align:middle;font-size:.87rem;}
                   <div class="photo-upload-box" id="profilPhotoUploadBox">
                     <img id="profilPhotoPreview" style="display:none;">
                     <i class="bi bi-camera-fill" id="profilPhotoPlaceholderIcon"></i>
+                    <div class="photo-view-hint" id="profilPhotoViewHint" style="display:none;"><i class="bi bi-zoom-in"></i></div>
+                    <button type="button" class="photo-edit-btn" id="profilPhotoEditBtn" title="Changer la photo"><i class="bi bi-camera-fill"></i></button>
                   </div>
                   <div>
                     <div class="fw-semibold small mb-1">Photo d'identité</div>
-                    <div class="text-muted mb-2" style="font-size:.78rem;">Cliquez sur le cadre pour ajouter ou changer votre photo.</div>
+                    <div class="text-muted mb-2" style="font-size:.78rem;">Cliquez sur la photo pour l'agrandir, ou sur <i class="bi bi-camera-fill"></i> pour la changer.</div>
                     <input type="file" accept="image/*" id="profilPhotoInput" class="form-control form-control-sm" style="max-width:220px;">
                   </div>
                 </div>
-                <div class="row g-3">
+                <div class="row g-3" id="monProfilFormateurFields">
                   <div class="col-md-6"><label class="form-label small">Nom</label><input class="form-control" id="profilNom"></div>
                   <div class="col-md-6"><label class="form-label small">Prénom</label><input class="form-control" id="profilPrenom"></div>
                   <div class="col-md-6"><label class="form-label small">Spécialité</label><input class="form-control" id="profilSpecialite"></div>
@@ -764,22 +1051,44 @@ table.table td{vertical-align:middle;font-size:.87rem;}
                     <div class="mt-2" id="profilCvCurrent"></div>
                   </div>
                 </div>
+                <div class="row g-3" id="monProfilEtudiantFields" style="display:none;">
+                  <div class="col-12">
+                    <div class="p-3 rounded" style="background:#F5F6F9;">
+                      <div class="fw-semibold" id="monProfilEtudiantNom">—</div>
+                      <div class="text-muted small" id="monProfilEtudiantInfos">—</div>
+                    </div>
+                  </div>
+                  <div class="col-12">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="btnExportMaFichePdf"><i class="bi bi-file-earmark-pdf"></i> Exporter ma fiche étudiant (PDF)</button>
+                    <div class="text-muted mt-1" style="font-size:.78rem;">Le document contient toutes vos informations : identité, tuteur, formation, présences, notes et paiements.</div>
+                  </div>
+                </div>
                 <hr class="my-3">
                 <h6 class="fw-bold small text-muted mb-2"><i class="bi bi-shield-lock-fill me-1"></i> Sécurité du compte</h6>
                 <div class="row g-3">
                   <div class="col-md-6"><label class="form-label small">Identifiant de connexion</label><input class="form-control" id="profilIdentifiant"></div>
-                  <div class="col-md-6"><label class="form-label small">Nouveau mot de passe <span class="text-muted">(laisser vide pour ne pas changer)</span></label><input type="password" class="form-control" id="profilNouveauMdp" placeholder="••••••••"></div>
-                  <div class="col-md-6"><label class="form-label small">Mot de passe actuel <span class="text-muted">(requis pour tout changement d'identifiant/mot de passe)</span></label><input type="password" class="form-control" id="profilMdpActuel" placeholder="••••••••"></div>
+                  <div class="col-md-6"><label class="form-label small">Nouveau mot de passe <span class="text-muted">(laisser vide pour ne pas changer)</span></label>
+                    <div class="password-field-wrap">
+                      <input type="password" class="form-control" id="profilNouveauMdp" placeholder="••••••••">
+                      <button type="button" class="password-toggle-btn" data-toggle-for="profilNouveauMdp" title="Afficher / masquer"><i class="bi bi-eye"></i></button>
+                    </div>
+                  </div>
+                  <div class="col-md-6"><label class="form-label small">Mot de passe actuel <span class="text-muted">(requis pour tout changement d'identifiant/mot de passe)</span></label>
+                    <div class="password-field-wrap">
+                      <input type="password" class="form-control" id="profilMdpActuel" placeholder="••••••••">
+                      <button type="button" class="password-toggle-btn" data-toggle-for="profilMdpActuel" title="Afficher / masquer"><i class="bi bi-eye"></i></button>
+                    </div>
+                  </div>
                 </div>
                 <div id="profilError" class="alert alert-danger py-2 small mt-3" style="display:none;"></div>
                 <button class="btn btn-amber mt-3" type="submit"><i class="bi bi-check-lg me-1"></i> Enregistrer les modifications</button>
               </form>
             </div>
-          </div>
-          <div class="col-lg-5">
-            <div class="card-clean p-3">
-              <h6 class="fw-bold mb-2"><i class="bi bi-info-circle me-1"></i> À propos</h6>
-              <p class="text-muted small mb-0">Ces informations sont visibles par la direction et le secrétariat. La direction reste habilitée à modifier votre compte (y compris votre mot de passe) depuis la gestion des utilisateurs.</p>
+            <div class="card-clean p-3 mt-3">
+              <h6 class="fw-bold mb-1"><i class="bi bi-images me-1"></i> Ma galerie photos</h6>
+              <div class="text-muted mb-2" style="font-size:.78rem;">Ces photos apparaissent dans votre tableau de bord et dans la galerie de l'établissement, visible par tous sur la page d'accueil.</div>
+              <input type="file" accept="image/*" multiple class="form-control form-control-sm mb-3" id="profilGaleriePhotoInput" style="max-width:280px;">
+              <div class="row g-2" id="profilGaleriePreview"></div>
             </div>
           </div>
         </div>
@@ -863,17 +1172,37 @@ table.table td{vertical-align:middle;font-size:.87rem;}
           <!-- Étape 1 : Informations générales sur l'étudiant -->
           <div class="wizard-step" data-step="1">
             <h6 class="fw-bold small text-muted mb-3"><i class="bi bi-person-vcard me-1"></i> Informations générales sur l'étudiant</h6>
-            <div class="d-flex align-items-center flex-wrap gap-3 mb-3">
+
+            <div class="d-flex align-items-center flex-nowrap gap-2 gap-sm-3 mb-3">
               <div class="photo-upload-box" id="photoUploadBox">
                 <img id="photoPreview" style="display:none;">
                 <i class="bi bi-camera-fill" id="photoPlaceholderIcon"></i>
               </div>
-              <div>
+              <div style="min-width:0;flex:1 1 auto;">
                 <div class="fw-semibold small mb-1">Photo d'identité</div>
                 <div class="text-muted mb-2" style="font-size:.78rem;">Cliquez sur le cadre pour ajouter ou changer la photo (optionnel).</div>
                 <input type="file" accept="image/*" id="photoInput" class="form-control form-control-sm" style="max-width:220px;">
               </div>
             </div>
+
+            <!-- Matricule : affiché en lecture seule, avec aperçu en direct pendant la saisie du n° d'ordre ;
+                 modifiable uniquement via l'icône crayon (direction) -->
+            <div class="mb-3 p-2 px-3 rounded d-flex align-items-center flex-wrap gap-2" style="background:#f5f6f8;">
+              <span class="small text-muted me-1">Matricule</span>
+              <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" id="btnEditOrdreEtudiant" title="Modifier le n° d'ordre">
+                <i class="bi bi-pencil-fill"></i>
+              </button>
+              <span class="fw-bold text-mono fs-6" id="matriculeDisplayText">—</span>
+              <div class="d-none align-items-center gap-2 flex-wrap" id="ordreEditWrap">
+                <span class="text-muted small">N° d'ordre :</span>
+                <input type="number" min="1" step="1" class="form-control form-control-sm" style="width:100px;" id="inputEtudiantOrdreEdit">
+                <button type="button" class="btn btn-sm btn-success" id="btnConfirmOrdreEtudiant" title="Valider"><i class="bi bi-check-lg"></i></button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="btnCancelOrdreEtudiant" title="Annuler"><i class="bi bi-x-lg"></i></button>
+                <span class="small text-danger" id="ordreEditError"></span>
+              </div>
+              <input type="hidden" name="ordre" id="inputEtudiantOrdre">
+            </div>
+
             <div class="row g-3">
               <div class="col-md-6"><label class="form-label small">Nom</label><input required class="form-control" name="nom"></div>
               <div class="col-md-6"><label class="form-label small">Prénom</label><input required class="form-control" name="prenom"></div>
@@ -881,7 +1210,7 @@ table.table td{vertical-align:middle;font-size:.87rem;}
                 <select class="form-select" name="sexe"><option value="F">Féminin</option><option value="M">Masculin</option></select>
               </div>
               <div class="col-md-4"><label class="form-label small">Date de naissance</label><input type="date" class="form-control" name="dateNaissance"></div>
-              <div class="col-md-4"><label class="form-label small">Date d'inscription</label><input type="date" class="form-control" name="dateInscription" required></div>
+              <div class="col-md-4"><label class="form-label small">Date d'inscription</label><input type="date" class="form-control" name="dateInscription" required id="inputEtudiantDateInscription"></div>
               <div class="col-md-6"><label class="form-label small">Téléphone</label><input required class="form-control" name="telephone"></div>
               <div class="col-md-6"><label class="form-label small">Email</label><input type="email" class="form-control" name="email"></div>
               <div class="col-12"><label class="form-label small">Lieu de résidence</label><input class="form-control" name="adresse" placeholder="Quartier, ville..."></div>
@@ -997,6 +1326,8 @@ table.table td{vertical-align:middle;font-size:.87rem;}
             <div class="col-md-6"><label class="form-label small">Prix total (F)</label><input required type="number" min="0" class="form-control" name="prixTotal"></div>
           </div>
           <div><label class="form-label small">Description</label><textarea class="form-control" name="description" rows="2"></textarea></div>
+          <div class="mt-3"><label class="form-label small">Débouchés <span class="text-muted">(affichés dans la fiche détaillée sur le site public)</span></label><textarea class="form-control" name="debouches" rows="2" placeholder="Ex : technicien installateur, chef de chantier, auto-entrepreneur..."></textarea></div>
+          <div class="mt-3"><label class="form-label small">Image / flyer <span class="text-muted">(URL, laisser vide pour une image par défaut)</span></label><input class="form-control" name="flyer" placeholder="https://..."></div>
           <div class="alert alert-light border small mt-3 mb-0"><i class="bi bi-info-circle me-1"></i> Les modules et leurs formateurs se gèrent depuis le bouton <strong>Modules</strong> sur la fiche de la filière, une fois celle-ci enregistrée.</div>
         </div>
         <div class="modal-footer">
@@ -1396,6 +1727,12 @@ table.table td{vertical-align:middle;font-size:.87rem;}
 
 <div class="toast-container position-fixed bottom-0 end-0 p-3"><div id="mainToast" class="toast align-items-center text-bg-dark border-0" role="alert"><div class="d-flex"><div class="toast-body" id="toastMsg">OK</div><button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div></div></div>
 
+<!-- Visionneuse plein écran (agrandissement des photos de profil / galerie), sans dépasser l'écran -->
+<div class="img-lightbox-overlay" id="imgLightboxOverlay">
+  <button type="button" class="img-lightbox-close" id="imgLightboxClose"><i class="bi bi-x-lg"></i></button>
+  <img id="imgLightboxImg" src="" alt="">
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 /* ========================================================================
@@ -1405,6 +1742,34 @@ const STORAGE_KEY = 'anadence_db_v1';
 let DB = null;
 let state = { role: null, userName: '', userId: null, section: 'dashboard' };
 let pendingDelete = null;
+
+/* ---------- Visionneuse plein écran (agrandir une image sans dépasser l'écran) ---------- */
+function openImgLightbox(src){
+  if(!src) return;
+  document.getElementById('imgLightboxImg').src = src;
+  document.getElementById('imgLightboxOverlay').classList.add('show');
+}
+function closeImgLightbox(){
+  document.getElementById('imgLightboxOverlay').classList.remove('show');
+  document.getElementById('imgLightboxImg').src = '';
+}
+document.getElementById('imgLightboxOverlay').addEventListener('click', e=>{
+  if(e.target.id==='imgLightboxOverlay' || e.target.id==='imgLightboxImg') closeImgLightbox();
+});
+document.getElementById('imgLightboxClose').addEventListener('click', closeImgLightbox);
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeImgLightbox(); });
+
+/* ---------- Bouton oeil : afficher/masquer les champs mot de passe ---------- */
+document.querySelectorAll('.password-toggle-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const input = document.getElementById(btn.dataset.toggleFor);
+    if(!input) return;
+    const icon = btn.querySelector('i');
+    const isHidden = input.type === 'password';
+    input.type = isHidden ? 'text' : 'password';
+    icon.className = isHidden ? 'bi bi-eye-slash' : 'bi bi-eye';
+  });
+});
 
 /* ========================================================================
    CONFIGURATION FIREBASE
@@ -1475,7 +1840,7 @@ const NAV = [
   {section:'documents', label:'Documents', icon:'bi-folder-fill', roles:['direction','secretariat','formateur','etudiant','partenaire']},
   {section:'annonces', label:'Annonces', icon:'bi-megaphone-fill', roles:['direction','secretariat','comptabilite','formateur','etudiant','partenaire']},
   {section:'messagerie', label:'Messagerie', icon:'bi-chat-dots-fill', roles:['direction','secretariat','comptabilite','formateur','etudiant','partenaire']},
-  {section:'monprofil', label:'Mon profil', icon:'bi-person-badge-fill', roles:['formateur']},
+  {section:'monprofil', label:'Mon profil', icon:'bi-person-badge-fill', roles:['formateur','etudiant']},
   {section:'utilisateurs', label:'Utilisateurs', icon:'bi-shield-lock-fill', roles:['direction']},
 ];
 
@@ -1510,7 +1875,7 @@ function defaultPermsForRole(role){
 function currentUser(){ return DB && DB.users ? DB.users.find(u=>u.id===state.userId) : null; }
 function hasPerm(section, type){
   if(section==='utilisateurs') return state.role==='direction';
-  if(section==='monprofil') return state.role==='formateur';
+  if(section==='monprofil') return state.role==='formateur' || state.role==='etudiant';
   if(section==='dashboard') return true;
   if(state.role==='direction') return true; // la direction a toujours accès complet
   const u = currentUser();
@@ -1575,18 +1940,38 @@ function avatarHTML(o, size){
   if(o && o.photo){ return `<img src="${o.photo}" class="avatar-img" style="width:${size}px;height:${size}px;">`; }
   return `<div class="avatar-circ" style="width:${size}px;height:${size}px;font-size:${size<40?'.7rem':'1rem'};">${initials(o?o.prenom:'',o?o.nom:'')}</div>`;
 }
-// Numéro d'inscription / matricule au format: <n° d'ordre sur 3 chiffres>CF<mois d'inscription>-<année d'inscription>
-// Exemple : le 5e étudiant inscrit en février 2022 => 005CF02-2022
-function genMatricule(dateInscription){
+// Numéro matricule au format: <n° d'ordre sur 3 chiffres>CF<mois d'inscription sur 2 chiffres><année d'inscription sur 2 chiffres>
+// Exemple : 001CF0622 => n° d'ordre 001, inscrit en 06 (juin) 2022
+// Exemple : 006CF0126 => n° d'ordre 006, inscrit en 01 (janvier) 2026
+// Le n° d'ordre est unique pour chaque étudiant (jamais partagé), attribué automatiquement de façon
+// croissante selon l'ordre d'inscription, mais modifiable manuellement par la direction si besoin.
+function computeMatricule(ordre, dateInscription){
   const d = dateInscription ? new Date(dateInscription) : new Date();
-  const annee = d.getFullYear();
+  const annee2 = String(d.getFullYear()).slice(-2);
   const mois = String(d.getMonth()+1).padStart(2,'0');
-  const ordre = DB.etudiants.filter(et=>{
-    if(!et.dateInscription) return false;
-    const ed = new Date(et.dateInscription);
-    return ed.getFullYear()===annee && String(ed.getMonth()+1).padStart(2,'0')===mois;
-  }).length + 1;
-  return `${String(ordre).padStart(3,'0')}CF${mois}-${annee}`;
+  const ordreNum = Number(ordre)||0;
+  return `${String(ordreNum).padStart(3,'0')}CF${mois}${annee2}`;
+}
+// Prochain n° d'ordre disponible : le plus grand n° d'ordre déjà utilisé + 1
+function nextOrdreEtudiant(){
+  const max = DB.etudiants.reduce((m,e)=>Math.max(m, Number(e.ordre)||0), 0);
+  return max + 1;
+}
+// Vérifie qu'un n° d'ordre n'est pas déjà utilisé par un autre étudiant (excludeId = étudiant en cours d'édition)
+function ordreEtudiantDejaUtilise(ordre, excludeId){
+  const ordreNum = Number(ordre);
+  return DB.etudiants.some(e=>e.id!==excludeId && Number(e.ordre)===ordreNum);
+}
+function updateMatriculeDisplay(){
+  const f = document.getElementById('formEtudiant');
+  if(!f) return;
+  const wrap = document.getElementById('ordreEditWrap');
+  const editing = wrap && !wrap.classList.contains('d-none');
+  const ordreVal = editing ? document.getElementById('inputEtudiantOrdreEdit').value : document.getElementById('inputEtudiantOrdre').value;
+  const dateEl = f.elements['dateInscription'];
+  const display = document.getElementById('matriculeDisplayText');
+  if(!display) return;
+  display.textContent = (ordreVal && dateEl.value) ? computeMatricule(ordreVal, dateEl.value) : '—';
 }
 function toast(msg){ document.getElementById('toastMsg').textContent = msg; new bootstrap.Toast(document.getElementById('mainToast')).show(); }
 function getFiliere(id){ return DB.filieres.find(f=>f.id===id); }
@@ -2056,6 +2441,7 @@ function migrateDB(){
   if(!DB.messages) DB.messages = [];
   if(!DB.leads) DB.leads = [];
   if(!DB.modules) DB.modules = [];
+  if(!DB.galerie) DB.galerie = [];
   // Migration : les anciennes bases avaient un formateur unique par filière (filiere.formateurId).
   // On convertit ce lien en un module par défaut, pour ne pas perdre l'information existante.
   if(DB.modules.length===0){
@@ -2098,10 +2484,10 @@ function seedData(){
   const filiereIds = {elec: uid(), info: uid(), couture: uid(), plomberie: uid()};
   const formateurIds = {f1: uid(), f2: uid(), f3: uid()};
   const filieres = [
-    {id:filiereIds.elec, nom:'Électricité Bâtiment', duree:'9 mois', prixTotal:350000, description:"Installation électrique domestique et industrielle."},
-    {id:filiereIds.info, nom:'Informatique de Gestion', duree:'6 mois', prixTotal:250000, description:"Bureautique, réseaux, maintenance PC."},
-    {id:filiereIds.couture, nom:'Couture & Stylisme', duree:'12 mois', prixTotal:200000, description:"Coupe, couture, création de modèles."},
-    {id:filiereIds.plomberie, nom:'Plomberie Sanitaire', duree:'6 mois', prixTotal:220000, description:"Installation et dépannage sanitaire."},
+    {id:filiereIds.elec, nom:'Électricité Bâtiment', duree:'9 mois', prixTotal:350000, description:"Installation électrique domestique et industrielle.", debouches:"Électricien installateur, technicien de maintenance, chef d'équipe chantier, auto-entrepreneur en installation électrique."},
+    {id:filiereIds.info, nom:'Informatique de Gestion', duree:'6 mois', prixTotal:250000, description:"Bureautique, réseaux, maintenance PC.", debouches:"Agent de saisie, assistant administratif, technicien de maintenance informatique, gérant de cybercentre."},
+    {id:filiereIds.couture, nom:'Couture & Stylisme', duree:'12 mois', prixTotal:200000, description:"Coupe, couture, création de modèles.", debouches:"Couturier(ère), styliste-modéliste, chef d'atelier, création de sa propre marque."},
+    {id:filiereIds.plomberie, nom:'Plomberie Sanitaire', duree:'6 mois', prixTotal:220000, description:"Installation et dépannage sanitaire.", debouches:"Plombier installateur, technicien de dépannage sanitaire, chef de chantier, auto-entrepreneur."},
   ];
   const formateurs = [
     {id:formateurIds.f1, nom:'HOUNSOU', prenom:'Adjovi', specialite:'Électricité / Plomberie', telephone:'97 12 34 56', email:'a.hounsou@anadence.bj'},
@@ -2121,7 +2507,7 @@ function seedData(){
     {id:modId.plombInstall, nom:'Installation sanitaire', filiereId:filiereIds.plomberie, formateurId:formateurIds.f1, description:"Installation et dépannage sanitaire."},
   ];
   let seedOrdreMatricule = 0;
-  const etu = (nom,prenom,sexe,fil,modIds,statut='actif') => ({id:uid(),matricule:`${String(++seedOrdreMatricule).padStart(3,'0')}CF02-2026`,nom,prenom,sexe,dateNaissance:'2002-03-14',dateInscription:'2026-02-10',telephone:'01'+Math.floor(10000000+Math.random()*89999999),email:prenom.toLowerCase()+'.'+nom.toLowerCase()+'@mail.com',adresse:'Cotonou',filiereId:fil,statut,moduleIds:modIds||[],nomTuteur:'Parent de '+prenom,telephoneTuteur:'01'+Math.floor(10000000+Math.random()*89999999),lienTuteur:'Parent'});
+  const etu = (nom,prenom,sexe,fil,modIds,statut='actif') => { const ordre = ++seedOrdreMatricule; return {id:uid(),ordre,matricule:`${String(ordre).padStart(3,'0')}CF0226`,nom,prenom,sexe,dateNaissance:'2002-03-14',dateInscription:'2026-02-10',telephone:'01'+Math.floor(10000000+Math.random()*89999999),email:prenom.toLowerCase()+'.'+nom.toLowerCase()+'@mail.com',adresse:'Cotonou',filiereId:fil,statut,moduleIds:modIds||[],nomTuteur:'Parent de '+prenom,telephoneTuteur:'01'+Math.floor(10000000+Math.random()*89999999),lienTuteur:'Parent'}; };
   const etudiants = [
     // Chantal suit les deux modules de sa filière
     etu('ALAPINI','Chantal','F',filiereIds.elec,[modId.elecCab, modId.elecSec]),
@@ -2170,20 +2556,26 @@ function seedData(){
     {id:uid(), nom:'Adjovi HOUNSOU', role:'formateur', identifiant:'a.hounsou', motDePasse:'formateur123', formateurId:formateurIds.f1, perms:defaultPermsForRole('formateur')},
     {id:uid(), nom:'Chantal ALAPINI', role:'etudiant', identifiant:'c.alapini', motDePasse:'etudiant123', etudiantId:etudiants[0].id, perms:defaultPermsForRole('etudiant')},
   ];
-  return {filieres, modules, formateurs, etudiants, paiements, evaluations, rapports, users, leads:[], presences:[], documents:[], annonces:[
+  return {filieres, modules, formateurs, etudiants, paiements, evaluations, rapports, users, leads:[], presences:[], documents:[], galerie:[], annonces:[
     {id:uid(), titre:'Reprise des cours après les fêtes', contenu:"Les cours reprennent normalement le 5 janvier 2027 pour toutes les filières. Merci de vous présenter à l'heure.", auteur:'Direction Générale', date:'2026-12-20'}
   ], messages:[]};
 }
 
 /* ---------- Site public ---------- */
 const SERVICES = [
-  {icon:'bi-mortarboard-fill', titre:'Formations qualifiantes', desc:"Des cursus pratiques et théoriques dans nos différentes filières, sanctionnés par une attestation de fin de formation."},
-  {icon:'bi-tools', titre:'Ateliers & chantiers école', desc:"Mise en pratique sur des chantiers réels et en atelier, encadrée par des formateurs expérimentés."},
-  {icon:'bi-briefcase-fill', titre:"Accompagnement à l'insertion", desc:"Aide à la recherche de stage et d'emploi, mise en relation avec des entreprises partenaires."},
-  {icon:'bi-award-fill', titre:'Certification', desc:"Délivrance d'attestations et de certificats reconnus à l'issue de chaque filière."},
-  {icon:'bi-person-lines-fill', titre:'Orientation & conseil', desc:"Un accompagnement personnalisé pour choisir la filière adaptée à votre projet professionnel."},
-  {icon:'bi-arrow-repeat', titre:'Formation continue', desc:"Des modules courts pour les professionnels souhaitant se perfectionner ou se reconvertir."},
+  {id:'srv-formations', icon:'bi-mortarboard-fill', titre:'Formations qualifiantes', desc:"Des cursus pratiques et théoriques dans nos différentes filières, sanctionnés par une attestation de fin de formation.", detail:"Nos formations qualifiantes combinent cours théoriques et mise en pratique intensive, dans des groupes à taille humaine. Chaque filière est conçue avec des professionnels du secteur pour coller aux besoins réels du marché de l'emploi, et se termine par une attestation de fin de formation reconnue par le centre.", seed:'anadence-srv-formations'},
+  {id:'srv-ateliers', icon:'bi-tools', titre:'Ateliers & chantiers école', desc:"Mise en pratique sur des chantiers réels et en atelier, encadrée par des formateurs expérimentés.", detail:"Dès les premières semaines, les apprenants mettent la main à la pâte : ateliers équipés et chantiers-écoles permettent de travailler sur des cas concrets, sous la supervision constante de formateurs expérimentés, pour être opérationnel dès la sortie du centre.", seed:'anadence-srv-ateliers'},
+  {id:'srv-insertion', icon:'bi-briefcase-fill', titre:"Accompagnement à l'insertion", desc:"Aide à la recherche de stage et d'emploi, mise en relation avec des entreprises partenaires.", detail:"Le centre accompagne chaque étudiant dans la recherche de stage puis d'emploi : préparation aux entretiens, aide à la rédaction de CV, et mise en relation avec un réseau d'entreprises partenaires dans chacune des filières.", seed:'anadence-srv-insertion'},
+  {id:'srv-certification', icon:'bi-award-fill', titre:'Certification', desc:"Délivrance d'attestations et de certificats reconnus à l'issue de chaque filière.", detail:"À l'issue de chaque filière, une évaluation finale permet de délivrer une attestation ou un certificat de fin de formation, valorisant les compétences acquises auprès des employeurs et partenaires du centre.", seed:'anadence-srv-certification'},
+  {id:'srv-orientation', icon:'bi-person-lines-fill', titre:'Orientation & conseil', desc:"Un accompagnement personnalisé pour choisir la filière adaptée à votre projet professionnel.", detail:"Avant même l'inscription, notre équipe reçoit chaque candidat pour un entretien d'orientation : bilan des centres d'intérêt, des aptitudes et du projet professionnel, afin de l'orienter vers la filière la plus adaptée.", seed:'anadence-srv-orientation'},
+  {id:'srv-continue', icon:'bi-arrow-repeat', titre:'Formation continue', desc:"Des modules courts pour les professionnels souhaitant se perfectionner ou se reconvertir.", detail:"Pour les professionnels déjà en activité, le centre propose des modules courts de perfectionnement ou de reconversion, organisés en horaires aménagés pour rester compatibles avec une activité professionnelle.", seed:'anadence-srv-continue'},
 ];
+const BLOG_POSTS = [
+  {id:'blog-1', titre:'Rentrée 2026 : ouverture des inscriptions', date:'2026-08-05', seed:'anadence-blog-rentree', excerpt:"Les inscriptions pour la nouvelle année de formation sont ouvertes dans toutes nos filières.", contenu:"Les inscriptions pour la nouvelle année de formation sont officiellement ouvertes dans toutes nos filières : Électricité Bâtiment, Informatique de Gestion, Couture & Stylisme et Plomberie Sanitaire.\n\nLes places étant limitées dans chaque atelier, nous invitons les candidats à se présenter au secrétariat ou à remplir le formulaire de contact du site pour être recontactés rapidement."},
+  {id:'blog-2', titre:'Portes ouvertes : découvrez nos ateliers', date:'2026-07-18', seed:'anadence-blog-portes-ouvertes', excerpt:"Une journée portes ouvertes pour visiter nos ateliers et échanger avec nos formateurs.", contenu:"Le centre a organisé une journée portes ouvertes permettant aux futurs apprenants et à leurs familles de visiter les ateliers, d'échanger directement avec les formateurs et de découvrir le matériel utilisé pendant les formations.\n\nUn moment convivial qui a permis à de nombreux visiteurs de mieux cerner leur projet professionnel avant de s'inscrire."},
+  {id:'blog-3', titre:'Nos étudiants en couture exposent leurs créations', date:'2026-06-22', seed:'anadence-blog-couture', excerpt:"Les apprenants de la filière Couture & Stylisme ont présenté leurs réalisations lors d'un défilé.", contenu:"Les apprenants de la filière Couture & Stylisme ont présenté leurs réalisations lors d'un petit défilé organisé dans l'enceinte du centre, en présence de la direction et de plusieurs partenaires.\n\nCet évènement annuel valorise le travail réalisé tout au long de l'année et permet aux étudiants de gagner en confiance avant leur entrée sur le marché du travail."},
+];
+function fallbackFlyer(seed){ return `https://picsum.photos/seed/${encodeURIComponent(seed)}/640/480`; }
 const GALERIE = [
   {seed:'anadence-elec', legende:'Atelier électricité bâtiment'},
   {seed:'anadence-info', legende:'Salle informatique de gestion'},
@@ -2195,33 +2587,98 @@ const GALERIE = [
 function renderPublicSite(){
   document.getElementById('servicesGrid').innerHTML = SERVICES.map(s=>`
     <div class="col-md-6 col-lg-4">
-      <div class="service-card">
-        <div class="service-icon"><i class="bi ${s.icon}"></i></div>
-        <h6 class="fw-bold mb-2">${s.titre}</h6>
-        <p class="text-muted small mb-0">${s.desc}</p>
+      <div class="flyer-card">
+        <div class="flyer-img-wrap">
+          <img src="${fallbackFlyer(s.seed)}" alt="${s.titre}" loading="lazy">
+          <span class="flyer-badge"><i class="bi ${s.icon} me-1"></i>Service</span>
+        </div>
+        <div class="flyer-body">
+          <div class="flyer-title">${s.titre}</div>
+          <div class="flyer-desc">${s.desc}</div>
+          <button type="button" class="btn btn-outline-secondary btn-sm mt-auto align-self-start" onclick="showServiceDetail('${s.id}')">Voir détails <i class="bi bi-arrow-right ms-1"></i></button>
+        </div>
       </div>
     </div>`).join('');
-  document.getElementById('galerieGrid').innerHTML = GALERIE.map(g=>`
+  const galerieStatique = GALERIE.map(g=>`
     <div class="col-md-4 col-6">
       <div class="gallery-item">
         <img src="https://picsum.photos/seed/${g.seed}/500/380" alt="${g.legende}" loading="lazy">
         <div class="caption">${g.legende}</div>
       </div>
     </div>`).join('');
+  const galerieMembres = (DB.galerie||[]).slice().reverse().map(g=>`
+    <div class="col-md-4 col-6">
+      <div class="gallery-item">
+        <img src="${g.dataUrl}" alt="${g.legende||''}" loading="lazy">
+        <div class="caption">${g.legende||''}</div>
+      </div>
+    </div>`).join('');
+  document.getElementById('galerieGrid').innerHTML = galerieStatique + galerieMembres;
   document.getElementById('visitorFilieresGrid').innerHTML = DB.filieres.map(f=>`
     <div class="col-md-6 col-lg-3">
-      <div class="filiere-visitor-card">
-        <div class="top">
-          <div class="fw-bold">${f.nom}</div>
-          <div class="small" style="color:#B9C2DA;">${f.duree||''}</div>
+      <div class="flyer-card">
+        <div class="flyer-img-wrap">
+          <img src="${f.flyer || fallbackFlyer('anadence-fil-'+f.id)}" alt="${f.nom}" loading="lazy">
+          <span class="flyer-badge"><i class="bi bi-mortarboard-fill me-1"></i>Formation</span>
         </div>
-        <div class="p-3">
-          <p class="small text-muted mb-2">${f.description||''}</p>
-          <div class="price">${fmtCFA(f.prixTotal)}</div>
+        <div class="flyer-body">
+          <div class="flyer-title">${f.nom}</div>
+          <div class="flyer-meta">
+            <span class="badge text-bg-light border"><i class="bi bi-clock-history me-1"></i>${f.duree||'—'}</span>
+            <span class="badge text-bg-light border"><i class="bi bi-cash-coin me-1"></i>${fmtCFA(f.prixTotal)}</span>
+          </div>
+          <div class="flyer-desc">${f.description||''}</div>
+          <button type="button" class="btn btn-amber btn-sm mt-auto align-self-start" onclick="showFiliereDetail('${f.id}')">Voir détails <i class="bi bi-arrow-right ms-1"></i></button>
         </div>
       </div>
     </div>`).join('');
   document.getElementById('visitorLeadFiliere').innerHTML = DB.filieres.map(f=>`<option value="${f.id}">${f.nom}</option>`).join('');
+  document.getElementById('blogGrid').innerHTML = BLOG_POSTS.map(b=>`
+    <div class="col-md-6 col-lg-4">
+      <div class="blog-card">
+        <div class="blog-img-wrap"><img src="${fallbackFlyer(b.seed)}" alt="${b.titre}" loading="lazy"></div>
+        <div class="blog-body">
+          <div class="blog-date"><i class="bi bi-calendar-event me-1"></i>${fmtDate(b.date)}</div>
+          <div class="blog-title">${b.titre}</div>
+          <div class="blog-excerpt">${b.excerpt}</div>
+          <button type="button" class="btn btn-outline-secondary btn-sm mt-auto align-self-start" onclick="showBlogDetail('${b.id}')">Lire la suite <i class="bi bi-arrow-right ms-1"></i></button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+function showFiliereDetail(id){
+  const f = getFiliere(id);
+  if(!f) return;
+  document.getElementById('filiereDetailTitle').textContent = f.nom;
+  document.getElementById('filiereDetailImg').src = f.flyer || fallbackFlyer('anadence-fil-'+f.id);
+  document.getElementById('filiereDetailBadges').innerHTML = `
+    <span class="badge text-bg-light border"><i class="bi bi-clock-history me-1"></i>${f.duree||'—'}</span>
+    <span class="badge text-bg-light border"><i class="bi bi-cash-coin me-1"></i>${fmtCFA(f.prixTotal)}</span>`;
+  document.getElementById('filiereDetailDesc').textContent = f.description || 'Aucune description disponible pour le moment.';
+  document.getElementById('filiereDetailDebouches').textContent = f.debouches || 'Aucun débouché renseigné pour le moment.';
+  document.getElementById('btnFiliereDetailInscrire').onclick = ()=>{
+    bootstrap.Modal.getInstance(document.getElementById('modalFiliereDetail')).hide();
+    document.getElementById('visitorLeadFiliere').value = f.id;
+    document.getElementById('public-contact').scrollIntoView({behavior:'smooth'});
+  };
+  new bootstrap.Modal(document.getElementById('modalFiliereDetail')).show();
+}
+function showServiceDetail(id){
+  const s = SERVICES.find(x=>x.id===id);
+  if(!s) return;
+  document.getElementById('serviceDetailTitle').textContent = s.titre;
+  document.getElementById('serviceDetailImg').src = fallbackFlyer(s.seed);
+  document.getElementById('serviceDetailDesc').textContent = s.detail || s.desc;
+  new bootstrap.Modal(document.getElementById('modalServiceDetail')).show();
+}
+function showBlogDetail(id){
+  const b = BLOG_POSTS.find(x=>x.id===id);
+  if(!b) return;
+  document.getElementById('blogDetailTitle').textContent = b.titre;
+  document.getElementById('blogDetailImg').src = fallbackFlyer(b.seed);
+  document.getElementById('blogDetailDate').innerHTML = `<i class="bi bi-calendar-event me-1"></i>${fmtDate(b.date)}`;
+  document.getElementById('blogDetailContent').textContent = b.contenu || b.excerpt;
+  new bootstrap.Modal(document.getElementById('modalBlogDetail')).show();
 }
 document.getElementById('formVisitorLead').addEventListener('submit', async e=>{
   e.preventDefault();
@@ -2239,6 +2696,34 @@ document.getElementById('btnOpenLogin').addEventListener('click', ()=>{
   document.getElementById('loginError').style.display='none';
   new bootstrap.Modal(document.getElementById('modalLogin')).show();
 });
+/* Menu latéral mobile du site public : ferme le menu puis exécute l'action choisie (défilement ou connexion) */
+(function(){
+  const offcanvasEl = document.getElementById('publicOffcanvasMenu');
+  const offcanvas = bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl);
+  let pendingAction = null;
+  document.querySelectorAll('#publicOffcanvasLinks .public-offcanvas-link').forEach(link=>{
+    link.addEventListener('click', e=>{
+      e.preventDefault();
+      const targetSection = link.getAttribute('href');
+      pendingAction = ()=>{
+        const el = document.querySelector(targetSection);
+        if(el) el.scrollIntoView({behavior:'smooth'});
+      };
+      offcanvas.hide();
+    });
+  });
+  document.getElementById('btnOpenLoginOffcanvas').addEventListener('click', ()=>{
+    pendingAction = ()=>{
+      document.getElementById('formLogin').reset();
+      document.getElementById('loginError').style.display='none';
+      new bootstrap.Modal(document.getElementById('modalLogin')).show();
+    };
+    offcanvas.hide();
+  });
+  offcanvasEl.addEventListener('hidden.bs.offcanvas', ()=>{
+    if(pendingAction){ const action = pendingAction; pendingAction = null; action(); }
+  });
+})();
 document.getElementById('formLogin').addEventListener('submit', e=>{
   e.preventDefault();
   const data = Object.fromEntries(new FormData(e.target).entries());
@@ -2317,7 +2802,7 @@ function countRapportsCorrectionEtudiant(){
   }, 0);
 }
 function renderNav(){
-  const items = NAV.filter(n=> n.section==='dashboard' ? true : n.section==='utilisateurs' ? state.role==='direction' : n.section==='monprofil' ? state.role==='formateur' : hasPerm(n.section,'view'));
+  const items = NAV.filter(n=> n.section==='dashboard' ? true : n.section==='utilisateurs' ? state.role==='direction' : n.section==='monprofil' ? (state.role==='formateur'||state.role==='etudiant') : hasPerm(n.section,'view'));
   const html = `<div class="nav-section-title">Menu</div>` + items.map(n=>{
     const corrCount = n.section==='rapports' ? countRapportsCorrectionEtudiant() : 0;
     const badge = corrCount>0 ? `<span class="badge bg-danger rounded-pill ms-auto">${corrCount}</span>` : '';
@@ -2483,8 +2968,11 @@ function renderDashboard(){
   const dashChartCol = document.getElementById('dashChartCol');
   const dashSideTitle = document.getElementById('dashSideTitle');
   const dashSideContent = document.getElementById('dashSideContent');
+  // La répartition des étudiants par filière n'est pas pertinente pour un étudiant : on masque la carte.
+  const hideFiliereChart = state.role==='etudiant';
+  dashChartCol.style.display = hideFiliereChart ? 'none' : '';
   if(isFinanceUser){
-    dashSideCol.style.display=''; dashChartCol.className='col-lg-7';
+    dashSideCol.style.display=''; dashSideCol.className='col-lg-5'; dashChartCol.className='col-lg-7';
     dashSideTitle.textContent = 'Alertes impayés';
     const impayes = dashEtudiants.map(e=>({e, f:etudiantFinance(e.id)})).filter(x=>x.f.reste>0).sort((a,b)=>b.f.reste-a.f.reste).slice(0,6);
     dashSideContent.innerHTML = impayes.length ? impayes.map(x=>`
@@ -2496,7 +2984,7 @@ function renderDashboard(){
         <span class="fw-bold text-danger" style="font-size:.85rem;">${fmtCFA(x.f.reste)}</span>
       </div>`).join('') : `<div class="empty-state py-3"><i class="bi bi-check-circle"></i><p class="mb-0 mt-2">Aucun impayé notable</p></div>`;
   } else if(isEtudiantFinance && dashEtudiants[0]){
-    dashSideCol.style.display=''; dashChartCol.className='col-lg-7';
+    dashSideCol.style.display=''; dashSideCol.className = hideFiliereChart ? 'col-lg-12' : 'col-lg-5'; dashChartCol.className='col-lg-7';
     dashSideTitle.textContent = 'Mon état financier';
     const mine = etudiantFinance(dashEtudiants[0].id);
     dashSideContent.innerHTML = `
@@ -2506,6 +2994,20 @@ function renderDashboard(){
   } else {
     // pas d'accès aux paiements (ex : formateur) : on masque totalement le volet financier
     dashSideCol.style.display='none'; dashChartCol.className='col-lg-12';
+  }
+
+  // Ma galerie (étudiant / formateur) : aperçu des photos publiées, visibles également dans la galerie publique
+  const dashGalerieRow = document.getElementById('dashGalerieRow');
+  if(state.role==='etudiant' || state.role==='formateur'){
+    dashGalerieRow.style.display='';
+    const mesPhotos = monGaleriePhotos();
+    document.getElementById('dashGalerieContent').innerHTML = mesPhotos.length ? mesPhotos.slice(0,8).map(p=>`
+      <div class="col-4 col-md-2">
+        <img src="${p.dataUrl}" style="width:100%;height:80px;object-fit:cover;border-radius:8px;" alt="">
+      </div>`).join('') + `<div class="col-12 mt-1"><a href="#" onclick="goSection('monprofil');return false;" class="small">Gérer mes photos dans « Mon profil » →</a></div>`
+      : `<div class="col-12 text-muted small">Vous n'avez pas encore publié de photo. Rendez-vous dans « Mon profil » pour en ajouter.</div>`;
+  } else {
+    dashGalerieRow.style.display='none';
   }
 
   // derniers paiements (masqué si pas d'accès aux paiements)
@@ -2721,9 +3223,64 @@ document.getElementById('btnEtudiantWizardNext').addEventListener('click', ()=>{
 document.getElementById('btnEtudiantWizardPrev').addEventListener('click', ()=>{
   goToEtudiantWizardStep(Math.max(etudiantWizardStep-1, 1));
 });
+// Seule la direction peut modifier manuellement le n° d'ordre du matricule d'un étudiant.
+// Le matricule est affiché en lecture seule ; un clic sur le crayon ouvre l'édition du n° d'ordre.
+function applyOrdreEtudiantEditability(){
+  const btn = document.getElementById('btnEditOrdreEtudiant');
+  if(!btn) return;
+  const peutModifier = state.role==='direction';
+  btn.style.display = peutModifier ? 'inline-flex' : 'none';
+  closeOrdreEditWrap();
+}
+function openOrdreEditWrap(){
+  const wrap = document.getElementById('ordreEditWrap');
+  const btn = document.getElementById('btnEditOrdreEtudiant');
+  const ordreEl = document.getElementById('inputEtudiantOrdre');
+  const editInput = document.getElementById('inputEtudiantOrdreEdit');
+  document.getElementById('ordreEditError').textContent = '';
+  editInput.value = ordreEl.value || nextOrdreEtudiant();
+  wrap.classList.remove('d-none');
+  wrap.classList.add('d-flex');
+  btn.style.display = 'none';
+  editInput.focus();
+  editInput.select();
+}
+function closeOrdreEditWrap(){
+  const wrap = document.getElementById('ordreEditWrap');
+  const btn = document.getElementById('btnEditOrdreEtudiant');
+  wrap.classList.add('d-none');
+  wrap.classList.remove('d-flex');
+  if(state.role==='direction') btn.style.display = 'inline-flex';
+  document.getElementById('ordreEditError').textContent = '';
+}
+document.getElementById('btnEditOrdreEtudiant').addEventListener('click', openOrdreEditWrap);
+document.getElementById('btnCancelOrdreEtudiant').addEventListener('click', ()=>{ closeOrdreEditWrap(); updateMatriculeDisplay(); });
+document.getElementById('inputEtudiantOrdreEdit').addEventListener('input', updateMatriculeDisplay);
+document.getElementById('btnConfirmOrdreEtudiant').addEventListener('click', ()=>{
+  const editInput = document.getElementById('inputEtudiantOrdreEdit');
+  const errEl = document.getElementById('ordreEditError');
+  const val = parseInt(editInput.value, 10);
+  const f = document.getElementById('formEtudiant');
+  if(!val || val<1){ errEl.textContent = 'N° invalide.'; return; }
+  if(ordreEtudiantDejaUtilise(val, f.elements['id'].value || null)){
+    errEl.textContent = 'N° déjà utilisé par un autre étudiant.';
+    return;
+  }
+  document.getElementById('inputEtudiantOrdre').value = val;
+  updateMatriculeDisplay();
+  closeOrdreEditWrap();
+});
+document.getElementById('inputEtudiantOrdreEdit').addEventListener('keydown', ev=>{
+  if(ev.key==='Enter'){ ev.preventDefault(); document.getElementById('btnConfirmOrdreEtudiant').click(); }
+  else if(ev.key==='Escape'){ ev.preventDefault(); closeOrdreEditWrap(); }
+});
+document.getElementById('inputEtudiantDateInscription').addEventListener('input', updateMatriculeDisplay);
 document.getElementById('btnNewEtudiant').addEventListener('click', ()=>{
   document.getElementById('formEtudiant').reset();
   document.getElementById('formEtudiant').elements['id'].value='';
+  document.getElementById('inputEtudiantOrdre').value = nextOrdreEtudiant();
+  // Date d'inscription pré-remplie avec aujourd'hui pour que le matricule s'affiche dès l'ouverture du formulaire
+  document.getElementById('inputEtudiantDateInscription').value = new Date().toISOString().slice(0,10);
   resetPhotoBox();
   MULTI_UPLOADS['preuveAbandonData'].reset();
   MULTI_UPLOADS['diplomeFichiersData'].reset();
@@ -2731,6 +3288,8 @@ document.getElementById('btnNewEtudiant').addEventListener('click', ()=>{
   renderEtudiantModulesCheckboxes(document.getElementById('selectFiliereEtudiant').value, []);
   goToEtudiantWizardStep(1);
   document.getElementById('modalEtudiantTitle').textContent='Nouvel étudiant';
+  applyOrdreEtudiantEditability();
+  updateMatriculeDisplay();
   new bootstrap.Modal(document.getElementById('modalEtudiant')).show();
 });
 function editEtudiant(id){
@@ -2738,6 +3297,7 @@ function editEtudiant(id){
   const f = document.getElementById('formEtudiant');
   f.reset();
   Object.keys(e).forEach(k=>{ if(f.elements[k]) f.elements[k].value = e[k]; });
+  document.getElementById('inputEtudiantOrdre').value = e.ordre!=null ? e.ordre : nextOrdreEtudiant();
   setPhotoBox(e.photo || '');
   MULTI_UPLOADS['preuveAbandonData'].render();
   MULTI_UPLOADS['diplomeFichiersData'].render();
@@ -2745,6 +3305,8 @@ function editEtudiant(id){
   renderEtudiantModulesCheckboxes(e.filiereId, e.moduleIds||[]);
   goToEtudiantWizardStep(1);
   document.getElementById('modalEtudiantTitle').textContent='Modifier étudiant';
+  applyOrdreEtudiantEditability();
+  updateMatriculeDisplay();
   new bootstrap.Modal(document.getElementById('modalEtudiant')).show();
 }
 function viewEtudiant(id){
@@ -3028,12 +3590,24 @@ document.getElementById('formEtudiant').addEventListener('submit', async e=>{
   const fd = new FormData(f);
   const data = Object.fromEntries(fd.entries());
   data.moduleIds = fd.getAll('moduleIds'); // plusieurs cases peuvent être cochées (ou aucune)
+
+  // Le n° d'ordre doit être unique (jamais partagé par 2 étudiants), même si le mois/année
+  // d'inscription (partie après "CF") peut se répéter d'un étudiant à l'autre.
+  let ordreNum = parseInt(data.ordre, 10);
+  if(!ordreNum || ordreNum < 1){ ordreNum = nextOrdreEtudiant(); }
+  if(ordreEtudiantDejaUtilise(ordreNum, data.id || null)){
+    toast(`Le n° d'ordre ${String(ordreNum).padStart(3,'0')} est déjà utilisé par un autre étudiant. Veuillez en choisir un autre.`);
+    document.getElementById('btnEditOrdreEtudiant').click();
+    return;
+  }
+  data.ordre = ordreNum;
+  data.matricule = computeMatricule(ordreNum, data.dateInscription);
+
   if(data.id){
     const idx = DB.etudiants.findIndex(x=>x.id===data.id);
     DB.etudiants[idx] = {...DB.etudiants[idx], ...data};
   } else {
     data.id = uid();
-    data.matricule = genMatricule(data.dateInscription);
     DB.etudiants.push(data);
   }
   await saveDB();
@@ -3092,7 +3666,7 @@ document.getElementById('formFiliere').addEventListener('submit', async e=>{
   await saveDB();
   bootstrap.Modal.getInstance(document.getElementById('modalFiliere')).hide();
   toast('Filière enregistrée');
-  populateAllSelects(); renderFilieres();
+  populateAllSelects(); renderFilieres(); renderPublicSite();
 });
 
 /* ---------- MODULES (rattachés à une filière) ---------- */
@@ -3441,6 +4015,15 @@ function renderEvaluations(){
     base = scopeByFiliereId(base);
   }
   let list = base.filter(ev=> !filFilter || ev.filiereId===filFilter);
+  const evalMoyenneBanner = document.getElementById('evalMoyenneBanner');
+  if(state.role==='etudiant'){
+    // moyenne générale calculée sur toutes mes évaluations, indépendamment du filtre filière sélectionné
+    const moy = base.length ? (base.reduce((s,ev)=>s+Number(ev.note),0)/base.length).toFixed(1) : '—';
+    document.getElementById('evalMoyenneValue').textContent = moy;
+    evalMoyenneBanner.classList.remove('d-none'); evalMoyenneBanner.classList.add('d-flex');
+  } else {
+    evalMoyenneBanner.classList.add('d-none'); evalMoyenneBanner.classList.remove('d-flex');
+  }
   document.getElementById('evaluationsBody').innerHTML = list.length ? list.map(ev=>{
     const et = getEtudiant(ev.etudiantId);
     const noteCls = ev.note>=14 ? 'note-good' : ev.note>=10 ? 'note-avg' : 'note-bad';
@@ -4228,6 +4811,7 @@ function filteredPresenceHistory(){
 }
 function renderPresenceHistory(){
   const list = filteredPresenceHistory();
+  const manage = canEdit('presences');
 
   // résumé de la période
   const total = list.length;
@@ -4250,9 +4834,60 @@ function renderPresenceHistory(){
       <td>${nomComplet(getEtudiant(p.etudiantId))}</td>
       <td><span class="badge ${cls}">${p.statut}</span></td>
       <td class="d-none d-lg-table-cell text-muted small">${p.motif||'—'}</td>
+      <td class="text-end">${manage ? `<button class="btn btn-sm btn-icon" onclick="editerAppelSession('${p.filiereId}','${p.date}')" title="Modifier l'appel de ce jour"><i class="bi bi-pencil"></i></button>
+      <button class="btn btn-sm btn-icon text-danger" onclick="askDelete('presences','${p.id}')" title="Supprimer cette présence"><i class="bi bi-trash"></i></button>` : ''}</td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="6"><div class="empty-state"><i class="bi bi-calendar-x"></i><p>Aucun appel enregistré pour cette période</p></div></td></tr>`;
+
+  renderAppelsSessions(list, manage);
+}
+/* Vue groupée par séance d'appel (filière + date), pour modifier ou supprimer un appel entier en un clic */
+function renderAppelsSessions(list, manage){
+  const card = document.getElementById('appelsSessionsCard');
+  card.style.display = manage ? '' : 'none';
+  if(!manage) return;
+  const groups = {};
+  list.forEach(p=>{
+    const key = p.filiereId+'|'+p.date;
+    if(!groups[key]) groups[key] = {filiereId:p.filiereId, date:p.date, total:0, present:0};
+    groups[key].total++;
+    if(p.statut==='present') groups[key].present++;
+  });
+  const sessions = Object.values(groups).sort((a,b)=> b.date.localeCompare(a.date));
+  document.getElementById('appelsSessionsBody').innerHTML = sessions.length ? sessions.map(s=>{
+    const tauxSession = s.total>0 ? Math.round((s.present/s.total)*100) : 0;
+    return `<tr>
+      <td>${fmtDate(s.date)}</td>
+      <td>${getFiliere(s.filiereId)?.nom||'—'}</td>
+      <td>${s.total}</td>
+      <td class="d-none d-md-table-cell">${tauxSession}%</td>
+      <td class="text-end">
+        <button class="btn btn-sm btn-icon" onclick="editerAppelSession('${s.filiereId}','${s.date}')" title="Modifier cet appel"><i class="bi bi-pencil"></i></button>
+        <button class="btn btn-sm btn-icon text-danger" onclick="askDeletePresenceSession('${s.filiereId}','${s.date}')" title="Supprimer cet appel"><i class="bi bi-trash"></i></button>
+      </td>
     </tr>`;
   }).join('') : `<tr><td colspan="5"><div class="empty-state"><i class="bi bi-calendar-x"></i><p>Aucun appel enregistré pour cette période</p></div></td></tr>`;
 }
+/* Charge un appel existant (filière + date) dans le formulaire d'appel pour le modifier */
+function editerAppelSession(filiereId, date){
+  document.getElementById('presenceFiliere').value = filiereId;
+  document.getElementById('presenceDate').value = date;
+  populatePresenceList();
+  document.getElementById('presenceAppelCard').scrollIntoView({behavior:'smooth', block:'start'});
+}
+/* Supprime tous les enregistrements de présence d'un appel (une filière, une date) */
+function askDeletePresenceSession(filiereId, date){
+  pendingDelete = {collection:'presences-session', filiereId, date};
+  new bootstrap.Modal(document.getElementById('modalConfirm')).show();
+}
+/* Supprime tous les appels correspondant à la période/filière actuellement filtrée */
+function askDeletePresencePeriode(){
+  const list = filteredPresenceHistory();
+  if(!list.length){ toast('Aucun appel à supprimer pour cette période'); return; }
+  pendingDelete = {collection:'presences-periode', ids: list.map(p=>p.id)};
+  new bootstrap.Modal(document.getElementById('modalConfirm')).show();
+}
+document.getElementById('btnDeleteAppelsPeriode').addEventListener('click', askDeletePresencePeriode);
 async function exportPresenceRapportPdf(){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
@@ -4428,10 +5063,21 @@ function resetProfilPhotoBox(){
 function setProfilPhotoBox(dataUrl){
   const img = document.getElementById('profilPhotoPreview');
   const icon = document.getElementById('profilPhotoPlaceholderIcon');
-  if(dataUrl){ img.src = dataUrl; img.style.display='block'; icon.style.display='none'; }
-  else { img.style.display='none'; icon.style.display='block'; }
+  const hint = document.getElementById('profilPhotoViewHint');
+  if(dataUrl){ img.src = dataUrl; img.style.display='block'; icon.style.display='none'; hint.style.display='flex'; }
+  else { img.style.display='none'; icon.style.display='block'; hint.style.display='none'; }
 }
-document.getElementById('profilPhotoUploadBox').addEventListener('click', ()=> document.getElementById('profilPhotoInput').click());
+// Clic sur la photo (si elle existe déjà) : agrandissement. Sinon : ouvre le sélecteur de fichier.
+// Le bouton caméra, lui, ouvre toujours le sélecteur de fichier pour changer la photo.
+document.getElementById('profilPhotoUploadBox').addEventListener('click', ()=>{
+  const img = document.getElementById('profilPhotoPreview');
+  if(img.style.display!=='none' && img.src){ openImgLightbox(img.src); }
+  else { document.getElementById('profilPhotoInput').click(); }
+});
+document.getElementById('profilPhotoEditBtn').addEventListener('click', e=>{
+  e.stopPropagation();
+  document.getElementById('profilPhotoInput').click();
+});
 let profilPhotoPending = null;
 let profilCvPending = null;
 document.getElementById('profilPhotoInput').addEventListener('change', e=>{
@@ -4462,22 +5108,37 @@ document.getElementById('profilCvInput').addEventListener('change', e=>{
 });
 function renderMonProfil(){
   const u = currentUser();
-  const f = u && u.formateurId ? getFormateur(u.formateurId) : null;
-  document.getElementById('profilNom').value = f?.nom || '';
-  document.getElementById('profilPrenom').value = f?.prenom || '';
-  document.getElementById('profilSpecialite').value = f?.specialite || '';
-  document.getElementById('profilTelephone').value = f?.telephone || '';
-  document.getElementById('profilEmail').value = f?.email || '';
-  document.getElementById('profilPortfolio').value = f?.portfolio || '';
+  const isEtudiant = state.role==='etudiant';
+  document.getElementById('monProfilFormateurFields').style.display = isEtudiant ? 'none' : '';
+  document.getElementById('monProfilEtudiantFields').style.display = isEtudiant ? '' : 'none';
+  let photo = '';
+  if(isEtudiant){
+    const et = u && u.etudiantId ? getEtudiant(u.etudiantId) : null;
+    photo = et?.photo || '';
+    document.getElementById('monProfilEtudiantNom').textContent = et ? nomComplet(et) : '—';
+    document.getElementById('monProfilEtudiantInfos').textContent = et ? `${et.matricule} · ${getFiliere(et.filiereId)?.nom||'—'}` : '—';
+    profilCvPending = null;
+  } else {
+    const f = u && u.formateurId ? getFormateur(u.formateurId) : null;
+    document.getElementById('profilNom').value = f?.nom || '';
+    document.getElementById('profilPrenom').value = f?.prenom || '';
+    document.getElementById('profilSpecialite').value = f?.specialite || '';
+    document.getElementById('profilTelephone').value = f?.telephone || '';
+    document.getElementById('profilEmail').value = f?.email || '';
+    document.getElementById('profilPortfolio').value = f?.portfolio || '';
+    document.getElementById('profilCvInput').value = '';
+    profilCvPending = f?.cv || null;
+    document.getElementById('profilCvCurrent').innerHTML = f?.cv ? `<a class="btn btn-sm btn-outline-secondary" href="${f.cv}" target="_blank" download="cv-${f.nom||'formateur'}"><i class="bi bi-file-earmark-person"></i> Voir mon CV actuel</a>` : '<span class="text-muted small">Aucun CV déposé pour le moment.</span>';
+    photo = f?.photo || '';
+  }
   document.getElementById('profilIdentifiant').value = u?.identifiant || '';
   document.getElementById('profilNouveauMdp').value = '';
   document.getElementById('profilMdpActuel').value = '';
   document.getElementById('profilError').style.display = 'none';
-  document.getElementById('profilCvInput').value = '';
-  profilPhotoPending = f?.photo || null;
-  profilCvPending = f?.cv || null;
-  setProfilPhotoBox(f?.photo || '');
-  document.getElementById('profilCvCurrent').innerHTML = f?.cv ? `<a class="btn btn-sm btn-outline-secondary" href="${f.cv}" target="_blank" download="cv-${f.nom||'formateur'}"><i class="bi bi-file-earmark-person"></i> Voir mon CV actuel</a>` : '<span class="text-muted small">Aucun CV déposé pour le moment.</span>';
+  document.getElementById('profilPhotoInput').value = '';
+  profilPhotoPending = photo || null;
+  setProfilPhotoBox(photo || '');
+  renderMaGalerie();
 }
 document.getElementById('formMonProfil').addEventListener('submit', async e=>{
   e.preventDefault();
@@ -4486,9 +5147,12 @@ document.getElementById('formMonProfil').addEventListener('submit', async e=>{
   const errBox = document.getElementById('profilError');
   errBox.style.display = 'none';
   const u = currentUser();
-  if(!u || !u.formateurId){ return; }
-  const f = getFormateur(u.formateurId);
-  if(!f) return;
+  if(!u) return;
+  const isEtudiant = state.role==='etudiant';
+  if(isEtudiant && !u.etudiantId) return;
+  if(!isEtudiant && !u.formateurId) return;
+  const target = isEtudiant ? getEtudiant(u.etudiantId) : getFormateur(u.formateurId);
+  if(!target) return;
 
   const newIdentifiant = document.getElementById('profilIdentifiant').value.trim();
   const newMdp = document.getElementById('profilNouveauMdp').value;
@@ -4515,15 +5179,19 @@ document.getElementById('formMonProfil').addEventListener('submit', async e=>{
     if(mdpChange) u.motDePasse = newMdp;
   }
 
-  f.nom = document.getElementById('profilNom').value;
-  f.prenom = document.getElementById('profilPrenom').value;
-  f.specialite = document.getElementById('profilSpecialite').value;
-  f.telephone = document.getElementById('profilTelephone').value;
-  f.email = document.getElementById('profilEmail').value;
-  f.portfolio = document.getElementById('profilPortfolio').value;
-  f.photo = profilPhotoPending || '';
-  f.cv = profilCvPending || '';
-  u.nom = nomComplet(f);
+  if(isEtudiant){
+    target.photo = profilPhotoPending || '';
+  } else {
+    target.nom = document.getElementById('profilNom').value;
+    target.prenom = document.getElementById('profilPrenom').value;
+    target.specialite = document.getElementById('profilSpecialite').value;
+    target.telephone = document.getElementById('profilTelephone').value;
+    target.email = document.getElementById('profilEmail').value;
+    target.portfolio = document.getElementById('profilPortfolio').value;
+    target.photo = profilPhotoPending || '';
+    target.cv = profilCvPending || '';
+    u.nom = nomComplet(target);
+  }
 
   await saveDB();
   state.userName = u.nom;
@@ -4532,6 +5200,67 @@ document.getElementById('formMonProfil').addEventListener('submit', async e=>{
   toast('Profil mis à jour');
   renderMonProfil();
   populateAllSelects();
+});
+document.getElementById('btnExportMaFichePdf').addEventListener('click', ()=>{
+  const u = currentUser();
+  if(u && u.etudiantId) exportFicheEtudiantPdf(u.etudiantId);
+});
+
+/* ---------- MA GALERIE (photos publiées par l'étudiant/formateur) ---------- */
+function currentGalerieOwner(){
+  const u = currentUser();
+  if(!u) return null;
+  if(state.role==='etudiant' && u.etudiantId) return {ownerType:'etudiant', ownerId:u.etudiantId};
+  if(state.role==='formateur' && u.formateurId) return {ownerType:'formateur', ownerId:u.formateurId};
+  return null;
+}
+function monGaleriePhotos(){
+  const owner = currentGalerieOwner();
+  if(!owner || !DB || !DB.galerie) return [];
+  return DB.galerie.filter(g=>g.ownerType===owner.ownerType && g.ownerId===owner.ownerId);
+}
+function renderMaGalerie(){
+  const box = document.getElementById('profilGaleriePreview');
+  if(!box) return;
+  const photos = monGaleriePhotos();
+  box.innerHTML = photos.length ? photos.map(p=>`
+    <div class="col-6 col-sm-4 col-md-3">
+      <div style="position:relative;">
+        <img src="${p.dataUrl}" class="galerie-photo-card" alt="" onclick="openImgLightbox('${p.dataUrl}')">
+        <button type="button" class="btn btn-sm btn-danger" style="position:absolute;top:4px;right:4px;padding:1px 6px;line-height:1;" onclick="event.stopPropagation();supprimerMaPhotoGalerie('${p.id}')" title="Supprimer cette photo"><i class="bi bi-x-lg"></i></button>
+      </div>
+    </div>`).join('') : '<div class="col-12 text-muted small">Aucune photo publiée pour le moment.</div>';
+}
+async function supprimerMaPhotoGalerie(id){
+  DB.galerie = (DB.galerie||[]).filter(g=>g.id!==id);
+  await saveDB();
+  renderMaGalerie();
+  renderDashboard();
+  renderPublicSite();
+  toast('Photo supprimée');
+}
+document.getElementById('profilGaleriePhotoInput').addEventListener('change', async e=>{
+  const files = Array.from(e.target.files||[]);
+  if(!files.length) return;
+  const owner = currentGalerieOwner();
+  if(!owner){ e.target.value=''; return; }
+  const u = currentUser();
+  let okCount = 0;
+  for(const file of files){
+    try{
+      const url = await uploadToCloudinary(file);
+      DB.galerie.push({id:uid(), ownerType:owner.ownerType, ownerId:owner.ownerId, dataUrl:url, legende:u?.nom||'', date:new Date().toISOString()});
+      okCount++;
+    }catch(err){ console.error(err); toast("Échec de l'envoi d'une photo — réessayez"); }
+  }
+  e.target.value = '';
+  if(okCount>0){
+    await saveDB();
+    renderMaGalerie();
+    renderDashboard();
+    renderPublicSite();
+    toast(okCount>1 ? 'Photos ajoutées à votre galerie' : 'Photo ajoutée à votre galerie');
+  }
 });
 
 /* ---------- UTILISATEURS (création des profils par la direction) ---------- */
@@ -4845,6 +5574,27 @@ function askDelete(collection, id){
 }
 document.getElementById('btnConfirmDelete').addEventListener('click', async ()=>{
   if(pendingDelete){
+    if(pendingDelete.collection==='presences-session'){
+      // Supprime l'appel complet (toutes les présences) d'une filière à une date donnée
+      DB.presences = DB.presences.filter(p=>!(p.filiereId===pendingDelete.filiereId && p.date===pendingDelete.date));
+      await saveDB();
+      toast('Appel supprimé');
+      renderSection(state.section);
+      bootstrap.Modal.getInstance(document.getElementById('modalConfirm')).hide();
+      pendingDelete = null;
+      return;
+    }
+    if(pendingDelete.collection==='presences-periode'){
+      // Supprime tous les appels de la période/filière filtrée
+      const idsSet = new Set(pendingDelete.ids);
+      DB.presences = DB.presences.filter(p=>!idsSet.has(p.id));
+      await saveDB();
+      toast('Appels de la période supprimés');
+      renderSection(state.section);
+      bootstrap.Modal.getInstance(document.getElementById('modalConfirm')).hide();
+      pendingDelete = null;
+      return;
+    }
     if(pendingDelete.collection==='modules'){
       // Retire le module des inscriptions des étudiants
       DB.etudiants.forEach(e=>{ if(e.moduleIds) e.moduleIds = e.moduleIds.filter(id=>id!==pendingDelete.id); });
