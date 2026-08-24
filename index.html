@@ -135,6 +135,7 @@ h1,h2,h3,h4,h5,.brand,.nav-section-title{font-family:'Poppins',sans-serif;}
 .rb-comptabilite{background:#DEF7EA;color:#1C7A46;}
 .rb-formateur{background:#FFEFD9;color:#B4700B;}
 .rb-etudiant{background:#E1F6F4;color:#116B62;}
+.rb-partenaire{background:#FDE6EE;color:#B0245B;}
 .rb-visiteur{background:#F1F2F4;color:#555;}
 
 .stat-card{
@@ -459,6 +460,7 @@ table.table td{vertical-align:middle;font-size:.87rem;}
       </div>
       <!-- ===== DASHBOARD ===== -->
       <div class="section-panel" id="panel-dashboard">
+        <div id="dashNotifBanner" style="display:none;"></div>
         <div class="row g-3 mb-3" id="statCards"></div>
         <div class="row g-3">
           <div class="col-lg-7" id="dashChartCol">
@@ -786,9 +788,17 @@ table.table td{vertical-align:middle;font-size:.87rem;}
       <!-- ===== UTILISATEURS ===== -->
       <div class="section-panel" id="panel-utilisateurs">
         <div class="card-clean">
-          <div class="card-header d-flex justify-content-between align-items-center">
+          <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
             <span><i class="bi bi-shield-lock-fill me-1"></i> Comptes & rôles</span>
             <button class="btn btn-amber btn-sm" id="btnNewUser"><i class="bi bi-plus-lg"></i> Nouveau compte</button>
+          </div>
+          <div class="card-body pb-0">
+            <div class="btn-group btn-group-sm flex-wrap" role="group" id="usersTabGroup" aria-label="Filtrer les comptes par profil">
+              <button type="button" class="btn btn-outline-secondary active" data-userstab="administration"><i class="bi bi-briefcase-fill me-1"></i> Administration</button>
+              <button type="button" class="btn btn-outline-secondary" data-userstab="formateur"><i class="bi bi-person-workspace me-1"></i> Formateurs</button>
+              <button type="button" class="btn btn-outline-secondary" data-userstab="etudiant"><i class="bi bi-mortarboard-fill me-1"></i> Étudiants</button>
+              <button type="button" class="btn btn-outline-secondary" data-userstab="partenaire"><i class="bi bi-hand-thumbs-up-fill me-1"></i> Partenaires</button>
+            </div>
           </div>
           <div class="card-body p-0">
             <div class="table-responsive">
@@ -1227,7 +1237,7 @@ table.table td{vertical-align:middle;font-size:.87rem;}
 <div class="modal fade" id="modalRapportEtudiant" tabindex="-1">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
-      <div class="modal-header"><h5 class="modal-title">Compléter le rapport de chantier</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-header"><h5 class="modal-title" id="modalRapportEtudiantTitle">Compléter le rapport de chantier</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
       <form id="formRapportEtudiant">
         <input type="hidden" id="rapportEtudiantRapportId">
         <div class="modal-body">
@@ -1250,10 +1260,29 @@ table.table td{vertical-align:middle;font-size:.87rem;}
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
-          <button type="submit" class="btn btn-amber">Soumettre le rapport</button>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" id="btnAnnulerRapportEtudiant">Annuler</button>
+          <button type="submit" class="btn btn-amber" id="btnSoumettreRapportEtudiant">Soumettre le rapport</button>
         </div>
       </form>
+    </div>
+  </div>
+</div>
+
+<!-- Demande de correction (formateur / direction) -->
+<div class="modal fade" id="modalDemandeCorrection" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header"><h6 class="modal-title fw-bold mb-0">Demander une correction</h6><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <input type="hidden" id="drRapportId">
+        <input type="hidden" id="drEtudiantId">
+        <label class="form-label small">Précisez à l'étudiant ce qu'il doit corriger</label>
+        <textarea class="form-control" id="drMotif" rows="3" placeholder="Ex : merci d'ajouter des photos du chantier et de préciser les travaux réalisés"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Annuler</button>
+        <button type="button" class="btn btn-amber btn-sm" id="btnConfirmDemandeCorrection">Envoyer la demande</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1428,10 +1457,14 @@ const ROLES = [
   {id:'comptabilite', label:'Comptabilité', icon:'bi-calculator-fill'},
   {id:'formateur', label:'Formateur', icon:'bi-person-workspace'},
   {id:'etudiant', label:'Étudiant', icon:'bi-mortarboard-fill'},
+  {id:'partenaire', label:'Partenaire', icon:'bi-hand-thumbs-up-fill'},
 ];
+// Rôles regroupés sous l'onglet "Administration" dans le menu Utilisateurs (direction, secrétariat, comptabilité,
+// + tout futur profil ajouté qui ne serait ni formateur, ni étudiant, ni partenaire).
+const ADMIN_ROLE_IDS = ['direction','secretariat','comptabilite'];
 
 const NAV = [
-  {section:'dashboard', label:'Tableau de bord', icon:'bi-speedometer2', roles:['direction','secretariat','comptabilite','formateur','etudiant']},
+  {section:'dashboard', label:'Tableau de bord', icon:'bi-speedometer2', roles:['direction','secretariat','comptabilite','formateur','etudiant','partenaire']},
   {section:'etudiants', label:'Étudiants', icon:'bi-people-fill', roles:['direction','secretariat','comptabilite','formateur']},
   {section:'filieres', label:'Filières', icon:'bi-mortarboard-fill', roles:['direction','secretariat','formateur']},
   {section:'formateurs', label:'Formateurs', icon:'bi-person-workspace', roles:['direction','secretariat']},
@@ -1439,9 +1472,9 @@ const NAV = [
   {section:'evaluations', label:'Évaluations', icon:'bi-clipboard-check-fill', roles:['direction','secretariat','formateur','etudiant']},
   {section:'rapports', label:'Rapports de chantier', icon:'bi-clipboard-data-fill', roles:['direction','secretariat','formateur','etudiant']},
   {section:'presences', label:'Présences', icon:'bi-calendar-check-fill', roles:['direction','secretariat','formateur','etudiant']},
-  {section:'documents', label:'Documents', icon:'bi-folder-fill', roles:['direction','secretariat','formateur','etudiant']},
-  {section:'annonces', label:'Annonces', icon:'bi-megaphone-fill', roles:['direction','secretariat','comptabilite','formateur','etudiant']},
-  {section:'messagerie', label:'Messagerie', icon:'bi-chat-dots-fill', roles:['direction','secretariat','comptabilite','formateur','etudiant']},
+  {section:'documents', label:'Documents', icon:'bi-folder-fill', roles:['direction','secretariat','formateur','etudiant','partenaire']},
+  {section:'annonces', label:'Annonces', icon:'bi-megaphone-fill', roles:['direction','secretariat','comptabilite','formateur','etudiant','partenaire']},
+  {section:'messagerie', label:'Messagerie', icon:'bi-chat-dots-fill', roles:['direction','secretariat','comptabilite','formateur','etudiant','partenaire']},
   {section:'monprofil', label:'Mon profil', icon:'bi-person-badge-fill', roles:['formateur']},
   {section:'utilisateurs', label:'Utilisateurs', icon:'bi-shield-lock-fill', roles:['direction']},
 ];
@@ -2273,11 +2306,23 @@ document.querySelectorAll('.modal').forEach(m=>{
 });
 
 /* ---------- Navigation ---------- */
+// Nombre de chantiers pour lesquels le formateur/la direction a demandé une correction à l'étudiant connecté.
+function countRapportsCorrectionEtudiant(){
+  if(state.role!=='etudiant' || !DB || !DB.rapports) return 0;
+  const u = currentUser();
+  if(!u) return 0;
+  return DB.rapports.reduce((n,r)=>{
+    const p = getParticipant(r, u.etudiantId);
+    return n + (p && p.correctionDemandee ? 1 : 0);
+  }, 0);
+}
 function renderNav(){
   const items = NAV.filter(n=> n.section==='dashboard' ? true : n.section==='utilisateurs' ? state.role==='direction' : n.section==='monprofil' ? state.role==='formateur' : hasPerm(n.section,'view'));
-  const html = `<div class="nav-section-title">Menu</div>` + items.map(n=>`
-    <a href="#" class="side-link" data-section="${n.section}"><i class="bi ${n.icon}"></i> ${n.label}</a>
-  `).join('');
+  const html = `<div class="nav-section-title">Menu</div>` + items.map(n=>{
+    const corrCount = n.section==='rapports' ? countRapportsCorrectionEtudiant() : 0;
+    const badge = corrCount>0 ? `<span class="badge bg-danger rounded-pill ms-auto">${corrCount}</span>` : '';
+    return `<a href="#" class="side-link" data-section="${n.section}"><i class="bi ${n.icon}"></i> ${n.label}${badge}</a>`;
+  }).join('');
   document.getElementById('navContainer').innerHTML = html;
   document.getElementById('navContainerMobile').innerHTML = html;
   document.querySelectorAll('[data-section]').forEach(a=>{
@@ -2343,8 +2388,51 @@ function populateAllSelects(){
 }
 
 /* ---------- DASHBOARD ---------- */
+// Notifications de l'étudiant concernant ses rapports de chantier (bandeau rouge en haut du tableau de bord).
+function getEtudiantNotifications(){
+  if(state.role!=='etudiant' || !DB || !DB.rapports) return [];
+  const u = currentUser();
+  if(!u) return [];
+  const notifs = [];
+  DB.rapports.forEach(r=>{
+    const p = getParticipant(r, u.etudiantId);
+    if(!p || p.participation==='non') return;
+    if(p.locked) return; // rapport verrouillé (validé ou expiré) : plus d'action requise
+    if(p.correctionDemandee){
+      notifs.push({
+        icon:'bi-arrow-repeat',
+        text:`Correction demandée pour le rapport « ${r.titre} »${p.motifCorrection?' — '+p.motifCorrection:''}`
+      });
+    } else if(!p.soumis){
+      notifs.push({
+        icon:'bi-hourglass-split',
+        text:`Rapport « ${r.titre} » à compléter — ${deadlineRemainingHTML(r).replace(/<[^>]+>/g,'')}`
+      });
+    }
+  });
+  return notifs;
+}
+function renderDashNotifBanner(){
+  const el = document.getElementById('dashNotifBanner');
+  if(!el) return;
+  const notifs = getEtudiantNotifications();
+  if(!notifs.length){ el.style.display='none'; el.innerHTML=''; return; }
+  el.style.display='block';
+  el.innerHTML = `
+    <div class="alert alert-danger mb-3">
+      <div class="fw-bold mb-2"><i class="bi bi-bell-fill me-1"></i> Notifications</div>
+      <div class="d-flex flex-column gap-2">
+        ${notifs.map(n=>`
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span class="small"><i class="bi ${n.icon} me-1"></i>${n.text}</span>
+            <button type="button" class="btn btn-sm btn-outline-danger flex-shrink-0" onclick="goSection('rapports')"><i class="bi bi-eye"></i> Afficher</button>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
 let chartFilieresInstance = null;
 function renderDashboard(){
+  renderDashNotifBanner();
   const dashEtudiants = scopeEtudiants(DB.etudiants);
   const dashFilieres = scopeFilieres(DB.filieres);
   const totalEtudiants = dashEtudiants.filter(e=>e.statut==='actif').length;
@@ -3500,6 +3588,7 @@ function creerParticipant(etudiantId, participation, motif){
     appreciationsDetail:null, note:null, appreciationRapport:'',
     locked:false, lockReason:null, evalPushed:false,
     dateValidation:null, valideParId:null,
+    correctionDemandee:false, motifCorrection:'', dateDemandeCorrection:null,
   };
   if(participation==='non' && !motif){
     p.note = 0; p.locked = true; p.lockReason = 'non-sans-motif';
@@ -3525,7 +3614,9 @@ function applyAutoExpirations(){
     const deadlinePassed = (Date.now() - new Date(r.dateCreation).getTime()) > RAPPORT_DEADLINE_MS;
     if(!deadlinePassed) return;
     (r.participants||[]).forEach(p=>{
-      if(p.participation==='oui' && !p.soumis && !p.locked){
+      // Un participant à qui une correction a été demandée ne doit pas basculer automatiquement à 0 :
+      // il dispose du temps nécessaire pour corriger, la validation reste manuelle.
+      if(p.participation==='oui' && !p.soumis && !p.locked && !p.correctionDemandee){
         p.note = 0; p.locked = true; p.lockReason = 'expire';
         p.dateValidation = new Date().toISOString().slice(0,10);
         pushEvaluationForParticipant(r, p);
@@ -3542,6 +3633,7 @@ function participantStatus(r, p){
   }
   if(p.locked && p.lockReason==='expire') return {code:'expire', label:'Délai de 72h dépassé — Note 0/19', cls:'danger'};
   if(p.locked && p.lockReason==='valide') return {code:'valide', label:'Rapport validé — Note '+p.note+'/19', cls:'success'};
+  if(p.correctionDemandee) return {code:'correction', label:'Correction demandée — en attente de l\'étudiant', cls:'danger'};
   if(p.soumis) return {code:'attente', label:'Rapport soumis — en attente de validation', cls:'warning'};
   return {code:'a-remplir', label:'À compléter par l\'étudiant', cls:'info'};
 }
@@ -3561,6 +3653,7 @@ function canDeleteChantier(r){
 }
 function renderRapports(){
   if(applyAutoExpirations()) saveDB();
+  renderNav();
   const editable = canEdit('rapports');
   document.getElementById('btnNewRapport').style.display = (editable && state.role!=='etudiant')?'inline-block':'none';
   let list = scopeByFiliereId([...DB.rapports]);
@@ -3582,13 +3675,32 @@ function rapportHeaderHTML(r){
     <h6 class="fw-bold">${r.titre}</h6>
     <div class="small text-muted mb-2"><i class="bi bi-geo-alt"></i> ${r.lieu||'—'} · <i class="bi bi-person-badge"></i> ${r.formateurNom || nomComplet(getFormateur(r.formateurId))}</div>`;
 }
+// Identifiants des chantiers actuellement "dépliés" (détails + participants visibles) dans la vue admin/formateur/secrétariat.
+// Repliés par défaut pour rester compact en plein écran comme sur mobile.
+const expandedChantiers = new Set();
+function toggleChantier(id){
+  if(expandedChantiers.has(id)) expandedChantiers.delete(id); else expandedChantiers.add(id);
+  renderRapports();
+}
+// Identifiants "rapportId__etudiantId" des participants dont le détail du rapport est actuellement déplié
+// dans la vue admin/formateur. Repliés par défaut : le formateur ne voit d'abord que la liste des étudiants
+// avec leur statut, et clique sur "Afficher" devant un nom pour voir le détail du rapport et le noter.
+const expandedParticipants = new Set();
+function toggleParticipantDetail(rapportId, etudiantId){
+  const key = rapportId+'__'+etudiantId;
+  if(expandedParticipants.has(key)) expandedParticipants.delete(key); else expandedParticipants.add(key);
+  renderRapports();
+}
 // Vue direction / secrétariat / formateur : liste des chantiers avec le récapitulatif de chaque participant.
 function rapportCardAdminHTML(r){
+  const expanded = expandedChantiers.has(r.id);
   const participants = r.participants||[];
   const canDelete = canDeleteChantier(r);
   const rows = participants.map(p=>{
     const et = getEtudiant(p.etudiantId);
     const st = participantStatus(r, p);
+    const pKey = r.id+'__'+p.etudiantId;
+    const pExpanded = expandedParticipants.has(pKey);
     let gradeBlock = '';
     if(st.code==='attente' && canValidateRapport(r)){
       gradeBlock = `
@@ -3597,84 +3709,166 @@ function rapportCardAdminHTML(r){
           ${apprGridHTML(r.id, p.etudiantId)}
           <label class="form-label small mb-1">Commentaire (optionnel)</label>
           <input type="text" class="form-control form-control-sm" id="rapportAppr_${r.id}_${p.etudiantId}" placeholder="Optionnel">
-          <button class="btn btn-amber btn-sm mt-2" onclick="validerParticipantRapport('${r.id}','${p.etudiantId}')"><i class="bi bi-check2-circle"></i> Noter et valider</button>
+          <div class="d-flex gap-2 flex-wrap mt-2">
+            <button class="btn btn-amber btn-sm" onclick="validerParticipantRapport('${r.id}','${p.etudiantId}')"><i class="bi bi-check2-circle"></i> Noter et valider</button>
+            <button class="btn btn-outline-danger btn-sm" onclick="openDemandeCorrectionModal('${r.id}','${p.etudiantId}')"><i class="bi bi-arrow-repeat"></i> Demander une correction</button>
+          </div>
         </div>`;
+    } else if(st.code==='correction' && canValidateRapport(r)){
+      gradeBlock = `
+        <div class="alert alert-danger py-2 px-3 small mt-2 mb-0"><i class="bi bi-hourglass-split me-1"></i> En attente de la correction par l'étudiant${p.motifCorrection?' — motif : '+p.motifCorrection:''}</div>`;
     }
     const photosFiche = p.fichePhoto ? `<img src="${p.fichePhoto}" style="width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:pointer;" onclick="window.open('${p.fichePhoto}','_blank')">` : '';
     const photosSite = (p.photosEtudiant||[]).map(ph=>`<img src="${ph}" style="width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:pointer;" onclick="window.open('${ph}','_blank')">`).join('');
-    const resetBtn = (state.role==='direction' && (p.soumis || p.locked)) ? `<button class="btn btn-outline-secondary btn-sm" title="Réinitialiser (Direction)" onclick="resetParticipantDirection('${r.id}','${p.etudiantId}')"><i class="bi bi-arrow-counterclockwise"></i></button>` : '';
+    const resetBtn = (state.role==='direction' && (p.soumis || p.locked || p.correctionDemandee)) ? `<button class="btn btn-outline-secondary btn-sm" title="Réinitialiser (Direction)" onclick="resetParticipantDirection('${r.id}','${p.etudiantId}')"><i class="bi bi-arrow-counterclockwise"></i></button>` : '';
+    // Détail du rapport de cet étudiant : masqué tant que le formateur n'a pas cliqué sur "Afficher" devant son nom.
+    const detailHTML = `
+        ${p.participation==='non' && p.motif ? `<div class="small text-muted mt-1"><strong>Motif :</strong> ${p.motif}</div>` : ''}
+        ${p.description ? `<div class="small mt-2"><strong>Travaux :</strong> ${p.description}</div>` : ''}
+        ${p.incidents ? `<div class="small text-muted"><strong>Observations :</strong> ${p.incidents}</div>` : ''}
+        ${p.appreciationRapport ? `<div class="small text-muted"><strong>Commentaire :</strong> ${p.appreciationRapport}</div>` : ''}
+        ${(photosFiche||photosSite) ? `<div class="d-flex flex-wrap gap-2 mt-2">${photosFiche}${photosSite}</div>` : ''}
+        <div class="mt-2">
+          <button class="btn btn-outline-secondary btn-sm" onclick="exportRapportPdf('${r.id}','${p.etudiantId}')" title="PDF de ce rapport"><i class="bi bi-file-earmark-pdf"></i> PDF</button>
+          ${resetBtn}
+        </div>
+        ${gradeBlock}`;
     return `
       <div class="border rounded p-2 mb-2">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-1">
           <div class="d-flex align-items-center gap-2">${avatarHTML(et,28)}<span class="small fw-semibold">${nomComplet(et)}</span></div>
           <div class="d-flex align-items-center gap-2">
             <span class="badge bg-${st.cls}">${st.label}</span>
-            <button class="btn btn-outline-secondary btn-sm" onclick="exportRapportPdf('${r.id}','${p.etudiantId}')" title="PDF de ce rapport"><i class="bi bi-file-earmark-pdf"></i></button>
-            ${resetBtn}
+            <button class="btn btn-outline-secondary btn-sm" onclick="toggleParticipantDetail('${r.id}','${p.etudiantId}')">
+              <i class="bi bi-${pExpanded?'eye-slash':'eye'}"></i> ${pExpanded?'Masquer':'Afficher'}
+            </button>
           </div>
         </div>
-        ${p.participation==='non' && p.motif ? `<div class="small text-muted mt-1"><strong>Motif :</strong> ${p.motif}</div>` : ''}
-        ${p.description ? `<div class="small mt-2"><strong>Travaux :</strong> ${p.description}</div>` : ''}
-        ${p.incidents ? `<div class="small text-muted"><strong>Observations :</strong> ${p.incidents}</div>` : ''}
-        ${p.appreciationRapport ? `<div class="small text-muted"><strong>Commentaire :</strong> ${p.appreciationRapport}</div>` : ''}
-        ${(photosFiche||photosSite) ? `<div class="d-flex flex-wrap gap-2 mt-2">${photosFiche}${photosSite}</div>` : ''}
-        ${gradeBlock}
+        ${pExpanded ? detailHTML : ''}
       </div>`;
   }).join('');
-  return `
-    <div class="col-md-6">
-      <div class="chantier-card h-100">
-        ${rapportHeaderHTML(r)}
+  const toggleBtn = `<button class="btn btn-outline-secondary btn-sm" onclick="toggleChantier('${r.id}')">
+    <i class="bi bi-${expanded?'eye-slash':'eye'}"></i> ${expanded?'Masquer':'Afficher'}
+  </button>`;
+  const detailBlock = expanded ? `
+        <div class="small text-muted mb-2"><i class="bi bi-geo-alt"></i> ${r.lieu||'—'} · <i class="bi bi-person-badge"></i> ${r.formateurNom || nomComplet(getFormateur(r.formateurId))}</div>
         <div class="small text-muted mb-2"><i class="bi bi-people"></i> ${participants.length} étudiant(s) concerné(s)</div>
         ${r.auteurNom?`<div class="text-muted mb-2" style="font-size:.74rem;">Chantier initié par ${r.auteurNom}</div>`:''}
         ${rows || '<div class="empty-state py-3"><p class="mb-0 small">Aucun étudiant sélectionné</p></div>'}
         <div class="d-flex gap-2 flex-wrap mt-1">
           ${canDelete ? `<button class="btn btn-outline-danger btn-sm" onclick="askDelete('rapports','${r.id}')"><i class="bi bi-trash"></i> Supprimer le chantier</button>` : ''}
+        </div>` : '';
+  return `
+    <div class="col-md-6">
+      <div class="chantier-card h-100">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <span class="tag">${getFiliere(r.filiereId)?.nom||'—'}</span>
+          <span class="text-muted small">${fmtPeriodeRapport(r)}</span>
         </div>
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <h6 class="fw-bold mb-0">${r.titre}</h6>
+          ${toggleBtn}
+        </div>
+        ${detailBlock}
       </div>
     </div>`;
 }
 // Vue étudiant : uniquement sa propre participation à chaque chantier.
+// Repliée par défaut (comme les cartes admin) : on ne voit que la période du chantier
+// et le bouton "Afficher". Un clic déplie la carte et révèle le détail + l'action
+// à mener (Compléter / Corriger le rapport), ou simplement le résultat (En attente
+// de validation / Validé) quand aucune action n'est requise côté étudiant.
 function rapportCardEtudiantHTML(r){
   const u = currentUser();
   const p = getParticipant(r, u.etudiantId);
   if(!p) return '';
   const st = participantStatus(r, p);
-  let body = '';
-  if(st.code==='dispense'){
-    body = `<div class="alert alert-secondary py-2 px-3 small mb-0"><i class="bi bi-slash-circle me-1"></i> Vous n'avez pas participé à ce chantier — Motif : ${p.motif} — aucune note attribuée.</div>`;
-  } else if(st.code==='non-sans-motif'){
-    body = `<div class="alert alert-danger py-2 px-3 small mb-0"><i class="bi bi-x-circle me-1"></i> Non-participation enregistrée sans motif — Note : 0/19.</div>`;
-  } else if(st.code==='expire'){
-    body = `<div class="alert alert-danger py-2 px-3 small mb-0"><i class="bi bi-hourglass-bottom me-1"></i> Le délai de 72h pour finaliser ce rapport est dépassé — Note : 0/19.</div>`;
-  } else if(st.code==='a-remplir'){
-    body = `
-      <div class="alert alert-info py-2 px-3 small">${deadlineRemainingHTML(r)}</div>
-      <button class="btn btn-amber btn-sm" onclick="openRapportEtudiantModal('${r.id}')"><i class="bi bi-pencil-square"></i> Compléter le rapport</button>`;
+  const expanded = expandedChantiers.has(r.id);
+
+  // Bandeau visible même repliée : la carte reste "muette" tant qu'aucune action/résultat
+  // n'existe (état "à compléter"), et affiche sinon un résumé immédiat (notification de
+  // correction avec son bouton, "En attente de validation", ou "Validé").
+  let collapsedExtra = '';
+  if(st.code==='correction'){
+    collapsedExtra = `
+      <div class="alert alert-danger py-2 px-3 small mt-2 mb-0">
+        <div class="fw-semibold mb-2"><i class="bi bi-exclamation-triangle-fill me-1"></i> Le formateur demande une correction</div>
+        <button class="btn btn-amber btn-sm" onclick="openRapportEtudiantModal('${r.id}')"><i class="bi bi-pencil-square"></i> Corriger le rapport</button>
+      </div>`;
   } else if(st.code==='attente'){
-    body = `
-      <div class="small text-muted mb-2"><i class="bi bi-hourglass-split me-1"></i> Rapport soumis le ${fmtDate(p.dateSoumission)} — en attente de validation par le formateur.</div>
-      ${p.description ? `<div class="small mb-1"><strong>Travaux :</strong> ${p.description}</div>` : ''}`;
+    collapsedExtra = `<div class="small text-muted mt-2"><i class="bi bi-hourglass-split me-1"></i> En attente de validation</div>`;
   } else if(st.code==='valide'){
-    const detail = Array.isArray(p.appreciationsDetail) ? p.appreciationsDetail : [];
-    const counts = {};
-    detail.forEach(a=>{ counts[a.niveau] = (counts[a.niveau]||0)+1; });
-    const summary = APPRECIATION_NIVEAUX.filter(n=>counts[n]).map(n=>`${counts[n]} ${n}`).join(' · ');
-    body = `
-      <div class="alert alert-success py-2 px-3 small mb-2">
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-1"><span><i class="bi bi-check-circle-fill me-1"></i> Rapport validé</span><strong>Note : ${p.note}/19</strong></div>
-        ${summary ? `<div class="text-muted mt-1" style="font-size:.76rem;">${summary}</div>` : ''}
-      </div>
-      ${p.appreciationRapport ? `<div class="small text-muted mb-2"><strong>Commentaire :</strong> ${p.appreciationRapport}</div>` : ''}`;
+    collapsedExtra = `<div class="small text-success fw-semibold mt-2"><i class="bi bi-check-circle-fill me-1"></i> Validé</div>`;
+  } else if(st.code==='dispense' || st.code==='non-sans-motif' || st.code==='expire'){
+    collapsedExtra = `<div class="mt-2"><span class="badge bg-${st.cls}">${st.label}</span></div>`;
   }
+  // st.code==='a-remplir' -> rien de plus tant que la carte est repliée.
+
+  let detailBody = '';
+  if(expanded){
+    const lieuFormateur = `<div class="small text-muted mb-2"><i class="bi bi-geo-alt"></i> ${r.lieu||'—'} · <i class="bi bi-person-badge"></i> ${r.formateurNom || nomComplet(getFormateur(r.formateurId))}</div>`;
+    if(st.code==='dispense'){
+      detailBody = `<div class="alert alert-secondary py-2 px-3 small mb-0"><i class="bi bi-slash-circle me-1"></i> Vous n'avez pas participé à ce chantier — Motif : ${p.motif} — aucune note attribuée.</div>`;
+    } else if(st.code==='non-sans-motif'){
+      detailBody = `<div class="alert alert-danger py-2 px-3 small mb-0"><i class="bi bi-x-circle me-1"></i> Non-participation enregistrée sans motif — Note : 0/19.</div>`;
+    } else if(st.code==='expire'){
+      detailBody = `<div class="alert alert-danger py-2 px-3 small mb-0"><i class="bi bi-hourglass-bottom me-1"></i> Le délai de 72h pour finaliser ce rapport est dépassé — Note : 0/19.</div>`;
+    } else if(st.code==='a-remplir'){
+      detailBody = `
+        ${lieuFormateur}
+        <div class="alert alert-info py-2 px-3 small">${deadlineRemainingHTML(r)}</div>
+        <button class="btn btn-amber btn-sm" onclick="openRapportEtudiantModal('${r.id}')"><i class="bi bi-pencil-square"></i> Compléter le rapport</button>`;
+    } else if(st.code==='correction'){
+      detailBody = `
+        ${lieuFormateur}
+        <div class="alert alert-danger py-2 px-3 small mb-2">
+          <div class="fw-semibold mb-1"><i class="bi bi-exclamation-triangle-fill me-1"></i> Le formateur demande une correction</div>
+          ${p.motifCorrection ? `<div>${p.motifCorrection}</div>` : ''}
+        </div>
+        <button class="btn btn-amber btn-sm" onclick="openRapportEtudiantModal('${r.id}')"><i class="bi bi-pencil-square"></i> Corriger le rapport</button>`;
+    } else if(st.code==='attente'){
+      detailBody = `
+        ${lieuFormateur}
+        <div class="small text-muted mb-2"><i class="bi bi-hourglass-split me-1"></i> Rapport soumis le ${fmtDate(p.dateSoumission)} — en attente de validation par le formateur.</div>
+        ${p.description ? `<div class="small mb-2"><strong>Travaux :</strong> ${p.description}</div>` : ''}
+        <button class="btn btn-outline-secondary btn-sm" onclick="openRapportEtudiantModal('${r.id}', true)"><i class="bi bi-eye"></i> Voir le rapport complet</button>`;
+    } else if(st.code==='valide'){
+      const detail = Array.isArray(p.appreciationsDetail) ? p.appreciationsDetail : [];
+      const counts = {};
+      detail.forEach(a=>{ counts[a.niveau] = (counts[a.niveau]||0)+1; });
+      const summary = APPRECIATION_NIVEAUX.filter(n=>counts[n]).map(n=>`${counts[n]} ${n}`).join(' · ');
+      detailBody = `
+        ${lieuFormateur}
+        <div class="alert alert-success py-2 px-3 small mb-2">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-1"><span><i class="bi bi-check-circle-fill me-1"></i> Rapport validé</span><strong>Note : ${p.note}/19</strong></div>
+          ${summary ? `<div class="text-muted mt-1" style="font-size:.76rem;">${summary}</div>` : ''}
+        </div>
+        ${p.appreciationRapport ? `<div class="small text-muted mb-2"><strong>Commentaire :</strong> ${p.appreciationRapport}</div>` : ''}
+        <button class="btn btn-outline-secondary btn-sm" onclick="openRapportEtudiantModal('${r.id}', true)"><i class="bi bi-eye"></i> Voir le rapport complet</button>`;
+    }
+    detailBody += `
+      <div class="d-flex gap-2 flex-wrap mt-2">
+        <button class="btn btn-outline-secondary btn-sm" onclick="exportRapportPdf('${r.id}','${u.etudiantId}')"><i class="bi bi-file-earmark-pdf"></i> Télécharger le PDF</button>
+      </div>`;
+  }
+
+  const toggleBtn = `<button class="btn btn-outline-secondary btn-sm" onclick="toggleChantier('${r.id}')">
+    <i class="bi bi-${expanded?'eye-slash':'eye'}"></i> ${expanded?'Masquer':'Afficher'}
+  </button>`;
+
   return `
     <div class="col-md-6">
       <div class="chantier-card h-100">
-        ${rapportHeaderHTML(r)}
-        ${body}
-        <div class="d-flex gap-2 flex-wrap mt-2">
-          <button class="btn btn-outline-secondary btn-sm" onclick="exportRapportPdf('${r.id}','${u.etudiantId}')"><i class="bi bi-file-earmark-pdf"></i> Télécharger le PDF</button>
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <span class="tag">${getFiliere(r.filiereId)?.nom||'—'}</span>
+          <span class="text-muted small">${fmtPeriodeRapport(r)}</span>
         </div>
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <h6 class="fw-bold mb-0">${r.titre}</h6>
+          ${toggleBtn}
+        </div>
+        ${!expanded ? collapsedExtra : ''}
+        ${expanded ? `<div class="mt-2">${detailBody}</div>` : ''}
       </div>
     </div>`;
 }
@@ -3714,6 +3908,7 @@ async function resetParticipantDirection(rapportId, etudiantId){
     fichePhoto:null, photosEtudiant:[], appreciationsDetail:null, note: p.participation==='non' && !p.motif ? 0 : null,
     appreciationRapport:'', locked: p.participation==='non' && !p.motif, lockReason: p.participation==='non' && !p.motif ? 'non-sans-motif' : null,
     evalPushed:false, dateValidation:null, valideParId:null,
+    correctionDemandee:false, motifCorrection:'', dateDemandeCorrection:null,
   });
   DB.evaluations = DB.evaluations.filter(ev=>!(ev.etudiantId===etudiantId && ev.module==='Rapport de chantier — '+r.titre));
   await saveDB();
@@ -3783,19 +3978,79 @@ document.getElementById('formRapport').addEventListener('submit', async e=>{
 
 /* ---- Complétion du rapport côté étudiant ---- */
 const RE_MAX_SITE_PHOTOS = 5;
-function openRapportEtudiantModal(rapportId){
+// readonly=true -> mode "Afficher" (rapport soumis en attente de validation, ou déjà validé) : formulaire verrouillé, pas de soumission possible.
+function openRapportEtudiantModal(rapportId, readonly){
   const r = DB.rapports.find(x=>x.id===rapportId);
   const u = currentUser();
   const p = r && u && getParticipant(r, u.etudiantId);
   if(!r || !p) return;
-  document.getElementById('formRapportEtudiant').reset();
+  const form = document.getElementById('formRapportEtudiant');
+  form.reset();
+  form.dataset.readonly = readonly ? '1' : '';
   document.getElementById('rapportEtudiantRapportId').value = rapportId;
-  document.getElementById('rapportEtudiantDeadlineInfo').innerHTML = deadlineRemainingHTML(r);
-  document.getElementById('reFichePhotoPreview').innerHTML = '';
-  document.getElementById('reSitePhotosPreview').innerHTML = '';
+  // En cas de correction demandée, on repart des données déjà saisies par l'étudiant plutôt que d'un formulaire vide.
+  document.getElementById('reDescription').value = p.description || '';
+  document.getElementById('reIncidents').value = p.incidents || '';
+  document.getElementById('reRecommandations').value = p.recommandations || '';
+  const deadlineEl = document.getElementById('rapportEtudiantDeadlineInfo');
+  const titleEl = document.getElementById('modalRapportEtudiantTitle');
+  const submitBtn = document.getElementById('btnSoumettreRapportEtudiant');
+  const cancelBtn = document.getElementById('btnAnnulerRapportEtudiant');
+  const fieldIds = ['reDescription','reIncidents','reRecommandations','reFichePhotoInput','reSitePhotosInput'];
+  fieldIds.forEach(id=>{ const el = document.getElementById(id); if(el) el.disabled = !!readonly; });
+  submitBtn.style.display = readonly ? 'none' : '';
+  cancelBtn.textContent = readonly ? 'Fermer' : 'Annuler';
+  if(readonly){
+    titleEl.textContent = 'Rapport de chantier';
+    if(p.lockReason==='valide'){
+      deadlineEl.className = 'alert alert-success py-2 px-3 small';
+      deadlineEl.innerHTML = `<div class="fw-semibold mb-1"><i class="bi bi-check-circle-fill me-1"></i> Rapport validé — Note : ${p.note}/19</div>${p.appreciationRapport ? `<div>${p.appreciationRapport}</div>` : ''}`;
+    } else {
+      deadlineEl.className = 'alert alert-warning py-2 px-3 small';
+      deadlineEl.innerHTML = `<i class="bi bi-hourglass-split me-1"></i> Rapport soumis le ${fmtDate(p.dateSoumission)} — en attente de validation par le formateur.`;
+    }
+  } else {
+    titleEl.textContent = p.correctionDemandee ? 'Corriger le rapport de chantier' : 'Compléter le rapport de chantier';
+    if(p.correctionDemandee){
+      deadlineEl.className = 'alert alert-danger py-2 px-3 small';
+      deadlineEl.innerHTML = `<div class="fw-semibold mb-1"><i class="bi bi-exclamation-triangle-fill me-1"></i> Correction demandée par le formateur</div>${p.motifCorrection ? `<div>${p.motifCorrection}</div>` : ''}`;
+    } else {
+      deadlineEl.className = 'alert alert-warning py-2 px-3 small';
+      deadlineEl.innerHTML = deadlineRemainingHTML(r);
+    }
+  }
+  document.getElementById('btnSoumettreRapportEtudiant').textContent = p.correctionDemandee ? 'Renvoyer le rapport corrigé' : 'Soumettre le rapport';
+  document.getElementById('reFichePhotoPreview').innerHTML = p.fichePhoto ? `<img src="${p.fichePhoto}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--border);">` : '';
+  document.getElementById('reSitePhotosPreview').innerHTML = (p.photosEtudiant||[]).map(ph=>`<img src="${ph}" style="width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--border);">`).join('');
   document.getElementById('reSitePhotosCount').textContent = '';
   new bootstrap.Modal(document.getElementById('modalRapportEtudiant')).show();
 }
+// Ouvre la fenêtre permettant au formateur/à la direction de demander une correction à l'étudiant sur un rapport soumis.
+function openDemandeCorrectionModal(rapportId, etudiantId){
+  const r = DB.rapports.find(x=>x.id===rapportId);
+  if(!r || !canValidateRapport(r)) return;
+  document.getElementById('drRapportId').value = rapportId;
+  document.getElementById('drEtudiantId').value = etudiantId;
+  document.getElementById('drMotif').value = '';
+  new bootstrap.Modal(document.getElementById('modalDemandeCorrection')).show();
+}
+document.getElementById('btnConfirmDemandeCorrection').addEventListener('click', async ()=>{
+  const rapportId = document.getElementById('drRapportId').value;
+  const etudiantId = document.getElementById('drEtudiantId').value;
+  const motif = document.getElementById('drMotif').value.trim();
+  const r = DB.rapports.find(x=>x.id===rapportId);
+  const p = r && getParticipant(r, etudiantId);
+  if(!r || !p || !canValidateRapport(r)) return;
+  if(!motif){ toast('Merci de préciser ce que l\'étudiant doit corriger'); return; }
+  p.correctionDemandee = true;
+  p.motifCorrection = motif;
+  p.dateDemandeCorrection = new Date().toISOString().slice(0,10);
+  p.soumis = false;
+  await saveDB();
+  bootstrap.Modal.getInstance(document.getElementById('modalDemandeCorrection')).hide();
+  toast("Correction demandée — l'étudiant est notifié");
+  renderRapports();
+});
 document.getElementById('reFichePhotoInput').addEventListener('change', e=>{
   const preview = document.getElementById('reFichePhotoPreview');
   preview.innerHTML = '';
@@ -3836,13 +4091,15 @@ document.getElementById('reSitePhotosInput').addEventListener('change', e=>{
 });
 document.getElementById('formRapportEtudiant').addEventListener('submit', async e=>{
   e.preventDefault();
+  if(e.target.dataset.readonly==='1') return; // Mode "Afficher" : aucune soumission possible.
   const rapportId = document.getElementById('rapportEtudiantRapportId').value;
   const r = DB.rapports.find(x=>x.id===rapportId);
   const u = currentUser();
   const p = r && u && getParticipant(r, u.etudiantId);
   if(!r || !p){ toast('Rapport introuvable'); return; }
   if(p.locked || p.soumis){ toast("Ce rapport n'est plus modifiable"); return; }
-  if((Date.now() - new Date(r.dateCreation).getTime()) > RAPPORT_DEADLINE_MS){
+  // Le délai de 72h ne s'applique qu'à la toute première soumission ; une correction demandée reste possible ensuite.
+  if(!p.correctionDemandee && (Date.now() - new Date(r.dateCreation).getTime()) > RAPPORT_DEADLINE_MS){
     toast('Le délai de 72h est dépassé pour ce rapport');
     renderRapports();
     bootstrap.Modal.getInstance(document.getElementById('modalRapportEtudiant')).hide();
@@ -3871,11 +4128,13 @@ document.getElementById('formRapportEtudiant').addEventListener('submit', async 
       return;
     }
   }
+  const etaitCorrection = p.correctionDemandee;
   p.soumis = true;
   p.dateSoumission = new Date().toISOString().slice(0,10);
+  p.correctionDemandee = false;
   await saveDB();
   bootstrap.Modal.getInstance(document.getElementById('modalRapportEtudiant')).hide();
-  toast('Rapport soumis — en attente de validation par le formateur');
+  toast(etaitCorrection ? 'Rapport corrigé renvoyé — en attente de validation par le formateur' : 'Rapport soumis — en attente de validation par le formateur');
   renderRapports();
 });
 
@@ -4276,8 +4535,27 @@ document.getElementById('formMonProfil').addEventListener('submit', async e=>{
 });
 
 /* ---------- UTILISATEURS (création des profils par la direction) ---------- */
+// Onglet actif dans le menu Utilisateurs : administration | formateur | etudiant | partenaire
+let usersTab = 'administration';
+// Détermine à quel onglet appartient un compte. Tout rôle qui n'est ni formateur, ni étudiant,
+// ni partenaire (y compris les futurs profils ajoutés par la direction) tombe dans "Administration".
+function userTabForRole(role){
+  if(role==='formateur') return 'formateur';
+  if(role==='etudiant') return 'etudiant';
+  if(role==='partenaire') return 'partenaire';
+  return 'administration';
+}
+document.querySelectorAll('#usersTabGroup [data-userstab]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    usersTab = btn.dataset.userstab;
+    document.querySelectorAll('#usersTabGroup [data-userstab]').forEach(b=>b.classList.toggle('active', b===btn));
+    renderUtilisateurs();
+  });
+});
 function renderUtilisateurs(){
-  document.getElementById('usersBody').innerHTML = DB.users.length ? DB.users.map(u=>`
+  const list = DB.users.filter(u=>userTabForRole(u.role)===usersTab);
+  const emptyLabel = {administration:'Aucun compte administration', formateur:'Aucun compte formateur', etudiant:'Aucun compte étudiant', partenaire:'Aucun compte partenaire'}[usersTab] || 'Aucun compte créé';
+  document.getElementById('usersBody').innerHTML = list.length ? list.map(u=>`
     <tr>
       <td><div class="d-flex align-items-center gap-2"><div class="avatar-circ">${initials(u.nom,'')}</div>${u.nom}</div></td>
       <td class="text-mono d-none d-md-table-cell">${u.identifiant||'—'}</td>
@@ -4286,7 +4564,7 @@ function renderUtilisateurs(){
         <button class="btn btn-sm btn-icon" onclick="editUser('${u.id}')" title="Modifier"><i class="bi bi-pencil"></i></button>
         <button class="btn btn-sm btn-icon text-danger" onclick="askDelete('users','${u.id}')" title="Supprimer"><i class="bi bi-trash"></i></button>
       </td>
-    </tr>`).join('') : `<tr><td colspan="4"><div class="empty-state"><i class="bi bi-person-x"></i><p>Aucun compte créé</p></div></td></tr>`;
+    </tr>`).join('') : `<tr><td colspan="4"><div class="empty-state"><i class="bi bi-person-x"></i><p>${emptyLabel}</p></div></td></tr>`;
 }
 function fillUserRoleSelect(){
   document.getElementById('selectUserRole').innerHTML = ROLES.map(r=>`<option value="${r.id}">${r.label}</option>`).join('');
@@ -4324,6 +4602,9 @@ document.getElementById('btnNewUser').addEventListener('click', ()=>{
   document.getElementById('formUser').reset();
   document.getElementById('formUser').elements['id'].value='';
   document.getElementById('modalUserTitle').textContent='Nouveau compte';
+  // Pré-sélectionne le rôle correspondant à l'onglet actif (ex : ouvrir "Nouveau compte" depuis l'onglet Formateur pré-remplit le rôle Formateur).
+  const roleForTab = usersTab==='formateur' ? 'formateur' : usersTab==='etudiant' ? 'etudiant' : usersTab==='partenaire' ? 'partenaire' : 'direction';
+  document.getElementById('selectUserRole').value = roleForTab;
   const initialRole = document.getElementById('selectUserRole').value;
   toggleUserLinkFields(initialRole);
   renderPermsGrid(initialRole, defaultPermsForRole(initialRole));
