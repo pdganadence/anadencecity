@@ -280,6 +280,7 @@ table.table td{vertical-align:middle;font-size:.87rem;}
 .badge-statut-actif{background:#DEF7EA;color:#1C7A46;}
 .badge-statut-abandon{background:#FDE4E1;color:#B03327;}
 .badge-statut-diplome{background:#E1E9FF;color:#2E4EA6;}
+.badge-statut-avenir{background:#E4E7EC;color:#6B7280;}
 .avatar-circ{
   width:34px;height:34px;border-radius:50%;background:var(--navy);color:#fff;
   display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;font-family:'Poppins';
@@ -764,7 +765,7 @@ table.table td{vertical-align:middle;font-size:.87rem;}
       <div class="section-panel" id="panel-etudiants">
         <div class="card-clean">
           <div class="card-header d-flex flex-wrap gap-2 align-items-center justify-content-between">
-            <span><i class="bi bi-people-fill me-1"></i> Étudiants inscrits</span>
+            <span><i class="bi bi-people-fill me-1"></i> Étudiants inscrits <span class="badge bg-secondary-subtle text-secondary-emphasis ms-1" id="etudiantsCountBadge">0</span></span>
             <div class="d-flex gap-2 flex-wrap">
               <input type="text" class="form-control form-control-sm search-input" id="searchEtudiant" placeholder="Rechercher un étudiant...">
               <select class="form-select form-select-sm" id="filterFiliereEtudiant" style="width:auto;"></select>
@@ -791,11 +792,20 @@ table.table td{vertical-align:middle;font-size:.87rem;}
 
       <!-- ===== FILIERES ===== -->
       <div class="section-panel" id="panel-filieres">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h6 class="fw-bold mb-0"><i class="bi bi-mortarboard-fill me-1"></i> Filières & Formations</h6>
-          <button class="btn btn-amber btn-sm" id="btnNewFiliere"><i class="bi bi-plus-lg"></i> Nouvelle filière</button>
+        <div class="card-clean">
+          <div class="card-header d-flex flex-wrap gap-2 align-items-center justify-content-between">
+            <span><i class="bi bi-mortarboard-fill me-1"></i> Filières & Formations</span>
+            <button class="btn btn-amber btn-sm" id="btnNewFiliere"><i class="bi bi-plus-lg"></i> Nouvelle filière</button>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Filière</th><th class="d-none d-md-table-cell">Durée</th><th class="d-none d-lg-table-cell">Prix</th><th class="d-none d-lg-table-cell">Étudiants</th><th class="text-end">Actions</th></tr></thead>
+                <tbody id="filieresGrid"></tbody>
+              </table>
+            </div>
+          </div>
         </div>
-        <div class="row g-3" id="filieresGrid"></div>
       </div>
 
       <!-- ===== FORMATEURS ===== -->
@@ -818,7 +828,15 @@ table.table td{vertical-align:middle;font-size:.87rem;}
 
       <!-- ===== PAIEMENTS ===== -->
       <div class="section-panel" id="panel-paiements">
+        <div id="paiementNotifBanner" style="display:none;"></div>
         <div class="row g-3 mb-3" id="statCardsPaiements"></div>
+
+        <div class="card-clean mb-3" id="cardEcheancier" style="display:none;">
+          <div class="card-header d-flex flex-wrap gap-2 align-items-center justify-content-between">
+            <span><i class="bi bi-calendar2-week me-1"></i> Mon échéancier de paiement</span>
+          </div>
+          <div class="card-body" id="echeancierBody"></div>
+        </div>
 
         <div class="card-clean mb-3">
           <div class="card-header d-flex flex-wrap gap-2 align-items-center justify-content-between">
@@ -832,6 +850,12 @@ table.table td{vertical-align:middle;font-size:.87rem;}
                 <option value="Partiel">Partiel</option>
                 <option value="Impayé">Impayé</option>
               </select>
+              <select class="form-select form-select-sm" id="filterStatutEtudiantPaiement" style="width:auto;">
+                <option value="">Tous (Actif/Abandon/Diplômé)</option>
+                <option value="actif">Actif</option>
+                <option value="abandon">Abandon</option>
+                <option value="diplome">Diplômé</option>
+              </select>
               <button class="btn btn-outline-secondary btn-sm" id="btnExportFinancierPdf"><i class="bi bi-file-earmark-pdf"></i> Exporter PDF</button>
               <button class="btn btn-amber btn-sm" id="btnNewPaiement"><i class="bi bi-plus-lg"></i> Enregistrer un versement</button>
             </div>
@@ -839,7 +863,7 @@ table.table td{vertical-align:middle;font-size:.87rem;}
           <div class="card-body p-0">
             <div class="table-responsive">
               <table class="table table-hover align-middle mb-0">
-                <thead><tr><th>Étudiant</th><th class="d-none d-md-table-cell">Filière</th><th class="d-none d-lg-table-cell">Montant total</th><th class="d-none d-lg-table-cell">Payé</th><th>Reste</th><th>Statut</th><th class="text-end">Historique</th></tr></thead>
+                <thead><tr><th>Étudiant</th><th class="d-none d-md-table-cell">Filière</th><th class="d-none d-lg-table-cell">Montant total</th><th class="d-none d-lg-table-cell">Payé</th><th>Reste</th><th>Statut</th><th class="text-end">Échéancier</th><th class="text-end">Historique</th></tr></thead>
                 <tbody id="paiementsBody"></tbody>
               </table>
             </div>
@@ -862,7 +886,7 @@ table.table td{vertical-align:middle;font-size:.87rem;}
           <div class="card-body p-0">
             <div class="table-responsive">
               <table class="table table-hover align-middle mb-0">
-                <thead><tr><th>Date</th><th>Étudiant</th><th class="d-none d-md-table-cell">Filière</th><th>Montant</th><th class="d-none d-lg-table-cell">Mode</th><th class="d-none d-lg-table-cell">Type</th></tr></thead>
+                <thead><tr><th>Date</th><th>Étudiant</th><th class="d-none d-md-table-cell">Filière</th><th>Montant</th><th class="d-none d-lg-table-cell">Mode</th><th class="d-none d-lg-table-cell">Type</th><th class="text-end">Actions</th></tr></thead>
                 <tbody id="historiquePeriodeBody"></tbody>
               </table>
             </div>
@@ -1327,7 +1351,19 @@ table.table td{vertical-align:middle;font-size:.87rem;}
           </div>
           <div><label class="form-label small">Description</label><textarea class="form-control" name="description" rows="2"></textarea></div>
           <div class="mt-3"><label class="form-label small">Débouchés <span class="text-muted">(affichés dans la fiche détaillée sur le site public)</span></label><textarea class="form-control" name="debouches" rows="2" placeholder="Ex : technicien installateur, chef de chantier, auto-entrepreneur..."></textarea></div>
-          <div class="mt-3"><label class="form-label small">Image / flyer <span class="text-muted">(URL, laisser vide pour une image par défaut)</span></label><input class="form-control" name="flyer" placeholder="https://..."></div>
+          <div class="mt-3"><label class="form-label small">Image / flyer <span class="text-muted">(uploadée par la direction, optionnel)</span></label>
+            <div class="d-flex align-items-center flex-nowrap gap-2 gap-sm-3">
+              <div class="photo-upload-box" id="filiereImageUploadBox" style="border-radius:10px;">
+                <img id="filiereImagePreview" style="display:none;">
+                <i class="bi bi-image" id="filiereImagePlaceholderIcon"></i>
+              </div>
+              <div style="min-width:0;flex:1 1 auto;">
+                <div class="text-muted mb-2" style="font-size:.78rem;">Cliquez sur le cadre pour ajouter ou changer l'image (laisser vide pour une image par défaut).</div>
+                <input type="hidden" name="flyer" id="filiereImageData">
+                <input type="file" accept="image/*" id="filiereImageInput" class="form-control form-control-sm" style="max-width:220px;">
+              </div>
+            </div>
+          </div>
           <div class="alert alert-light border small mt-3 mb-0"><i class="bi bi-info-circle me-1"></i> Les modules et leurs formateurs se gèrent depuis le bouton <strong>Modules</strong> sur la fiche de la filière, une fois celle-ci enregistrée.</div>
         </div>
         <div class="modal-footer">
@@ -1389,6 +1425,17 @@ table.table td{vertical-align:middle;font-size:.87rem;}
   </div>
 </div>
 
+<!-- Fiche filière (view) -->
+<div class="modal fade" id="modalFicheFiliere" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Fiche filière</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body" id="ficheFiliereBody"></div>
+      <div class="modal-footer"><button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Fermer</button></div>
+    </div>
+  </div>
+</div>
+
 <!-- Modules d'une filière (liste) -->
 <div class="modal fade" id="modalModules" tabindex="-1">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
@@ -1437,9 +1484,10 @@ table.table td{vertical-align:middle;font-size:.87rem;}
 <div class="modal fade" id="modalPaiement" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
-      <div class="modal-header"><h5 class="modal-title">Enregistrer un versement</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-header"><h5 class="modal-title" id="modalPaiementTitle">Enregistrer un versement</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
       <form id="formPaiement">
         <div class="modal-body">
+          <input type="hidden" id="editPaiementId">
           <div class="mb-3"><label class="form-label small">Étudiant</label><select required class="form-select" name="etudiantId" id="selectEtudiantPaiement"></select></div>
           <div class="row g-3">
             <div class="col-md-6"><label class="form-label small">Montant (F)</label><input required type="number" min="1" class="form-control" name="montant"></div>
@@ -1454,7 +1502,7 @@ table.table td{vertical-align:middle;font-size:.87rem;}
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
-          <button type="submit" class="btn btn-amber">Valider le versement</button>
+          <button type="submit" class="btn btn-amber" id="btnSubmitPaiement">Valider le versement</button>
         </div>
       </form>
     </div>
@@ -1470,6 +1518,30 @@ table.table td{vertical-align:middle;font-size:.87rem;}
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Fermer</button>
         <button type="button" class="btn btn-amber btn-sm" id="btnExportHistoriqueEtudiantPdf"><i class="bi bi-file-earmark-pdf"></i> Exporter PDF</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Échéancier modal (configuration des tranches, propre à chaque étudiant) -->
+<div class="modal fade" id="modalEcheancier" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title" id="modalEcheancierTitle">Échéancier de paiement</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="text-muted small mb-3"><i class="bi bi-info-circle me-1"></i> Définissez les tranches de paiement propres à cet étudiant (libellé, montant et date limite).</div>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-2">
+            <thead><tr><th>Libellé</th><th style="width:160px;">Montant (F)</th><th style="width:170px;">Date limite</th><th style="width:44px;"></th></tr></thead>
+            <tbody id="echeancierFormRows"></tbody>
+          </table>
+        </div>
+        <button type="button" class="btn btn-outline-secondary btn-sm" id="btnAddEcheanceRow"><i class="bi bi-plus-lg"></i> Ajouter une tranche</button>
+        <div class="small mt-2" id="echeancierPctTotal"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="button" class="btn btn-amber" id="btnSaveEcheancier">Enregistrer l'échéancier</button>
       </div>
     </div>
   </div>
@@ -2002,6 +2074,37 @@ function etudiantFinance(etId){
   return {total,paye,reste,statut};
 }
 
+/* ---------- Échéancier de paiement (tranches propres à chaque étudiant, définies par la direction) ---------- */
+// Les versements sont affectés aux tranches dans l'ordre chronologique : un versement solde d'abord
+// le reste de la tranche la plus ancienne non soldée, puis le surplus éventuel est reporté sur la
+// tranche suivante (et ainsi de suite), jusqu'à épuisement du montant versé.
+function computeEcheancier(etId){
+  const et = getEtudiant(etId);
+  const fin = etudiantFinance(etId);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const tranches = ((et && et.echeancier) || []).slice().sort((a,b)=> new Date(a.date) - new Date(b.date));
+  let restantAAffecter = fin.paye;
+  return tranches.map(tr=>{
+    const montant = Number(tr.montant)||0;
+    let paye, reste;
+    if(restantAAffecter >= montant){ paye = montant; reste = 0; restantAAffecter -= montant; }
+    else if(restantAAffecter > 0){ paye = restantAAffecter; reste = montant - restantAAffecter; restantAAffecter = 0; }
+    else { paye = 0; reste = montant; }
+    const dateEch = tr.date ? new Date(tr.date) : null;
+    const diffJours = dateEch ? Math.ceil((dateEch - today)/(1000*60*60*24)) : null;
+    let statut = 'À venir';
+    if(reste<=0.5) statut = 'Payé';
+    else if(dateEch && diffJours<0) statut = 'En retard';
+    else if(dateEch && diffJours<=30) statut = 'À échoir';
+    return {...tr, montant, paye, reste, dateEch, diffJours, statut};
+  });
+}
+// Échéances non soldées dont la date limite tombe dans les 30 jours (passés ou à venir) : sert au
+// rappel affiché sur le tableau de bord et dans le menu paiement de l'étudiant concerné.
+function echeancesARappeler(etId){
+  return computeEcheancier(etId).filter(r=> r.statut==='En retard' || r.statut==='À échoir');
+}
+
 /* ---------- Génération PDF (police Poppins embarquée) ---------- */
 let PDF_FONT_READY = null;
 function bufferToBase64(buf){
@@ -2252,19 +2355,23 @@ async function exportFinancierPdf(){
   const font = await ensurePdfFont(doc);
   const filterStatut = document.getElementById('filterStatutPaiement').value;
   const filterFil = document.getElementById('filterFilierePaiement').value;
+  const filterStatutEt = document.getElementById('filterStatutEtudiantPaiement').value;
   const search = (document.getElementById('searchPaiement').value||'').toLowerCase();
   let finances = scopeEtudiants(DB.etudiants).map(e=>({e, fin:etudiantFinance(e.id)}))
     .filter(x=> !filterStatut || x.fin.statut===filterStatut)
     .filter(x=> !filterFil || x.e.filiereId===filterFil)
+    .filter(x=> !filterStatutEt || x.e.statut===filterStatutEt)
     .filter(x=> nomComplet(x.e).toLowerCase().includes(search));
   finances.sort((a,b)=>nomComplet(a.e).localeCompare(nomComplet(b.e),'fr',{sensitivity:'base'}));
   const totalCollecte = finances.reduce((s,x)=>s+x.fin.paye,0);
   const totalDu = finances.reduce((s,x)=>s+x.fin.total,0);
   const totalReste = Math.max(totalDu-totalCollecte,0);
   const taux = totalDu>0 ? Math.round((totalCollecte/totalDu)*100) : 0;
+  const statutEtLabel = {actif:'Actif', abandon:'Abandon', diplome:'Diplômé'}[filterStatutEt];
   const sousTitreParts = [
     filterFil ? 'Filière : '+(getFiliere(filterFil)?.nom||'') : null,
-    filterStatut ? 'Statut : '+filterStatut : null,
+    filterStatut ? 'Statut paiement : '+filterStatut : null,
+    statutEtLabel ? 'Statut étudiant : '+statutEtLabel : null,
   ].filter(Boolean);
   const sousTitre = `${finances.length} étudiant(s)` + (sousTitreParts.length ? ' — '+sousTitreParts.join(' — ') : '');
   const M = 14, W = 182;
@@ -2303,6 +2410,7 @@ function filteredHistoriquePeriode(){
   });
 }
 function renderHistoriquePeriode(){
+  const editable = canEdit('paiements');
   const list = filteredHistoriquePeriode().slice().sort((a,b)=> new Date(b.date)-new Date(a.date));
   const total = list.reduce((s,p)=>s+Number(p.montant),0);
   document.getElementById('historiquePeriodeSummary').textContent = `${list.length} versement(s) — Total collecté : ${fmtCFA(total)}`;
@@ -2315,8 +2423,10 @@ function renderHistoriquePeriode(){
       <td class="fw-semibold text-success">${fmtCFA(p.montant)}</td>
       <td class="d-none d-lg-table-cell">${p.mode||'—'}</td>
       <td class="d-none d-lg-table-cell">${p.type||'—'}</td>
+      <td class="text-end">${editable ? `<button class="btn btn-sm btn-icon" onclick="editPaiement('${p.id}')" title="Modifier"><i class="bi bi-pencil"></i></button>
+      <button class="btn btn-sm btn-icon text-danger" onclick="askDelete('paiements','${p.id}')" title="Supprimer"><i class="bi bi-trash"></i></button>` : ''}</td>
     </tr>`;
-  }).join('') : `<tr><td colspan="6"><div class="empty-state"><i class="bi bi-receipt"></i><p>Aucun versement sur cette période</p></div></td></tr>`;
+  }).join('') : `<tr><td colspan="7"><div class="empty-state"><i class="bi bi-receipt"></i><p>Aucun versement sur cette période</p></div></td></tr>`;
 }
 document.getElementById('histDateDebut').addEventListener('change', renderHistoriquePeriode);
 document.getElementById('histDateFin').addEventListener('change', renderHistoriquePeriode);
@@ -2431,6 +2541,7 @@ async function loadDB(){
     if(snap.exists){ DB = snap.data().payload ? JSON.parse(snap.data().payload) : snap.data(); migrateDB(); return; }
   }catch(e){ console.error('Erreur de connexion à Firebase', e); toast("Impossible de se connecter à la base Firebase — vérifiez la configuration"); }
   DB = seedData();
+  migrateDB();
   await saveDB();
 }
 function migrateDB(){
@@ -2470,6 +2581,7 @@ function migrateDB(){
     if(e.nomTuteur===undefined) e.nomTuteur='';
     if(e.telephoneTuteur===undefined) e.telephoneTuteur='';
     if(e.lienTuteur===undefined) e.lienTuteur='Parent';
+    if(!e.echeancier) e.echeancier = []; // échéancier de paiement propre à chaque étudiant
   });
   (DB.presences||[]).forEach(p=>{
     if(p.motif===undefined) p.motif='';
@@ -2886,16 +2998,35 @@ function getEtudiantNotifications(){
     if(p.correctionDemandee){
       notifs.push({
         icon:'bi-arrow-repeat',
+        target:'rapports',
         text:`Correction demandée pour le rapport « ${r.titre} »${p.motifCorrection?' — '+p.motifCorrection:''}`
       });
     } else if(!p.soumis){
       notifs.push({
         icon:'bi-hourglass-split',
+        target:'rapports',
         text:`Rapport « ${r.titre} » à compléter — ${deadlineRemainingHTML(r).replace(/<[^>]+>/g,'')}`
       });
     }
   });
-  return notifs;
+  return notifs.concat(getEtudiantPaiementNotifications());
+}
+// Rappels de paiement de l'étudiant : une échéance non soldée est signalée dès qu'il reste 30 jours
+// ou moins avant sa date limite (et tant qu'elle n'a pas été soldée, y compris si elle est déjà en retard).
+function getEtudiantPaiementNotifications(){
+  if(state.role!=='etudiant') return [];
+  const u = currentUser();
+  if(!u || !u.etudiantId) return [];
+  const et = getEtudiant(u.etudiantId);
+  if(!et || !et.echeancier || !et.echeancier.length) return [];
+  return echeancesARappeler(u.etudiantId).map(r=>{
+    const delai = r.diffJours<0 ? `en retard de ${Math.abs(r.diffJours)} jour(s)` : r.diffJours===0 ? "échéance aujourd'hui" : `dans ${r.diffJours} jour(s)`;
+    return {
+      icon: r.statut==='En retard' ? 'bi-exclamation-triangle-fill' : 'bi-alarm-fill',
+      target:'paiements',
+      text:`Échéance « ${r.libelle} » du ${fmtDate(r.date)} (${delai}) — ${fmtCFA(r.reste)} restant à régler`
+    };
+  });
 }
 function renderDashNotifBanner(){
   const el = document.getElementById('dashNotifBanner');
@@ -2910,8 +3041,23 @@ function renderDashNotifBanner(){
         ${notifs.map(n=>`
           <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
             <span class="small"><i class="bi ${n.icon} me-1"></i>${n.text}</span>
-            <button type="button" class="btn btn-sm btn-outline-danger flex-shrink-0" onclick="goSection('rapports')"><i class="bi bi-eye"></i> Afficher</button>
+            <button type="button" class="btn btn-sm btn-outline-danger flex-shrink-0" onclick="goSection('${n.target||'rapports'}')"><i class="bi bi-eye"></i> Afficher</button>
           </div>`).join('')}
+      </div>
+    </div>`;
+}
+// Même bandeau de rappel de paiement, réaffiché dans le menu Paiement lui-même (pas de bouton, l'étudiant y est déjà).
+function renderPaiementNotifBanner(){
+  const el = document.getElementById('paiementNotifBanner');
+  if(!el) return;
+  const notifs = getEtudiantPaiementNotifications();
+  if(!notifs.length){ el.style.display='none'; el.innerHTML=''; return; }
+  el.style.display='block';
+  el.innerHTML = `
+    <div class="alert alert-danger mb-3">
+      <div class="fw-bold mb-2"><i class="bi bi-bell-fill me-1"></i> Rappel de paiement</div>
+      <div class="d-flex flex-column gap-2">
+        ${notifs.map(n=>`<span class="small"><i class="bi ${n.icon} me-1"></i>${n.text}</span>`).join('')}
       </div>
     </div>`;
 }
@@ -3052,7 +3198,7 @@ function renderEtudiants(){
     const statutCls = {actif:'badge-statut-actif',diplome:'badge-statut-diplome',abandon:'badge-statut-abandon'}[e.statut];
     const payCls = {'Payé':'badge-statut-paye','Partiel':'badge-statut-partiel','Impayé':'badge-statut-impaye'}[fin.statut];
     return `<tr>
-      <td><div class="d-flex align-items-center gap-2">${avatarHTML(e)}<div><div class="fw-semibold">${nomComplet(e)}</div><div class="text-muted" style="font-size:.75rem;">${getFiliere(e.filiereId)?.nom||'—'}</div></div></div></td>
+      <td><div class="d-flex align-items-center gap-2">${avatarHTML(e)}<div><div class="fw-semibold">${nomComplet(e)}</div><div class="text-muted d-md-none" style="font-size:.75rem;">${getFiliere(e.filiereId)?.nom||'—'}</div></div></div></td>
       <td class="text-mono d-none d-md-table-cell">${e.matricule}</td>
       <td class="d-none d-md-table-cell">${getFiliere(e.filiereId)?.nom||'—'}</td>
       <td class="d-none d-lg-table-cell">${e.telephone}</td>
@@ -3067,6 +3213,7 @@ function renderEtudiants(){
       </td>
     </tr>`;
   }).join('') : `<tr><td colspan="${showPaiementCol?8:7}"><div class="empty-state"><i class="bi bi-inboxes"></i><p>Aucun étudiant trouvé</p></div></td></tr>`;
+  document.getElementById('etudiantsCountBadge').textContent = list.length;
   document.getElementById('btnNewEtudiant').style.display = editable ? 'inline-block':'none';
   document.getElementById('thPaiementEtudiant').style.display = showPaiementCol ? '' : 'none';
 }
@@ -3344,6 +3491,7 @@ function viewEtudiant(id){
           ${e.telephone ? `<a class="btn btn-sm btn-outline-light" href="tel:${e.telephone}" title="Appeler"><i class="bi bi-telephone-fill"></i></a>` : ''}
           ${e.telephone ? `<a class="btn btn-sm btn-outline-light" href="${waLink(e.telephone)}" target="_blank" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>` : ''}
           ${editable ? `<button class="btn btn-sm btn-outline-light" onclick="bootstrap.Modal.getInstance(document.getElementById('modalFicheEtudiant')).hide(); editEtudiant('${e.id}')" title="Modifier"><i class="bi bi-pencil"></i></button>` : ''}
+          ${editable && showFinance ? `<button class="btn btn-sm btn-outline-light" onclick="bootstrap.Modal.getInstance(document.getElementById('modalFicheEtudiant')).hide(); openEcheancierModal('${e.id}')" title="Échéancier de paiement"><i class="bi bi-calendar2-week"></i></button>` : ''}
           ${editable ? `<button class="btn btn-sm btn-outline-light" onclick="bootstrap.Modal.getInstance(document.getElementById('modalFicheEtudiant')).hide(); askDelete('etudiants','${e.id}')" title="Supprimer"><i class="bi bi-trash"></i></button>` : ''}
           <button class="btn btn-sm btn-amber" onclick="exportFicheEtudiantPdf('${e.id}')" title="Enregistrer en PDF"><i class="bi bi-file-earmark-pdf"></i> PDF</button>
         </div>
@@ -3355,6 +3503,24 @@ function viewEtudiant(id){
       <div class="col-4"><div class="fiche-mini-stat"><div class="stat-num" style="color:#1C7A46;">${fmtCFA(fin.paye)}</div><div class="stat-label">Payé</div></div></div>
       <div class="col-4"><div class="fiche-mini-stat"><div class="stat-num" style="color:#B03327;">${fmtCFA(fin.reste)}</div><div class="stat-label">Reste à payer</div></div></div>
     </div>` : ''}
+
+    ${showFinance && e.echeancier && e.echeancier.length ? (()=>{
+      const statutCls = {'Payé':'badge-statut-paye','À échoir':'badge-statut-partiel','En retard':'badge-statut-impaye','À venir':'badge-statut-avenir'};
+      const rows = computeEcheancier(e.id);
+      return `<div class="fiche-section">
+        <h6><i class="bi bi-calendar2-week me-1"></i> Échéancier de paiement</h6>
+        <div class="table-responsive"><table class="table table-sm align-middle mb-0">
+          <thead><tr><th>Tranche</th><th>Montant</th><th>Payé</th><th>Reste</th><th>Date limite</th><th>Statut</th></tr></thead>
+          <tbody>${rows.map(r=>`<tr>
+            <td>${r.libelle}</td><td>${fmtCFA(r.montant)}</td>
+            <td class="text-success">${fmtCFA(r.paye)}</td>
+            <td class="${r.reste>0?'text-danger fw-semibold':''}">${r.reste>0?fmtCFA(r.reste):'—'}</td>
+            <td>${fmtDate(r.date)}</td>
+            <td><span class="badge ${statutCls[r.statut]}">${r.statut}</span></td>
+          </tr>`).join('')}</tbody>
+        </table></div>
+      </div>`;
+    })() : ''}
 
     <div class="row g-3 mb-1">
       <div class="col-md-6">
@@ -3541,6 +3707,35 @@ async function exportFicheEtudiantPdf(id){
     ], pdfParseImages(e.diplomeFichiers), font) + 6;
   }
 
+  // ----- État financier (avant la présence) -----
+  if(showFinance){
+    y = pdfStatsSection(doc, M, y, W, 'État financier', [
+      {label:'Montant dû', value:fmtCFA(fin.total), color:[22,35,63]},
+      {label:'Payé', value:fmtCFA(fin.paye), color:[28,122,70]},
+      {label:'Reste à payer', value:fmtCFA(fin.reste), color:[176,51,39]},
+    ], font) + 6;
+
+    const echRows = computeEcheancier(id);
+    if(echRows.length){
+      if(y > 250){ doc.addPage(); y = 20; }
+      doc.autoTable({
+        startY: y,
+        margin:{left:M,right:210-M-W},
+        tableWidth:W,
+        theme:'grid',
+        head: [
+          [{content:'ÉCHÉANCIER DE PAIEMENT', colSpan:6, styles:{fillColor:[22,35,63], textColor:255, fontStyle:'bold', fontSize:9, halign:'left', cellPadding:{top:3.2,bottom:3.2,left:4,right:4}}}],
+          ['Tranche','Montant','Payé','Reste','Date limite','Statut'].map(t=>({content:t, styles:{fillColor:[240,241,244], textColor:[90,95,105], fontStyle:'bold', fontSize:7.3}})),
+        ],
+        body: echRows.map(r=>[r.libelle, fmtCFA(r.montant), fmtCFA(r.paye), r.reste>0?fmtCFA(r.reste):'—', fmtDate(r.date), r.statut]),
+        styles:{font, lineColor:[228,231,236], lineWidth:0.15, cellPadding:{top:2.8,bottom:2.8,left:4,right:3}},
+        bodyStyles:{fontSize:8.5, textColor:[26,29,35]},
+        alternateRowStyles:{fillColor:[248,249,251]},
+      });
+      y = doc.lastAutoTable.finalY + 6;
+    }
+  }
+
   // ----- Présence -----
   y = pdfStatsSection(doc, M, y, W, 'Présence', [
     {label:'Présences', value:nbPresent, color:[28,122,70]},
@@ -3567,15 +3762,6 @@ async function exportFicheEtudiantPdf(id){
       alternateRowStyles:{fillColor:[248,249,251]},
     });
     y = doc.lastAutoTable.finalY + 6;
-  }
-
-  // ----- État financier : toujours affiché tout en bas de la fiche -----
-  if(showFinance){
-    y = pdfStatsSection(doc, M, y, W, 'État financier', [
-      {label:'Montant dû', value:fmtCFA(fin.total), color:[22,35,63]},
-      {label:'Payé', value:fmtCFA(fin.paye), color:[28,122,70]},
-      {label:'Reste à payer', value:fmtCFA(fin.reste), color:[176,51,39]},
-    ], font);
   }
 
   pdfFooter(doc, font);
@@ -3620,41 +3806,109 @@ document.getElementById('formEtudiant').addEventListener('submit', async e=>{
 function renderFilieres(){
   const editable = canEdit('filieres');
   document.getElementById('btnNewFiliere').style.display = editable?'inline-block':'none';
-  document.getElementById('filieresGrid').innerHTML = scopeFilieres(DB.filieres).map(f=>{
+  const list = scopeFilieres(DB.filieres).slice().sort((a,b)=>(a.nom||'').localeCompare(b.nom||'','fr',{sensitivity:'base'}));
+  document.getElementById('filieresGrid').innerHTML = list.length ? list.map(f=>{
     const nbEt = DB.etudiants.filter(e=>e.filiereId===f.id).length;
-    const mods = modulesOfFiliere(f.id);
-    return `<div class="col-md-6 col-lg-4">
-      <div class="card-clean p-3 h-100 d-flex flex-column">
-        <div class="d-flex justify-content-between align-items-start">
-          <h6 class="fw-bold mb-1">${f.nom}</h6>
-          ${editable?`<div><button class="btn btn-sm btn-icon" onclick="editFiliere('${f.id}')"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-icon text-danger" onclick="askDelete('filieres','${f.id}')"><i class="bi bi-trash"></i></button></div>`:''}
+    return `<tr>
+      <td><span class="fw-semibold">${f.nom}</span></td>
+      <td class="d-none d-md-table-cell">${f.duree||'—'}</td>
+      <td class="d-none d-lg-table-cell">${fmtCFA(f.prixTotal)}</td>
+      <td class="d-none d-lg-table-cell">${nbEt}</td>
+      <td class="text-end">
+        <button class="btn btn-sm btn-amber d-inline-flex d-md-none align-items-center gap-1" onclick="viewFiliere('${f.id}')"><i class="bi bi-eye"></i> Afficher</button>
+        <button class="btn btn-sm btn-icon d-none d-md-inline-flex" onclick="viewFiliere('${f.id}')" title="Afficher"><i class="bi bi-eye"></i></button>
+        ${editable ? `<button class="btn btn-sm btn-icon d-none d-md-inline-flex" onclick="editFiliere('${f.id}')" title="Modifier"><i class="bi bi-pencil"></i></button>
+        <button class="btn btn-sm btn-icon text-danger d-none d-md-inline-flex" onclick="askDelete('filieres','${f.id}')" title="Supprimer"><i class="bi bi-trash"></i></button>` : ''}
+      </td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="5"><div class="empty-state"><i class="bi bi-mortarboard"></i><p>Aucune filière</p></div></td></tr>`;
+}
+function viewFiliere(id){
+  const f = getFiliere(id);
+  if(!f) return;
+  const nbEt = DB.etudiants.filter(e=>e.filiereId===f.id).length;
+  const mods = modulesOfFiliere(f.id);
+  const editable = canEdit('filieres');
+  document.getElementById('ficheFiliereBody').innerHTML = `
+    <div class="fiche-banner mb-3">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div class="d-flex align-items-center gap-3">
+          ${f.flyer ? `<img src="${f.flyer}" style="width:60px;height:60px;object-fit:cover;border-radius:12px;">` : `<div style="width:60px;height:60px;border-radius:12px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;"><i class="bi bi-mortarboard-fill" style="font-size:1.5rem;"></i></div>`}
+          <div>
+            <div class="fiche-name">${f.nom}</div>
+            <div class="fiche-sub">${f.duree||'—'}</div>
+          </div>
         </div>
-        <div class="text-muted small mb-2">${f.description||''}</div>
-        <div class="mt-auto">
-          <div class="d-flex justify-content-between small mb-1"><span class="text-muted">Durée</span><span class="fw-semibold">${f.duree||'—'}</span></div>
-          <div class="d-flex justify-content-between small mb-1"><span class="text-muted">Prix</span><span class="fw-semibold">${fmtCFA(f.prixTotal)}</span></div>
-          <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Étudiants</span><span class="fw-semibold">${nbEt}</span></div>
-          <button class="btn btn-outline-secondary btn-sm w-100" onclick="openModulesModal('${f.id}')"><i class="bi bi-collection"></i> Modules (${mods.length})</button>
+        <div class="d-flex gap-2 flex-wrap fiche-actions">
+          <button class="btn btn-sm btn-outline-light" onclick="bootstrap.Modal.getInstance(document.getElementById('modalFicheFiliere')).hide(); openModulesModal('${f.id}')" title="Modules"><i class="bi bi-collection"></i> Modules (${mods.length})</button>
+          ${editable ? `<button class="btn btn-sm btn-outline-light" onclick="bootstrap.Modal.getInstance(document.getElementById('modalFicheFiliere')).hide(); editFiliere('${f.id}')" title="Modifier"><i class="bi bi-pencil"></i></button>` : ''}
+          ${editable ? `<button class="btn btn-sm btn-outline-light" onclick="bootstrap.Modal.getInstance(document.getElementById('modalFicheFiliere')).hide(); askDelete('filieres','${f.id}')" title="Supprimer"><i class="bi bi-trash"></i></button>` : ''}
         </div>
       </div>
-    </div>`;
-  }).join('') || `<div class="col-12"><div class="empty-state"><i class="bi bi-mortarboard"></i><p>Aucune filière</p></div></div>`;
+    </div>
+    <div class="fiche-section">
+      <h6><i class="bi bi-info-circle me-1"></i> Informations</h6>
+      <div class="row g-2">
+        <div class="col-6 fiche-field"><span class="fiche-label">Durée</span><span class="fiche-value">${f.duree||'—'}</span></div>
+        <div class="col-6 fiche-field"><span class="fiche-label">Prix total</span><span class="fiche-value">${fmtCFA(f.prixTotal)}</span></div>
+        <div class="col-6 fiche-field mb-0"><span class="fiche-label">Étudiants inscrits</span><span class="fiche-value">${nbEt}</span></div>
+      </div>
+    </div>
+    ${f.description ? `<div class="fiche-section">
+      <h6><i class="bi bi-file-text me-1"></i> Description</h6>
+      <p class="mb-0 small">${f.description}</p>
+    </div>` : ''}
+    ${f.debouches ? `<div class="fiche-section mb-0">
+      <h6><i class="bi bi-briefcase-fill me-1"></i> Débouchés</h6>
+      <p class="mb-0 small">${f.debouches}</p>
+    </div>` : ''}
+  `;
+  new bootstrap.Modal(document.getElementById('modalFicheFiliere')).show();
 }
+function resetFiliereImageBox(){
+  document.getElementById('filiereImageInput').value='';
+  document.getElementById('filiereImageData').value='';
+  document.getElementById('filiereImagePreview').style.display='none';
+  document.getElementById('filiereImagePreview').src='';
+  document.getElementById('filiereImagePlaceholderIcon').style.display='block';
+}
+function setFiliereImageBox(dataUrl){
+  document.getElementById('filiereImageData').value = dataUrl || '';
+  const img = document.getElementById('filiereImagePreview');
+  const icon = document.getElementById('filiereImagePlaceholderIcon');
+  if(dataUrl){ img.src = dataUrl; img.style.display='block'; icon.style.display='none'; }
+  else { img.style.display='none'; icon.style.display='block'; }
+}
+document.getElementById('filiereImageUploadBox').addEventListener('click', ()=> document.getElementById('filiereImageInput').click());
+document.getElementById('filiereImageInput').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  setFiliereImageBox(URL.createObjectURL(file));
+  document.getElementById('filiereImageData').value = '';
+  const uploadPromise = uploadToCloudinary(file)
+    .then(url => { document.getElementById('filiereImageData').value = url; })
+    .catch(err => { console.error(err); toast("Échec de l'envoi de l'image — réessayez"); resetFiliereImageBox(); });
+  trackPendingUpload('filiereImageData', uploadPromise);
+});
 document.getElementById('btnNewFiliere').addEventListener('click', ()=>{
   document.getElementById('formFiliere').reset();
   document.getElementById('formFiliere').elements['id'].value='';
+  resetFiliereImageBox();
   document.getElementById('modalFiliereTitle').textContent='Nouvelle filière';
   new bootstrap.Modal(document.getElementById('modalFiliere')).show();
 });
 function editFiliere(id){
   const f = getFiliere(id);
   const form = document.getElementById('formFiliere');
+  form.reset();
   Object.keys(f).forEach(k=>{ if(form.elements[k]) form.elements[k].value = f[k]; });
+  setFiliereImageBox(f.flyer);
   document.getElementById('modalFiliereTitle').textContent='Modifier filière';
   new bootstrap.Modal(document.getElementById('modalFiliere')).show();
 }
 document.getElementById('formFiliere').addEventListener('submit', async e=>{
   e.preventDefault();
+  await resolvePendingUpload('filiereImageData');
   const data = Object.fromEntries(new FormData(e.target).entries());
   if(data.id){
     const idx = DB.filieres.findIndex(x=>x.id===data.id);
@@ -3668,6 +3922,7 @@ document.getElementById('formFiliere').addEventListener('submit', async e=>{
   toast('Filière enregistrée');
   populateAllSelects(); renderFilieres(); renderPublicSite();
 });
+
 
 /* ---------- MODULES (rattachés à une filière) ---------- */
 let currentModulesFiliereId = null;
@@ -3884,12 +4139,93 @@ document.getElementById('formFormateur').addEventListener('submit', async e=>{
 });
 
 /* ---------- PAIEMENTS ---------- */
+/* ---------- Échéancier de paiement : affichage (menu Paiement / fiche étudiant) ---------- */
+const statutEcheancierCls = {'Payé':'badge-statut-paye','À échoir':'badge-statut-partiel','En retard':'badge-statut-impaye','À venir':'badge-statut-avenir'};
+function renderEcheancierCard(){
+  const card = document.getElementById('cardEcheancier');
+  const body = document.getElementById('echeancierBody');
+  if(!card || !body) return;
+  renderPaiementNotifBanner();
+  if(state.role!=='etudiant'){ card.style.display='none'; return; }
+  const u = currentUser();
+  if(!u || !u.etudiantId){ card.style.display='none'; return; }
+  const rows = computeEcheancier(u.etudiantId);
+  if(!rows.length){
+    card.style.display='none';
+    return;
+  }
+  card.style.display='';
+  body.innerHTML = `<div class="table-responsive"><table class="table table-sm align-middle mb-0">
+    <thead><tr><th>Tranche</th><th>Montant</th><th>Payé</th><th>Reste</th><th>Date limite</th><th>Statut</th></tr></thead>
+    <tbody>${rows.map(r=>`<tr>
+      <td>${r.libelle}</td>
+      <td>${fmtCFA(r.montant)}</td>
+      <td class="text-success">${fmtCFA(r.paye)}</td>
+      <td class="${r.reste>0?'text-danger fw-semibold':''}">${r.reste>0?fmtCFA(r.reste):'—'}</td>
+      <td>${fmtDate(r.date)}</td>
+      <td><span class="badge ${statutEcheancierCls[r.statut]}">${r.statut}</span></td>
+    </tr>`).join('')}</tbody></table></div>`;
+}
+let currentEcheancierEtId = null;
+function openEcheancierModal(etId){
+  currentEcheancierEtId = etId;
+  const et = getEtudiant(etId);
+  document.getElementById('modalEcheancierTitle').textContent = `Échéancier de paiement — ${et?nomComplet(et):''}`;
+  const rows = (et && et.echeancier) ? [...et.echeancier].sort((a,b)=>new Date(a.date)-new Date(b.date)) : [];
+  const body = document.getElementById('echeancierFormRows');
+  body.innerHTML='';
+  if(rows.length){ rows.forEach(addEcheanceRow); } else { addEcheanceRow(); }
+  updateEcheancierPctTotal();
+  new bootstrap.Modal(document.getElementById('modalEcheancier')).show();
+}
+function addEcheanceRow(tr){
+  tr = tr || {libelle:'', montant:'', date:''};
+  const row = document.createElement('tr');
+  row.innerHTML = `
+    <td><input class="form-control form-control-sm" data-f="libelle" value="${tr.libelle||''}" placeholder="Ex: Tranche 1"></td>
+    <td><input type="number" min="0" step="1" class="form-control form-control-sm" data-f="montant" value="${tr.montant||''}"></td>
+    <td><input type="date" class="form-control form-control-sm" data-f="date" value="${tr.date||''}"></td>
+    <td class="text-end"><button type="button" class="btn btn-sm btn-icon text-danger" onclick="this.closest('tr').remove(); updateEcheancierPctTotal();"><i class="bi bi-trash"></i></button></td>`;
+  row.querySelector('[data-f="montant"]').addEventListener('input', updateEcheancierPctTotal);
+  document.getElementById('echeancierFormRows').appendChild(row);
+}
+document.getElementById('btnAddEcheanceRow').addEventListener('click', ()=>addEcheanceRow());
+function updateEcheancierPctTotal(){
+  const rows = [...document.querySelectorAll('#echeancierFormRows tr')];
+  const total = rows.reduce((s,r)=> s + (Number(r.querySelector('[data-f="montant"]').value)||0), 0);
+  const et = getEtudiant(currentEcheancierEtId);
+  const fin = et ? etudiantFinance(et.id) : {total:0};
+  const el = document.getElementById('echeancierPctTotal');
+  el.innerHTML = `Total des tranches : <strong>${fmtCFA(total)}</strong> — Montant total dû par l'étudiant : <strong>${fmtCFA(fin.total)}</strong>${Math.abs(total-fin.total)>0.5?' <span class="text-danger">(les deux montants ne correspondent pas)</span>':' <span class="text-success">✓</span>'}`;
+}
+document.getElementById('btnSaveEcheancier').addEventListener('click', async ()=>{
+  if(!currentEcheancierEtId) return;
+  const rows = [...document.querySelectorAll('#echeancierFormRows tr')].map(r=>({
+    id: uid(),
+    libelle: r.querySelector('[data-f="libelle"]').value.trim(),
+    montant: Number(r.querySelector('[data-f="montant"]').value)||0,
+    date: r.querySelector('[data-f="date"]').value,
+  })).filter(t=>t.libelle && t.date && t.montant>0);
+  if(!rows.length){ toast("Ajoutez au moins une tranche complète (libellé, montant et date)"); return; }
+  const et = getEtudiant(currentEcheancierEtId);
+  if(!et) return;
+  et.echeancier = rows;
+  await saveDB();
+  bootstrap.Modal.getInstance(document.getElementById('modalEcheancier')).hide();
+  toast("Échéancier de paiement enregistré");
+  renderEcheancierCard();
+  if(document.getElementById('paiementsBody')) renderPaiements();
+  if(state.section==='dashboard') renderDashNotifBanner();
+});
+
 function renderPaiements(){
+  renderEcheancierCard();
   const editable = canEdit('paiements');
   document.getElementById('btnNewPaiement').style.display = editable?'inline-block':'none';
   document.getElementById('btnExportFinancierPdf').style.display = state.role==='etudiant' ? 'none' : 'inline-block';
   const filterStatut = document.getElementById('filterStatutPaiement').value;
   const filterFil = document.getElementById('filterFilierePaiement').value;
+  const filterStatutEt = document.getElementById('filterStatutEtudiantPaiement').value;
   const search = (document.getElementById('searchPaiement').value||'').toLowerCase();
 
   const scopedEt = scopeEtudiants(DB.etudiants);
@@ -3906,6 +4242,7 @@ function renderPaiements(){
 
   let list = finances.filter(x=> !filterStatut || x.fin.statut===filterStatut)
     .filter(x=> !filterFil || x.e.filiereId===filterFil)
+    .filter(x=> !filterStatutEt || x.e.statut===filterStatutEt)
     .filter(x=> nomComplet(x.e).toLowerCase().includes(search));
   list.sort((a,b)=>nomComplet(a.e).localeCompare(nomComplet(b.e),'fr',{sensitivity:'base'}));
   document.getElementById('paiementsBody').innerHTML = list.length ? list.map(x=>{
@@ -3917,35 +4254,91 @@ function renderPaiements(){
       <td class="d-none d-lg-table-cell text-success fw-semibold">${fmtCFA(x.fin.paye)}</td>
       <td class="text-danger fw-semibold">${fmtCFA(x.fin.reste)}</td>
       <td><span class="badge ${payCls}">${x.fin.statut}</span></td>
-      <td class="text-end"><button class="btn btn-sm btn-outline-secondary" onclick="viewHistorique('${x.e.id}')"><i class="bi bi-clock-history"></i> Voir</button></td>
+      <td class="text-end">${editable ? `<button class="btn btn-sm btn-outline-secondary" onclick="openEcheancierModal('${x.e.id}')"><i class="bi bi-calendar2-week"></i></button>` : ''}</td>
+      <td class="text-end"><button class="btn btn-sm btn-outline-secondary" onclick="viewHistorique('${x.e.id}')"><i class="bi bi-clock-history"></i> Historique</button></td>
     </tr>`;
-  }).join('') : `<tr><td colspan="7"><div class="empty-state"><i class="bi bi-cash"></i><p>Aucun résultat</p></div></td></tr>`;
+  }).join('') : `<tr><td colspan="8"><div class="empty-state"><i class="bi bi-cash"></i><p>Aucun résultat</p></div></td></tr>`;
 }
 document.getElementById('filterStatutPaiement').addEventListener('change', renderPaiements);
 document.getElementById('filterFilierePaiement').addEventListener('change', renderPaiements);
+document.getElementById('filterStatutEtudiantPaiement').addEventListener('change', renderPaiements);
 document.getElementById('searchPaiement').addEventListener('input', renderPaiements);
 document.getElementById('btnExportFinancierPdf').addEventListener('click', exportFinancierPdf);
+// Indique si la modale Paiement a été ouverte depuis la modale Historique,
+// pour savoir si on doit rouvrir l'Historique une fois la modale Paiement fermée.
+let reopenHistoriqueAfterPaiement = false;
 document.getElementById('btnNewPaiement').addEventListener('click', ()=>{
+  reopenHistoriqueAfterPaiement = false;
   document.getElementById('formPaiement').reset();
+  document.getElementById('editPaiementId').value = '';
+  document.getElementById('modalPaiementTitle').textContent = 'Enregistrer un versement';
+  document.getElementById('btnSubmitPaiement').textContent = 'Valider le versement';
+  document.getElementById('selectEtudiantPaiement').disabled = false;
   document.getElementById('formPaiement').elements['date'].value = new Date().toISOString().slice(0,10);
   new bootstrap.Modal(document.getElementById('modalPaiement')).show();
+});
+// Modification d'un versement déjà enregistré (accès direction / comptabilité)
+function editPaiement(id){
+  const p = DB.paiements.find(x=>x.id===id);
+  if(!p) return;
+  // BUG CORRIGÉ : la modale #modalPaiement est déclarée AVANT #modalHistorique dans le HTML.
+  // Ouvrir #modalPaiement par-dessus #modalHistorique sans fermer cette dernière la laissait
+  // cachée derrière la fenêtre Historique (même z-index, ordre DOM défavorable) :
+  // impossible de voir/atteindre le formulaire de modification. On ferme donc l'Historique
+  // d'abord, et on le rouvrira automatiquement à la fermeture de la modale Paiement.
+  const histModalEl = document.getElementById('modalHistorique');
+  const histInstance = bootstrap.Modal.getInstance(histModalEl);
+  reopenHistoriqueAfterPaiement = !!(histInstance && histModalEl.classList.contains('show'));
+  if(histInstance) histInstance.hide();
+  const f = document.getElementById('formPaiement');
+  f.reset();
+  document.getElementById('editPaiementId').value = p.id;
+  f.elements['etudiantId'].value = p.etudiantId;
+  f.elements['montant'].value = p.montant;
+  f.elements['date'].value = p.date;
+  f.elements['mode'].value = p.mode;
+  f.elements['type'].value = p.type;
+  document.getElementById('selectEtudiantPaiement').disabled = true; // on ne change pas l'étudiant d'un versement existant
+  document.getElementById('modalPaiementTitle').textContent = 'Modifier le versement';
+  document.getElementById('btnSubmitPaiement').textContent = 'Enregistrer les modifications';
+  new bootstrap.Modal(document.getElementById('modalPaiement')).show();
+}
+// Quelle que soit la façon dont la modale Paiement se ferme (validation, Annuler, croix),
+// on rouvre l'Historique si c'est de là qu'on venait.
+document.getElementById('modalPaiement').addEventListener('hidden.bs.modal', ()=>{
+  document.getElementById('selectEtudiantPaiement').disabled = false;
+  if(reopenHistoriqueAfterPaiement && currentHistoriqueEtId){
+    reopenHistoriqueAfterPaiement = false;
+    viewHistorique(currentHistoriqueEtId);
+  }
 });
 document.getElementById('formPaiement').addEventListener('submit', async e=>{
   e.preventDefault();
   const data = Object.fromEntries(new FormData(e.target).entries());
-  data.id = uid();
-  DB.paiements.push(data);
+  const editId = document.getElementById('editPaiementId').value;
+  if(editId){
+    const p = DB.paiements.find(x=>x.id===editId);
+    if(p){ p.montant = data.montant; p.date = data.date; p.mode = data.mode; p.type = data.type; }
+  } else {
+    data.id = uid();
+    DB.paiements.push(data);
+  }
   await saveDB();
+  document.getElementById('selectEtudiantPaiement').disabled = false;
   bootstrap.Modal.getInstance(document.getElementById('modalPaiement')).hide();
-  toast('Versement enregistré');
+  toast(editId ? 'Versement modifié' : 'Versement enregistré');
   renderPaiements();
   renderHistoriquePeriode();
+  // La réouverture de l'Historique (si on venait de là) est gérée par l'écouteur
+  // 'hidden.bs.modal' ci-dessus, une fois que la modale Paiement est complètement fermée
+  // (évite de superposer à nouveau les deux fenêtres pendant l'animation de fermeture).
 });
 let currentHistoriqueEtId = null;
 function viewHistorique(etId){
   currentHistoriqueEtId = etId;
   const e = getEtudiant(etId);
   const fin = etudiantFinance(etId);
+  const editable = canEdit('paiements');
   const payCls = {'Payé':'badge-statut-paye','Partiel':'badge-statut-partiel','Impayé':'badge-statut-impaye'}[fin.statut];
   document.getElementById('modalHistoriqueTitle').textContent = `État de paiement — ${e?nomComplet(e):''}`;
   const list = DB.paiements.filter(p=>p.etudiantId===etId).sort((a,b)=>new Date(b.date)-new Date(a.date));
@@ -3963,7 +4356,11 @@ function viewHistorique(etId){
     <ul class="list-group list-group-flush">${list.map(p=>`
       <li class="list-group-item d-flex justify-content-between align-items-center px-0">
         <div><div class="fw-semibold small">${p.type}</div><div class="text-muted" style="font-size:.75rem;">${fmtDate(p.date)} · ${p.mode}</div></div>
-        <span class="fw-bold">${fmtCFA(p.montant)}</span>
+        <div class="d-flex align-items-center gap-2">
+          <span class="fw-bold">${fmtCFA(p.montant)}</span>
+          ${editable ? `<button class="btn btn-sm btn-icon" onclick="editPaiement('${p.id}')" title="Modifier ce versement"><i class="bi bi-pencil"></i></button>
+          <button class="btn btn-sm btn-icon text-danger" onclick="askDelete('paiements','${p.id}')" title="Supprimer ce versement"><i class="bi bi-trash"></i></button>` : ''}
+        </div>
       </li>`).join('')}</ul>` : `<div class="empty-state"><i class="bi bi-receipt"></i><p>Aucun versement</p></div>`}
   `;
   new bootstrap.Modal(document.getElementById('modalHistorique')).show();
@@ -5591,6 +5988,16 @@ document.getElementById('btnConfirmDelete').addEventListener('click', async ()=>
       await saveDB();
       toast('Appels de la période supprimés');
       renderSection(state.section);
+      bootstrap.Modal.getInstance(document.getElementById('modalConfirm')).hide();
+      pendingDelete = null;
+      return;
+    }
+    if(pendingDelete.collection==='paiements'){
+      DB.paiements = DB.paiements.filter(x=>x.id!==pendingDelete.id);
+      await saveDB();
+      toast('Versement supprimé');
+      renderSection(state.section);
+      if(currentHistoriqueEtId) viewHistorique(currentHistoriqueEtId);
       bootstrap.Modal.getInstance(document.getElementById('modalConfirm')).hide();
       pendingDelete = null;
       return;
