@@ -838,7 +838,7 @@ table.table td{vertical-align:middle;font-size:.87rem;}
           <div class="card-body" id="echeancierBody"></div>
         </div>
 
-        <div class="card-clean mb-3">
+        <div class="card-clean mb-3" id="cardEtatPaiementsParEtudiant">
           <div class="card-header d-flex flex-wrap gap-2 align-items-center justify-content-between">
             <span><i class="bi bi-cash-coin me-1"></i> État des paiements par étudiant</span>
             <div class="d-flex gap-2 flex-wrap">
@@ -872,13 +872,8 @@ table.table td{vertical-align:middle;font-size:.87rem;}
 
         <div class="card-clean">
           <div class="card-header d-flex flex-wrap gap-2 align-items-center justify-content-between">
-            <span><i class="bi bi-clock-history me-1"></i> Historique des paiements (période)</span>
+            <span><i class="bi bi-clock-history me-1"></i> <span id="historiquePeriodeTitle">Historique des paiements</span></span>
             <div class="d-flex gap-2 flex-wrap align-items-center">
-              <div class="d-flex align-items-center gap-1">
-                <input type="date" class="form-control form-control-sm" id="histDateDebut" style="width:auto;">
-                <span class="text-muted small">→</span>
-                <input type="date" class="form-control form-control-sm" id="histDateFin" style="width:auto;">
-              </div>
               <button class="btn btn-outline-secondary btn-sm" id="btnExportHistoriquePeriodePdf"><i class="bi bi-file-earmark-pdf"></i> Exporter PDF</button>
             </div>
           </div>
@@ -911,7 +906,7 @@ table.table td{vertical-align:middle;font-size:.87rem;}
           <div class="card-body p-0">
             <div class="table-responsive">
               <table class="table table-hover align-middle mb-0">
-                <thead><tr><th>Étudiant</th><th class="d-none d-md-table-cell">Filière</th><th>Module</th><th class="d-none d-md-table-cell">Formateur</th><th>Note /20</th><th class="d-none d-lg-table-cell">Appréciation</th><th class="d-none d-lg-table-cell">Date</th><th class="text-end">Actions</th></tr></thead>
+                <thead><tr><th id="thEvalEtudiant">Étudiant</th><th class="d-none d-md-table-cell">Filière</th><th>Module</th><th class="d-none d-md-table-cell">Formateur</th><th>Note /20</th><th class="d-none d-lg-table-cell">Appréciation</th><th class="d-none d-lg-table-cell">Date</th><th class="text-end" id="thEvalActions">Actions</th></tr></thead>
                 <tbody id="evaluationsBody"></tbody>
               </table>
             </div>
@@ -933,8 +928,8 @@ table.table td{vertical-align:middle;font-size:.87rem;}
         <div class="card-clean p-3 mb-3" id="presenceAppelCard">
           <div class="row g-2 align-items-end">
             <div class="col-md-5">
-              <label class="form-label small">Filière</label>
-              <select class="form-select" id="presenceFiliere"></select>
+              <label class="form-label small">Module</label>
+              <select class="form-select" id="presenceModule"></select>
             </div>
             <div class="col-md-4">
               <label class="form-label small">Date</label>
@@ -965,7 +960,7 @@ table.table td{vertical-align:middle;font-size:.87rem;}
           <div class="card-body p-0">
             <div class="table-responsive">
               <table class="table table-hover align-middle mb-0">
-                <thead><tr><th>Date</th><th>Filière</th><th>Étudiants enregistrés</th><th class="d-none d-md-table-cell">Taux présence</th><th class="text-end">Actions</th></tr></thead>
+                <thead><tr><th>Date</th><th>Module</th><th>Étudiants enregistrés</th><th class="d-none d-md-table-cell">Taux présence</th><th class="text-end">Actions</th></tr></thead>
                 <tbody id="appelsSessionsBody"></tbody>
               </table>
             </div>
@@ -977,14 +972,14 @@ table.table td{vertical-align:middle;font-size:.87rem;}
             <div class="d-flex gap-2 flex-wrap align-items-end">
               <div><label class="form-label small mb-0">Du</label><input type="date" class="form-control form-control-sm" id="presenceHistFrom"></div>
               <div><label class="form-label small mb-0">Au</label><input type="date" class="form-control form-control-sm" id="presenceHistTo"></div>
-              <select class="form-select form-select-sm" id="presenceHistFiliere" style="width:auto;"></select>
+              <select class="form-select form-select-sm" id="presenceHistModule" style="width:auto;"></select>
               <button class="btn btn-outline-secondary btn-sm" id="btnExportPresencePdf"><i class="bi bi-file-earmark-pdf"></i> Exporter PDF</button>
             </div>
           </div>
           <div class="card-body p-0">
             <div class="table-responsive">
               <table class="table table-hover align-middle mb-0">
-                <thead><tr><th>Date</th><th class="d-none d-md-table-cell">Filière</th><th>Étudiant</th><th>Statut</th><th class="d-none d-lg-table-cell">Motif</th><th class="text-end">Actions</th></tr></thead>
+                <thead><tr><th>Date</th><th class="d-none d-md-table-cell">Module</th><th id="thPresEtudiant">Étudiant</th><th>Statut</th><th class="d-none d-lg-table-cell">Motif</th><th class="text-end" id="thPresActions">Actions</th></tr></thead>
                 <tbody id="presenceHistoryBody"></tbody>
               </table>
             </div>
@@ -1988,6 +1983,27 @@ function scopeByFiliereId(list){
   const ids = scopedFiliereIds();
   return ids ? list.filter(x=>ids.includes(x.filiereId)) : list;
 }
+// Un formateur ne voit/gère que les modules qui lui sont confiés ; les autres profils sont limités à leur(s) filière(s).
+function scopeModules(list){
+  const u = currentUser();
+  if(state.role==='formateur' && u && u.formateurId){
+    return list.filter(m=>m.formateurId===u.formateurId);
+  }
+  const ids = scopedFiliereIds();
+  return ids ? list.filter(m=>ids.includes(m.filiereId)) : list;
+}
+// Portée des présences : basée sur le module (via le formateur qui l'anime, ou la filière pour les autres profils).
+function scopeByModuleId(list){
+  const u = currentUser();
+  if(state.role==='formateur' && u && u.formateurId){
+    const modIds = modulesOfFormateur(u.formateurId).map(m=>m.id);
+    return list.filter(x=>modIds.includes(x.moduleId));
+  }
+  const ids = scopedFiliereIds();
+  if(!ids) return list;
+  const modIds = DB.modules.filter(m=>ids.includes(m.filiereId)).map(m=>m.id);
+  return list.filter(x=>modIds.includes(x.moduleId));
+}
 function scopeEtudiants(list){
   const u = currentUser();
   if(state.role==='etudiant'){
@@ -2157,12 +2173,12 @@ function pdfHeader(doc, titre, sousTitre, font){
   doc.setTextColor(30,30,30);
   doc.setFont(font,'bold');
   doc.setFontSize(15);
-  doc.text(titre, 14, 36);
+  doc.text(titre, 14, 35);
   if(sousTitre){
     doc.setFont(font,'normal');
     doc.setFontSize(10);
     doc.setTextColor(100,100,100);
-    doc.text(sousTitre, 14, 42);
+    doc.text(sousTitre, 14, 43);
   }
   doc.setTextColor(30,30,30);
 }
@@ -2330,15 +2346,16 @@ async function exportEtudiantsListPdf(){
     const matchFil = !filFilter || e.filiereId===filFilter;
     const matchStatut = !statutFilter || e.statut===statutFilter;
     return matchSearch && matchFil && matchStatut;
-  }).sort((a,b)=>nomComplet(a).localeCompare(nomComplet(b),'fr',{sensitivity:'base'}));
+  }).sort((a,b)=>`${a.nom} ${a.prenom}`.localeCompare(`${b.nom} ${b.prenom}`,'fr',{sensitivity:'base'}));
   const showPaiementCol = state.role!=='formateur';
   pdfHeader(doc, 'Liste des étudiants inscrits', `${list.length} étudiant(s)` + (filFilter ? ' — Filière : '+getFiliere(filFilter)?.nom : ''), font);
   doc.autoTable({
-    startY: 48,
+    startY: 50,
     head: [showPaiementCol ? ['Matricule','Nom & Prénom','Filière','Téléphone','Statut','Paiement'] : ['Matricule','Nom & Prénom','Filière','Téléphone','Statut']],
     body: list.map(e=>{
       const fin = etudiantFinance(e.id);
-      return showPaiementCol ? [e.matricule, nomComplet(e), getFiliere(e.filiereId)?.nom||'—', e.telephone, e.statut, fin.statut] : [e.matricule, nomComplet(e), getFiliere(e.filiereId)?.nom||'—', e.telephone, e.statut];
+      const nomAffiche = `${e.nom} ${e.prenom}`;
+      return showPaiementCol ? [e.matricule, nomAffiche, getFiliere(e.filiereId)?.nom||'—', e.telephone, e.statut, fin.statut] : [e.matricule, nomAffiche, getFiliere(e.filiereId)?.nom||'—', e.telephone, e.statut];
     }),
     styles:{font},
     headStyles:{fillColor:[22,35,63], textColor:255, fontSize:9, font},
@@ -2376,7 +2393,7 @@ async function exportFinancierPdf(){
   const sousTitre = `${finances.length} étudiant(s)` + (sousTitreParts.length ? ' — '+sousTitreParts.join(' — ') : '');
   const M = 14, W = 182;
   pdfHeader(doc, 'État des paiements des étudiants', sousTitre, font);
-  let y = pdfStatsSection(doc, M, 48, W, 'Récapitulatif', [
+  let y = pdfStatsSection(doc, M, 50, W, 'Récapitulatif', [
     {label:'Montant dû', value:fmtCFA(totalDu), color:[22,35,63]},
     {label:'Collecté', value:fmtCFA(totalCollecte), color:[28,122,70]},
     {label:'Reste à recouvrer', value:fmtCFA(totalReste), color:[176,51,39]},
@@ -2401,16 +2418,15 @@ function scopedPaiements(){
   return DB.paiements.filter(p=>scopedIds.includes(p.etudiantId));
 }
 function filteredHistoriquePeriode(){
-  const debut = document.getElementById('histDateDebut').value;
-  const fin = document.getElementById('histDateFin').value;
-  return scopedPaiements().filter(p=>{
-    if(debut && p.date < debut) return false;
-    if(fin && p.date > fin) return false;
-    return true;
-  });
+  return scopedPaiements();
 }
 function renderHistoriquePeriode(){
   const editable = canEdit('paiements');
+  // Pour un étudiant, cette section montre uniquement son propre historique
+  // (scopedPaiements() est déjà filtré via scopeEtudiants sur son id).
+  document.getElementById('historiquePeriodeTitle').textContent = state.role==='etudiant'
+    ? 'Mon historique des paiements'
+    : 'Historique des paiements';
   const list = filteredHistoriquePeriode().slice().sort((a,b)=> new Date(b.date)-new Date(a.date));
   const total = list.reduce((s,p)=>s+Number(p.montant),0);
   document.getElementById('historiquePeriodeSummary').textContent = `${list.length} versement(s) — Total collecté : ${fmtCFA(total)}`;
@@ -2426,22 +2442,17 @@ function renderHistoriquePeriode(){
       <td class="text-end">${editable ? `<button class="btn btn-sm btn-icon" onclick="editPaiement('${p.id}')" title="Modifier"><i class="bi bi-pencil"></i></button>
       <button class="btn btn-sm btn-icon text-danger" onclick="askDelete('paiements','${p.id}')" title="Supprimer"><i class="bi bi-trash"></i></button>` : ''}</td>
     </tr>`;
-  }).join('') : `<tr><td colspan="7"><div class="empty-state"><i class="bi bi-receipt"></i><p>Aucun versement sur cette période</p></div></td></tr>`;
+  }).join('') : `<tr><td colspan="7"><div class="empty-state"><i class="bi bi-receipt"></i><p>Aucun versement</p></div></td></tr>`;
 }
-document.getElementById('histDateDebut').addEventListener('change', renderHistoriquePeriode);
-document.getElementById('histDateFin').addEventListener('change', renderHistoriquePeriode);
 async function exportHistoriquePeriodePdf(){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   const font = await ensurePdfFont(doc);
-  const debut = document.getElementById('histDateDebut').value;
-  const fin = document.getElementById('histDateFin').value;
   const list = filteredHistoriquePeriode().slice().sort((a,b)=> new Date(a.date)-new Date(b.date));
   const total = list.reduce((s,p)=>s+Number(p.montant),0);
-  const periodeLabel = (debut||fin) ? `Période du ${debut?fmtDate(debut):'—'} au ${fin?fmtDate(fin):'—'}` : 'Toutes périodes';
-  pdfHeader(doc, 'Historique des paiements', `${periodeLabel} — ${list.length} versement(s)`, font);
+  pdfHeader(doc, 'Historique des paiements', `Toutes périodes — ${list.length} versement(s)`, font);
   doc.autoTable({
-    startY: 48,
+    startY: 50,
     head: [['Date','Étudiant','Filière','Montant','Mode','Type']],
     body: list.map(p=>{
       const e = getEtudiant(p.etudiantId);
@@ -2473,7 +2484,7 @@ async function exportRapportPdf(id, etudiantId){
     const M = 14, W = 182;
     pdfHeader(doc, 'Rapport de chantier / séance pratique', r.titre, font);
     const st = participantStatus(r, p);
-    let y = pdfSection(doc, M, 48, W, 'Informations générales', [
+    let y = pdfSection(doc, M, 50, W, 'Informations générales', [
       ['Filière', getFiliere(r.filiereId)?.nom||'—'],
       ['Formateur encadrant / responsable de chantier', r.formateurNom || nomComplet(getFormateur(r.formateurId))],
       ['Étudiant', nomComplet(getEtudiant(etudiantId))],
@@ -2511,7 +2522,7 @@ async function exportRapportPdf(id, etudiantId){
   // Export récapitulatif de tous les participants du chantier
   const M2 = 14, W2 = 182;
   pdfHeader(doc, 'Rapport de chantier / séance pratique', r.titre, font);
-  const yRecap = pdfSection(doc, M2, 48, W2, 'Informations générales', [
+  const yRecap = pdfSection(doc, M2, 50, W2, 'Informations générales', [
     ['Filière', getFiliere(r.filiereId)?.nom||'—'],
     ['Formateur encadrant / responsable de chantier', r.formateurNom || nomComplet(getFormateur(r.formateurId))],
     ['Période', fmtPeriodeRapport(r)],
@@ -2960,6 +2971,7 @@ function canEdit(module){
 /* ---------- Selects population ---------- */
 function populateAllSelects(){
   const filOpts = scopeFilieres(DB.filieres).map(f=>`<option value="${f.id}">${f.nom}</option>`).join('');
+  const modOpts = scopeModules(DB.modules).map(m=>`<option value="${m.id}">${m.nom} — ${getFiliere(m.filiereId)?.nom||''}</option>`).join('');
   const forOpts = DB.formateurs.map(f=>`<option value="${f.id}">${nomComplet(f)}</option>`).join('');
   const etOpts = scopeEtudiants(DB.etudiants).slice().sort((a,b)=>nomComplet(a).localeCompare(nomComplet(b),'fr',{sensitivity:'base'})).map(e=>`<option value="${e.id}">${nomComplet(e)} — ${e.matricule}</option>`).join('');
   const scopedForm = scopedFormateurOptionsHTML();
@@ -2971,15 +2983,15 @@ function populateAllSelects(){
   document.getElementById('selectFiliereRapport').innerHTML = filOpts;
   document.getElementById('visitorLeadFiliere').innerHTML = filOpts;
   document.getElementById('selectEtudiantDocument').innerHTML = etOpts;
-  document.getElementById('presenceFiliere').innerHTML = filOpts;
+  document.getElementById('presenceModule').innerHTML = modOpts;
   document.getElementById('selectMessageDestinataire').innerHTML = DB.users.filter(u=>u.id!==state.userId).map(u=>`<option value="${u.id}">${u.nom} (${ROLES.find(r=>r.id===u.role)?.label||u.role})</option>`).join('');
 
   const filterFil = document.getElementById('filterFiliereEtudiant');
   filterFil.innerHTML = '<option value="">Toutes les filières</option>'+filOpts;
   const filterFilEval = document.getElementById('filterFiliereEval');
   filterFilEval.innerHTML = '<option value="">Toutes les filières</option>'+filOpts;
-  const presenceHistFil = document.getElementById('presenceHistFiliere');
-  presenceHistFil.innerHTML = '<option value="">Toutes les filières</option>'+filOpts;
+  const presenceHistMod = document.getElementById('presenceHistModule');
+  presenceHistMod.innerHTML = '<option value="">Tous les modules</option>'+modOpts;
   const filterFilPai = document.getElementById('filterFilierePaiement');
   filterFilPai.innerHTML = '<option value="">Toutes les filières</option>'+filOpts;
 }
@@ -3009,7 +3021,37 @@ function getEtudiantNotifications(){
       });
     }
   });
-  return notifs.concat(getEtudiantPaiementNotifications());
+  return notifs.concat(getEtudiantPaiementNotifications(), getAnnonceNotifications(), getMessageNotifications());
+}
+// Notifications du formateur : annonces internes et messages reçus (mêmes règles que pour l'étudiant).
+function getFormateurNotifications(){
+  if(state.role!=='formateur') return [];
+  return [].concat(getAnnonceNotifications(), getMessageNotifications());
+}
+// Annonces publiées depuis la dernière visite de l'utilisateur sur le menu Annonces (étudiant ou formateur).
+function getAnnonceNotifications(){
+  if((state.role!=='etudiant' && state.role!=='formateur') || !DB || !DB.annonces) return [];
+  const u = currentUser();
+  if(!u) return [];
+  const lastSeen = u.lastSeenAnnonces || null;
+  const nouvelles = DB.annonces.filter(a=> !lastSeen || new Date(a.date) > new Date(lastSeen));
+  if(!nouvelles.length) return [];
+  return [{
+    icon:'bi-megaphone-fill',
+    target:'annonces',
+    text: nouvelles.length===1 ? `Nouvelle annonce : « ${nouvelles[0].titre} »` : `${nouvelles.length} nouvelles annonces publiées`
+  }];
+}
+// Messages reçus par l'utilisateur et pas encore lus (étudiant ou formateur).
+function getMessageNotifications(){
+  if((state.role!=='etudiant' && state.role!=='formateur') || !DB || !DB.messages) return [];
+  const nonLus = DB.messages.filter(m=>m.destinataireId===state.userId && !m.lu);
+  if(!nonLus.length) return [];
+  return [{
+    icon:'bi-chat-dots-fill',
+    target:'messagerie',
+    text: nonLus.length===1 ? `1 nouveau message reçu` : `${nonLus.length} nouveaux messages reçus`
+  }];
 }
 // Rappels de paiement de l'étudiant : une échéance non soldée est signalée dès qu'il reste 30 jours
 // ou moins avant sa date limite (et tant qu'elle n'a pas été soldée, y compris si elle est déjà en retard).
@@ -3031,7 +3073,7 @@ function getEtudiantPaiementNotifications(){
 function renderDashNotifBanner(){
   const el = document.getElementById('dashNotifBanner');
   if(!el) return;
-  const notifs = getEtudiantNotifications();
+  const notifs = state.role==='formateur' ? getFormateurNotifications() : getEtudiantNotifications();
   if(!notifs.length){ el.style.display='none'; el.innerHTML=''; return; }
   el.style.display='block';
   el.innerHTML = `
@@ -3078,16 +3120,16 @@ function renderDashboard(){
   const isFinanceUser = hasPerm('paiements','view') && state.role!=='etudiant'; // vue globale des paiements (direction/comptabilité)
   const isEtudiantFinance = state.role==='etudiant' && hasPerm('paiements','view');
 
-  const cards = [
-    {label:'Étudiants actifs', num:totalEtudiants, icon:'bi-people-fill'},
-    {label:'Filières', num:totalFilieres, icon:'bi-mortarboard-fill'},
-    {label:'Formateurs', num:totalFormateurs, icon:'bi-person-workspace'},
-  ];
+  const cards = [];
+  if(state.role!=='etudiant'){
+    cards.push(
+      {label:'Étudiants actifs', num:totalEtudiants, icon:'bi-people-fill'},
+      {label:'Filières', num:totalFilieres, icon:'bi-mortarboard-fill'},
+      {label:'Formateurs', num:totalFormateurs, icon:'bi-person-workspace'},
+    );
+  }
   if(isFinanceUser){
     cards.push({label:'Taux de recouvrement', num:tauxRecouvrement+'%', icon:'bi-graph-up-arrow'});
-  } else if(isEtudiantFinance && dashEtudiants[0]){
-    const mine = etudiantFinance(dashEtudiants[0].id);
-    cards.push({label:'Reste à payer', num:fmtCFA(mine.reste), icon:'bi-cash-coin'});
   }
   document.getElementById('statCards').innerHTML = cards.map(c=>`
     <div class="col-6 col-lg-3">
@@ -3156,11 +3198,11 @@ function renderDashboard(){
     dashGalerieRow.style.display='none';
   }
 
-  // derniers paiements (masqué si pas d'accès aux paiements)
+  // derniers paiements (masqué si pas d'accès aux paiements, et jamais affiché pour l'étudiant)
   const dashPaiementsRow = document.getElementById('dashPaiementsRow');
-  if(hasPerm('paiements','view')){
+  if(hasPerm('paiements','view') && state.role!=='etudiant'){
     dashPaiementsRow.style.display='';
-    document.getElementById('dashPaiementsTitle').textContent = state.role==='etudiant' ? 'Mes derniers versements' : 'Derniers paiements enregistrés';
+    document.getElementById('dashPaiementsTitle').textContent = 'Derniers paiements enregistrés';
     const last = [...DB.paiements].filter(p=>dashEtIds.includes(p.etudiantId)).sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,6);
     document.getElementById('dashPaiementsBody').innerHTML = last.map(p=>{
       const et = getEtudiant(p.etudiantId);
@@ -3190,7 +3232,7 @@ function renderEtudiants(){
     const matchStatut = !statutFilter || e.statut===statutFilter;
     return matchSearch && matchFil && matchStatut;
   });
-  list.sort((a,b)=> nomComplet(a).localeCompare(nomComplet(b), 'fr', {sensitivity:'base'}));
+  list.sort((a,b)=> `${a.nom} ${a.prenom}`.localeCompare(`${b.nom} ${b.prenom}`, 'fr', {sensitivity:'base'}));
   const editable = canEdit('etudiants');
   const showPaiementCol = state.role!=='formateur';
   document.getElementById('etudiantsBody').innerHTML = list.length ? list.map(e=>{
@@ -3198,7 +3240,7 @@ function renderEtudiants(){
     const statutCls = {actif:'badge-statut-actif',diplome:'badge-statut-diplome',abandon:'badge-statut-abandon'}[e.statut];
     const payCls = {'Payé':'badge-statut-paye','Partiel':'badge-statut-partiel','Impayé':'badge-statut-impaye'}[fin.statut];
     return `<tr>
-      <td><div class="d-flex align-items-center gap-2">${avatarHTML(e)}<div><div class="fw-semibold">${nomComplet(e)}</div><div class="text-muted d-md-none" style="font-size:.75rem;">${getFiliere(e.filiereId)?.nom||'—'}</div></div></div></td>
+      <td><div class="d-flex align-items-center gap-2">${avatarHTML(e)}<div><div class="fw-semibold">${e.nom} ${e.prenom}</div><div class="text-muted d-md-none" style="font-size:.75rem;">${getFiliere(e.filiereId)?.nom||'—'}</div></div></div></td>
       <td class="text-mono d-none d-md-table-cell">${e.matricule}</td>
       <td class="d-none d-md-table-cell">${getFiliere(e.filiereId)?.nom||'—'}</td>
       <td class="d-none d-lg-table-cell">${e.telephone}</td>
@@ -3463,6 +3505,7 @@ function viewEtudiant(id){
   const moy = notes.length ? (notes.reduce((s,n)=>s+Number(n.note),0)/notes.length).toFixed(1) : '—';
   const editable = canEdit('etudiants');
   const showFinance = hasPerm('paiements','view') && state.role!=='formateur';
+  const isFormateur = state.role==='formateur';
   const pres = DB.presences.filter(p=>p.etudiantId===id);
   const totalPres = pres.length;
   const nbPresent = pres.filter(p=>p.statut==='present').length;
@@ -3523,21 +3566,21 @@ function viewEtudiant(id){
     })() : ''}
 
     <div class="row g-3 mb-1">
-      <div class="col-md-6">
+      <div class="${isFormateur ? 'col-12' : 'col-md-6'}">
         <div class="fiche-section h-100">
           <h6><i class="bi bi-person-vcard me-1"></i> Informations personnelles</h6>
           <div class="row g-2">
             <div class="col-6 fiche-field"><span class="fiche-label">Sexe</span><span class="fiche-value">${e.sexe==='F'?'Féminin':'Masculin'}</span></div>
-            <div class="col-6 fiche-field"><span class="fiche-label">Date de naissance</span><span class="fiche-value">${fmtDate(e.dateNaissance)}</span></div>
+            ${!isFormateur ? `<div class="col-6 fiche-field"><span class="fiche-label">Date de naissance</span><span class="fiche-value">${fmtDate(e.dateNaissance)}</span></div>` : ''}
             <div class="col-6 fiche-field"><span class="fiche-label">Téléphone</span><span class="fiche-value">${e.telephone||'—'}</span></div>
             <div class="col-6 fiche-field"><span class="fiche-label">Email</span><span class="fiche-value">${e.email||'—'}</span></div>
-            <div class="col-6 fiche-field"><span class="fiche-label">Lieu de résidence</span><span class="fiche-value">${e.adresse||'—'}</span></div>
+            ${!isFormateur ? `<div class="col-6 fiche-field"><span class="fiche-label">Lieu de résidence</span><span class="fiche-value">${e.adresse||'—'}</span></div>` : ''}
             <div class="col-6 fiche-field"><span class="fiche-label">Niveau d'étude</span><span class="fiche-value">${e.niveauEtude||'—'}</span></div>
             <div class="col-12 fiche-field mb-0"><span class="fiche-label">Compétences / formations suivies</span><span class="fiche-value">${e.competences||'—'}</span></div>
           </div>
         </div>
       </div>
-      <div class="col-md-6">
+      ${!isFormateur ? `<div class="col-md-6">
         <div class="fiche-section h-100">
           <h6><i class="bi bi-people-fill me-1"></i> Tuteur / Parent</h6>
           <div class="row g-2">
@@ -3554,7 +3597,7 @@ function viewEtudiant(id){
             <div class="col-12 fiche-field mb-0"><span class="fiche-label">Adresse du tuteur</span><span class="fiche-value">${e.adresseTuteur||'—'}</span></div>
           </div>
         </div>
-      </div>
+      </div>` : ''}
     </div>
 
     <div class="fiche-section">
@@ -3566,16 +3609,15 @@ function viewEtudiant(id){
         <div class="col-6 col-md-3 fiche-field mb-0"><span class="fiche-label">Moyenne générale</span><span class="fiche-value">${moy}/20</span></div>
         <div class="col-6 col-md-3 fiche-field mb-0"><span class="fiche-label">Date de démarrage</span><span class="fiche-value">${e.dateDemarrage?fmtDate(e.dateDemarrage):'—'}</span></div>
         <div class="col-6 col-md-3 fiche-field mb-0"><span class="fiche-label">Durée de la formation</span><span class="fiche-value">${e.dureeFormation||'—'}</span></div>
-        <div class="col-6 col-md-3 fiche-field mb-0"><span class="fiche-label">Coût de la formation</span><span class="fiche-value">${e.coutFormation?fmtCFA(e.coutFormation):'—'}</span></div>
+        ${showFinance ? `<div class="col-6 col-md-3 fiche-field mb-0"><span class="fiche-label">Coût de la formation</span><span class="fiche-value">${e.coutFormation?fmtCFA(e.coutFormation):'—'}</span></div>
         <div class="col-6 col-md-3 fiche-field mb-0"><span class="fiche-label">Frais d'inscription</span><span class="fiche-value">${e.fraisInscription?fmtCFA(e.fraisInscription):'—'}</span></div>
         <div class="col-6 col-md-3 fiche-field mb-0"><span class="fiche-label">Frais d'uniforme</span><span class="fiche-value">${e.fraisUniforme?fmtCFA(e.fraisUniforme):'—'}</span></div>
-        <div class="col-6 col-md-3 fiche-field mb-0"><span class="fiche-label">${e.autresFraisLibelle||'Autres frais'}</span><span class="fiche-value">${e.autresFraisMontant?fmtCFA(e.autresFraisMontant):'—'}</span></div>
+        <div class="col-6 col-md-3 fiche-field mb-0"><span class="fiche-label">${e.autresFraisLibelle||'Autres frais'}</span><span class="fiche-value">${e.autresFraisMontant?fmtCFA(e.autresFraisMontant):'—'}</span></div>` : ''}
+        <div class="col-12 fiche-field mb-0">
+          <span class="fiche-label d-block mb-1">Modules suivis</span>
+          ${modsEt.length ? `<div class="d-flex flex-wrap gap-2">${modsEt.map(m=>`<span class="badge bg-light text-dark border">${m.nom}</span>`).join('')}</div>` : '<p class="text-muted small mb-0">Aucun module sélectionné pour le moment.</p>'}
+        </div>
       </div>
-    </div>
-
-    <div class="fiche-section">
-      <h6><i class="bi bi-collection-fill me-1"></i> Modules suivis</h6>
-      ${modsEt.length ? `<div class="d-flex flex-wrap gap-2">${modsEt.map(m=>`<span class="badge bg-light text-dark border">${m.nom}${m.formateurId?' — '+nomComplet(getFormateur(m.formateurId)):''}</span>`).join('')}</div>` : '<p class="text-muted small mb-0">Aucun module sélectionné pour le moment.</p>'}
     </div>
 
     ${e.statut==='abandon' ? `
@@ -3617,6 +3659,7 @@ async function exportFicheEtudiantPdf(id){
   const notes = DB.evaluations.filter(ev=>ev.etudiantId===id);
   const moy = notes.length ? (notes.reduce((s,n)=>s+Number(n.note),0)/notes.length).toFixed(1) : '—';
   const showFinance = hasPerm('paiements','view') && state.role!=='formateur';
+  const isFormateur = state.role==='formateur';
   const pres = DB.presences.filter(p=>p.etudiantId===id);
   const totalPres = pres.length;
   const nbPresent = pres.filter(p=>p.statut==='present').length;
@@ -3630,7 +3673,7 @@ async function exportFicheEtudiantPdf(id){
   pdfHeader(doc, 'Fiche étudiant', `Document généré le ${new Date().toLocaleDateString('fr-FR')}`, font);
 
   // ----- Bandeau d'identité (photo, nom, matricule, filière, statut) -----
-  let y = 32;
+  let y = 50;
   doc.setFillColor(22,35,63);
   doc.roundedRect(M, y, W, 22, 3, 3, 'F');
   let photoDrawn = false;
@@ -3663,38 +3706,41 @@ async function exportFicheEtudiantPdf(id){
   y += 22 + 7;
 
   // ----- Rubriques -----
-  y = pdfSection(doc, M, y, W, 'Informations personnelles', [
+  const infosPersoRows = [
     ['Sexe', e.sexe==='F'?'Féminin':'Masculin'],
-    ['Date de naissance', fmtDate(e.dateNaissance)],
-    ['Téléphone', e.telephone||'—'],
-    ['Email', e.email||'—'],
-    ['Lieu de résidence', e.adresse||'—'],
-    ["Niveau d'étude", e.niveauEtude||'—'],
-    ['Compétences / formations suivies', e.competences||'—'],
-  ], font) + 6;
+  ];
+  if(!isFormateur) infosPersoRows.push(['Date de naissance', fmtDate(e.dateNaissance)]);
+  infosPersoRows.push(['Téléphone', e.telephone||'—'], ['Email', e.email||'—']);
+  if(!isFormateur) infosPersoRows.push(['Lieu de résidence', e.adresse||'—']);
+  infosPersoRows.push(["Niveau d'étude", e.niveauEtude||'—'], ['Compétences / formations suivies', e.competences||'—']);
+  y = pdfSection(doc, M, y, W, 'Informations personnelles', infosPersoRows, font) + 6;
 
-  y = pdfSection(doc, M, y, W, 'Tuteur / Parent', [
-    ['Nom', e.nomTuteur||'—'],
-    ['Lien', e.lienTuteur||'—'],
-    ['Téléphone', e.telephoneTuteur||'—'],
-    ['Adresse', e.adresseTuteur||'—'],
-  ], font) + 6;
+  if(!isFormateur){
+    y = pdfSection(doc, M, y, W, 'Tuteur / Parent', [
+      ['Nom', e.nomTuteur||'—'],
+      ['Lien', e.lienTuteur||'—'],
+      ['Téléphone', e.telephoneTuteur||'—'],
+      ['Adresse', e.adresseTuteur||'—'],
+    ], font) + 6;
+  }
 
-  y = pdfSection(doc, M, y, W, 'Formation', [
+  const formationRows = [
     ['Filière', fil?.nom||'—'],
     ["Date d'inscription", fmtDate(e.dateInscription)],
     ['Date de démarrage', e.dateDemarrage?fmtDate(e.dateDemarrage):'—'],
     ['Durée de la formation', e.dureeFormation||'—'],
-    ['Coût de la formation', e.coutFormation?fmtCFA(e.coutFormation):'—'],
-    ["Frais d'inscription", e.fraisInscription?fmtCFA(e.fraisInscription):'—'],
-    ["Frais d'uniforme", e.fraisUniforme?fmtCFA(e.fraisUniforme):'—'],
-    [e.autresFraisLibelle||'Autres frais', e.autresFraisMontant?fmtCFA(e.autresFraisMontant):'—'],
-    ['Moyenne générale', moy+'/20'],
-  ], font) + 6;
-
-  y = pdfTextSection(doc, M, y, W, 'Modules suivis',
-    modsEt.length ? modsEt.map(m=>`${m.nom}${m.formateurId?' — '+nomComplet(getFormateur(m.formateurId)):''}`).join('   •   ') : 'Aucun module sélectionné pour le moment.',
-    font) + 6;
+  ];
+  if(showFinance){
+    formationRows.push(
+      ['Coût de la formation', e.coutFormation?fmtCFA(e.coutFormation):'—'],
+      ["Frais d'inscription", e.fraisInscription?fmtCFA(e.fraisInscription):'—'],
+      ["Frais d'uniforme", e.fraisUniforme?fmtCFA(e.fraisUniforme):'—'],
+      [e.autresFraisLibelle||'Autres frais', e.autresFraisMontant?fmtCFA(e.autresFraisMontant):'—'],
+    );
+  }
+  formationRows.push(['Moyenne générale', moy+'/20']);
+  formationRows.push(['Modules suivis', modsEt.length ? modsEt.map(m=>m.nom).join(', ') : 'Aucun module sélectionné pour le moment.']);
+  y = pdfSection(doc, M, y, W, 'Formation', formationRows, font) + 6;
 
   // ----- Rubrique conditionnelle selon le statut -----
   if(e.statut==='abandon'){
@@ -4105,7 +4151,7 @@ async function exportFicheFormateurPdf(id){
   const M = 14, W = 182; // marge gauche & largeur utile de la page A4
   pdfHeader(doc, 'Fiche formateur', nomComplet(f), font);
 
-  let y = 48;
+  let y = 50;
   y = pdfSection(doc, M, y, W, 'Informations personnelles', [
     ['Spécialité', f.specialite||'—'],
     ['Téléphone', f.telephone||'—'],
@@ -4221,6 +4267,9 @@ document.getElementById('btnSaveEcheancier').addEventListener('click', async ()=
 function renderPaiements(){
   renderEcheancierCard();
   const editable = canEdit('paiements');
+  // La carte "État des paiements par étudiant" (vue globale multi-étudiants) n'a pas
+  // lieu d'être dans le profil étudiant : on ne l'affiche que pour direction/comptabilité.
+  document.getElementById('cardEtatPaiementsParEtudiant').style.display = state.role==='etudiant' ? 'none' : '';
   document.getElementById('btnNewPaiement').style.display = editable?'inline-block':'none';
   document.getElementById('btnExportFinancierPdf').style.display = state.role==='etudiant' ? 'none' : 'inline-block';
   const filterStatut = document.getElementById('filterStatutPaiement').value;
@@ -4378,7 +4427,7 @@ async function exportHistoriqueEtudiantPdf(etId){
   const list = DB.paiements.filter(p=>p.etudiantId===etId).sort((a,b)=>new Date(a.date)-new Date(b.date));
   const M = 14, W = 182;
   pdfHeader(doc, 'État de paiement', `${e?nomComplet(e):''} — ${e?.matricule||''}${fil?' — '+fil.nom:''}`, font);
-  let y = pdfStatsSection(doc, M, 48, W, 'État financier', [
+  let y = pdfStatsSection(doc, M, 50, W, 'État financier', [
     {label:'Montant dû', value:fmtCFA(fin.total), color:[22,35,63]},
     {label:'Payé', value:fmtCFA(fin.paye), color:[28,122,70]},
     {label:'Reste à payer', value:fmtCFA(fin.reste), color:[176,51,39]},
@@ -4403,6 +4452,10 @@ async function exportHistoriqueEtudiantPdf(etId){
 function renderEvaluations(){
   const editable = canEdit('evaluations');
   document.getElementById('btnNewEvaluation').style.display = editable?'inline-block':'none';
+  // Côté étudiant : la colonne "Étudiant" (c'est toujours lui) et "Actions" (non éditable) sont inutiles.
+  const isEtudiantView = state.role==='etudiant';
+  document.getElementById('thEvalEtudiant').style.display = isEtudiantView ? 'none' : '';
+  document.getElementById('thEvalActions').style.display = isEtudiantView ? 'none' : '';
   const filFilter = document.getElementById('filterFiliereEval').value;
   let base = DB.evaluations;
   if(state.role==='etudiant'){
@@ -4425,17 +4478,17 @@ function renderEvaluations(){
     const et = getEtudiant(ev.etudiantId);
     const noteCls = ev.note>=14 ? 'note-good' : ev.note>=10 ? 'note-avg' : 'note-bad';
     return `<tr>
-      <td>${nomComplet(et)}</td>
+      ${isEtudiantView ? '' : `<td>${nomComplet(et)}</td>`}
       <td class="d-none d-md-table-cell">${getFiliere(ev.filiereId)?.nom||'—'}</td>
       <td>${ev.module}</td>
       <td class="d-none d-md-table-cell">${ev.formateurId ? nomComplet(getFormateur(ev.formateurId)) : (ev.formateurNom || '—')}</td>
       <td><span class="note-pill ${noteCls}">${ev.note}/20</span></td>
       <td class="d-none d-lg-table-cell">${ev.appreciation||'—'}</td>
       <td class="d-none d-lg-table-cell">${fmtDate(ev.date)}</td>
-      <td class="text-end">${editable ? `<button class="btn btn-sm btn-icon" onclick="editEvaluation('${ev.id}')" title="Modifier la note"><i class="bi bi-pencil"></i></button>
-      <button class="btn btn-sm btn-icon text-danger" onclick="askDelete('evaluations','${ev.id}')" title="Supprimer la note"><i class="bi bi-trash"></i></button>` : ''}</td>
+      ${isEtudiantView ? '' : `<td class="text-end">${editable ? `<button class="btn btn-sm btn-icon" onclick="editEvaluation('${ev.id}')" title="Modifier la note"><i class="bi bi-pencil"></i></button>
+      <button class="btn btn-sm btn-icon text-danger" onclick="askDelete('evaluations','${ev.id}')" title="Supprimer la note"><i class="bi bi-trash"></i></button>` : ''}</td>`}
     </tr>`;
-  }).join('') : `<tr><td colspan="8"><div class="empty-state"><i class="bi bi-clipboard-x"></i><p>Aucune évaluation</p></div></td></tr>`;
+  }).join('') : `<tr><td colspan="${isEtudiantView?6:8}"><div class="empty-state"><i class="bi bi-clipboard-x"></i><p>Aucune évaluation</p></div></td></tr>`;
 }
 /* Modification ou suppression d'une note déjà enregistrée (accès direction) */
 function editEvaluation(id){
@@ -5127,15 +5180,13 @@ function renderPresences(){
   renderPresenceHistory();
 }
 document.getElementById('presenceDate').value = new Date().toISOString().slice(0,10);
-document.getElementById('histDateDebut').value = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0,10);
-document.getElementById('histDateFin').value = new Date().toISOString().slice(0,10);
 const MOTIFS_ABSENCE = ['Avec permission','Sans permission','Malade','Deuil','Autre'];
 function populatePresenceList(){
-  const fid = document.getElementById('presenceFiliere').value;
+  const mid = document.getElementById('presenceModule').value;
   const date = document.getElementById('presenceDate').value;
-  const students = DB.etudiants.filter(e=>e.filiereId===fid && e.statut==='actif').sort((a,b)=>nomComplet(a).localeCompare(nomComplet(b),'fr',{sensitivity:'base'}));
+  const students = DB.etudiants.filter(e=>(e.moduleIds||[]).includes(mid) && e.statut==='actif').sort((a,b)=>nomComplet(a).localeCompare(nomComplet(b),'fr',{sensitivity:'base'}));
   document.getElementById('presenceListBody').innerHTML = students.length ? students.map(e=>{
-    const existing = DB.presences.find(p=>p.etudiantId===e.id && p.filiereId===fid && p.date===date);
+    const existing = DB.presences.find(p=>p.etudiantId===e.id && p.moduleId===mid && p.date===date);
     const statut = existing ? existing.statut : 'present';
     const motif = existing ? (existing.motif||'') : '';
     return `<tr data-student="${e.id}">
@@ -5154,7 +5205,7 @@ function populatePresenceList(){
         </select>
       </td>
     </tr>`;
-  }).join('') : `<tr><td colspan="3"><div class="empty-state"><i class="bi bi-people"></i><p>Aucun étudiant actif dans cette filière</p></div></td></tr>`;
+  }).join('') : `<tr><td colspan="3"><div class="empty-state"><i class="bi bi-people"></i><p>Aucun étudiant actif inscrit à ce module</p></div></td></tr>`;
   document.querySelectorAll('.presence-toggle').forEach(grp=>{
     grp.querySelectorAll('button').forEach(btn=>{
       btn.addEventListener('click', ()=>{
@@ -5169,19 +5220,19 @@ function populatePresenceList(){
     });
   });
 }
-document.getElementById('presenceFiliere').addEventListener('change', populatePresenceList);
+document.getElementById('presenceModule').addEventListener('change', populatePresenceList);
 document.getElementById('presenceDate').addEventListener('change', populatePresenceList);
 document.getElementById('btnSavePresence').addEventListener('click', async ()=>{
-  const fid = document.getElementById('presenceFiliere').value;
+  const mid = document.getElementById('presenceModule').value;
   const date = document.getElementById('presenceDate').value;
-  if(!fid || !date){ toast('Sélectionnez une filière et une date'); return; }
+  if(!mid || !date){ toast('Sélectionnez un module et une date'); return; }
   document.querySelectorAll('#presenceListBody tr[data-student]').forEach(row=>{
     const etudiantId = row.dataset.student;
     const activeBtn = row.querySelector('.presence-toggle .btn-success, .presence-toggle .btn-warning, .presence-toggle .btn-danger');
     const statut = activeBtn ? activeBtn.dataset.val : 'present';
     const motif = statut!=='present' ? (row.querySelector('.presence-motif').value || '') : '';
-    const idx = DB.presences.findIndex(p=>p.etudiantId===etudiantId && p.filiereId===fid && p.date===date);
-    const record = {id: idx>=0?DB.presences[idx].id:uid(), etudiantId, filiereId:fid, date, statut, motif, formateurId: state.role==='formateur'?state.userId:null};
+    const idx = DB.presences.findIndex(p=>p.etudiantId===etudiantId && p.moduleId===mid && p.date===date);
+    const record = {id: idx>=0?DB.presences[idx].id:uid(), etudiantId, moduleId:mid, date, statut, motif, formateurId: state.role==='formateur'?state.userId:null};
     if(idx>=0) DB.presences[idx] = record; else DB.presences.push(record);
   });
   await saveDB();
@@ -5190,17 +5241,17 @@ document.getElementById('btnSavePresence').addEventListener('click', async ()=>{
 });
 document.getElementById('presenceHistFrom').addEventListener('change', renderPresenceHistory);
 document.getElementById('presenceHistTo').addEventListener('change', renderPresenceHistory);
-document.getElementById('presenceHistFiliere').addEventListener('change', renderPresenceHistory);
+document.getElementById('presenceHistModule').addEventListener('change', renderPresenceHistory);
 function filteredPresenceHistory(){
   const from = document.getElementById('presenceHistFrom').value;
   const to = document.getElementById('presenceHistTo').value;
-  const filFilter = document.getElementById('presenceHistFiliere').value;
-  let list = scopeByFiliereId([...DB.presences]);
+  const modFilter = document.getElementById('presenceHistModule').value;
+  let list = scopeByModuleId([...DB.presences]);
   if(state.role==='etudiant'){
     const u = currentUser();
     list = list.filter(p=>u && p.etudiantId===u.etudiantId);
   }
-  if(filFilter) list = list.filter(p=>p.filiereId===filFilter);
+  if(modFilter) list = list.filter(p=>p.moduleId===modFilter);
   if(from) list = list.filter(p=>p.date>=from);
   if(to) list = list.filter(p=>p.date<=to);
   list.sort((a,b)=> b.date.localeCompare(a.date));
@@ -5209,6 +5260,9 @@ function filteredPresenceHistory(){
 function renderPresenceHistory(){
   const list = filteredPresenceHistory();
   const manage = canEdit('presences');
+  const isEtudiantView = state.role==='etudiant';
+  document.getElementById('thPresEtudiant').style.display = isEtudiantView ? 'none' : '';
+  document.getElementById('thPresActions').style.display = isEtudiantView ? 'none' : '';
 
   // résumé de la période
   const total = list.length;
@@ -5227,26 +5281,26 @@ function renderPresenceHistory(){
     const cls = {present:'badge-statut-actif',retard:'badge-statut-partiel',absent:'badge-statut-abandon'}[p.statut];
     return `<tr>
       <td>${fmtDate(p.date)}</td>
-      <td class="d-none d-md-table-cell">${getFiliere(p.filiereId)?.nom||'—'}</td>
-      <td>${nomComplet(getEtudiant(p.etudiantId))}</td>
+      <td class="d-none d-md-table-cell">${getModule(p.moduleId)?.nom||'—'}</td>
+      ${isEtudiantView ? '' : `<td>${nomComplet(getEtudiant(p.etudiantId))}</td>`}
       <td><span class="badge ${cls}">${p.statut}</span></td>
       <td class="d-none d-lg-table-cell text-muted small">${p.motif||'—'}</td>
-      <td class="text-end">${manage ? `<button class="btn btn-sm btn-icon" onclick="editerAppelSession('${p.filiereId}','${p.date}')" title="Modifier l'appel de ce jour"><i class="bi bi-pencil"></i></button>
-      <button class="btn btn-sm btn-icon text-danger" onclick="askDelete('presences','${p.id}')" title="Supprimer cette présence"><i class="bi bi-trash"></i></button>` : ''}</td>
+      ${isEtudiantView ? '' : `<td class="text-end">${manage ? `<button class="btn btn-sm btn-icon" onclick="editerAppelSession('${p.moduleId}','${p.date}')" title="Modifier l'appel de ce jour"><i class="bi bi-pencil"></i></button>
+      <button class="btn btn-sm btn-icon text-danger" onclick="askDelete('presences','${p.id}')" title="Supprimer cette présence"><i class="bi bi-trash"></i></button>` : ''}</td>`}
     </tr>`;
-  }).join('') : `<tr><td colspan="6"><div class="empty-state"><i class="bi bi-calendar-x"></i><p>Aucun appel enregistré pour cette période</p></div></td></tr>`;
+  }).join('') : `<tr><td colspan="${isEtudiantView?4:6}"><div class="empty-state"><i class="bi bi-calendar-x"></i><p>Aucun appel enregistré pour cette période</p></div></td></tr>`;
 
   renderAppelsSessions(list, manage);
 }
-/* Vue groupée par séance d'appel (filière + date), pour modifier ou supprimer un appel entier en un clic */
+/* Vue groupée par séance d'appel (module + date), pour modifier ou supprimer un appel entier en un clic */
 function renderAppelsSessions(list, manage){
   const card = document.getElementById('appelsSessionsCard');
   card.style.display = manage ? '' : 'none';
   if(!manage) return;
   const groups = {};
   list.forEach(p=>{
-    const key = p.filiereId+'|'+p.date;
-    if(!groups[key]) groups[key] = {filiereId:p.filiereId, date:p.date, total:0, present:0};
+    const key = p.moduleId+'|'+p.date;
+    if(!groups[key]) groups[key] = {moduleId:p.moduleId, date:p.date, total:0, present:0};
     groups[key].total++;
     if(p.statut==='present') groups[key].present++;
   });
@@ -5255,26 +5309,26 @@ function renderAppelsSessions(list, manage){
     const tauxSession = s.total>0 ? Math.round((s.present/s.total)*100) : 0;
     return `<tr>
       <td>${fmtDate(s.date)}</td>
-      <td>${getFiliere(s.filiereId)?.nom||'—'}</td>
+      <td>${getModule(s.moduleId)?.nom||'—'}</td>
       <td>${s.total}</td>
       <td class="d-none d-md-table-cell">${tauxSession}%</td>
       <td class="text-end">
-        <button class="btn btn-sm btn-icon" onclick="editerAppelSession('${s.filiereId}','${s.date}')" title="Modifier cet appel"><i class="bi bi-pencil"></i></button>
-        <button class="btn btn-sm btn-icon text-danger" onclick="askDeletePresenceSession('${s.filiereId}','${s.date}')" title="Supprimer cet appel"><i class="bi bi-trash"></i></button>
+        <button class="btn btn-sm btn-icon" onclick="editerAppelSession('${s.moduleId}','${s.date}')" title="Modifier cet appel"><i class="bi bi-pencil"></i></button>
+        <button class="btn btn-sm btn-icon text-danger" onclick="askDeletePresenceSession('${s.moduleId}','${s.date}')" title="Supprimer cet appel"><i class="bi bi-trash"></i></button>
       </td>
     </tr>`;
   }).join('') : `<tr><td colspan="5"><div class="empty-state"><i class="bi bi-calendar-x"></i><p>Aucun appel enregistré pour cette période</p></div></td></tr>`;
 }
-/* Charge un appel existant (filière + date) dans le formulaire d'appel pour le modifier */
-function editerAppelSession(filiereId, date){
-  document.getElementById('presenceFiliere').value = filiereId;
+/* Charge un appel existant (module + date) dans le formulaire d'appel pour le modifier */
+function editerAppelSession(moduleId, date){
+  document.getElementById('presenceModule').value = moduleId;
   document.getElementById('presenceDate').value = date;
   populatePresenceList();
   document.getElementById('presenceAppelCard').scrollIntoView({behavior:'smooth', block:'start'});
 }
-/* Supprime tous les enregistrements de présence d'un appel (une filière, une date) */
-function askDeletePresenceSession(filiereId, date){
-  pendingDelete = {collection:'presences-session', filiereId, date};
+/* Supprime tous les enregistrements de présence d'un appel (un module, une date) */
+function askDeletePresenceSession(moduleId, date){
+  pendingDelete = {collection:'presences-session', moduleId, date};
   new bootstrap.Modal(document.getElementById('modalConfirm')).show();
 }
 /* Supprime tous les appels correspondant à la période/filière actuellement filtrée */
@@ -5292,7 +5346,7 @@ async function exportPresenceRapportPdf(){
   const M = 14, W = 182;
   const from = document.getElementById('presenceHistFrom').value;
   const to = document.getElementById('presenceHistTo').value;
-  const filFilter = document.getElementById('presenceHistFiliere').value;
+  const modFilter = document.getElementById('presenceHistModule').value;
   const list = filteredPresenceHistory();
 
   const total = list.length;
@@ -5302,10 +5356,10 @@ async function exportPresenceRapportPdf(){
   const taux = total>0 ? Math.round((present/total)*100) : 0;
 
   const periodeLabel = (from||to) ? `Période du ${from?fmtDate(from):'—'} au ${to?fmtDate(to):'—'}` : 'Toutes périodes';
-  const filiereLabel = filFilter ? getFiliere(filFilter)?.nom||'' : 'Toutes les filières';
-  pdfHeader(doc, 'Rapport de présence', `${periodeLabel} — ${filiereLabel} — ${total} appel(s)`, font);
+  const moduleLabel = modFilter ? getModule(modFilter)?.nom||'' : 'Tous les modules';
+  pdfHeader(doc, 'Rapport de présence', `${periodeLabel} — ${moduleLabel} — ${total} appel(s)`, font);
 
-  let y = pdfStatsSection(doc, M, 48, W, 'Récapitulatif', [
+  let y = pdfStatsSection(doc, M, 50, W, 'Récapitulatif', [
     {label:'Présences', value:present, color:[28,122,70]},
     {label:'Retards', value:retard, color:[180,112,11]},
     {label:'Absences', value:absent, color:[176,51,39]},
@@ -5315,10 +5369,10 @@ async function exportPresenceRapportPdf(){
   if(y > 265){ doc.addPage(); y = 20; }
   doc.autoTable({
     startY: y,
-    head: [['Date','Filière','Étudiant','Statut','Motif']],
+    head: [['Date','Module','Étudiant','Statut','Motif']],
     body: list.map(p=>[
       fmtDate(p.date),
-      getFiliere(p.filiereId)?.nom||'—',
+      getModule(p.moduleId)?.nom||'—',
       nomComplet(getEtudiant(p.etudiantId)),
       {present:'Présent',retard:'Retard',absent:'Absent'}[p.statut]||p.statut,
       p.motif||'—',
@@ -5403,6 +5457,11 @@ function renderAnnonces(){
       <p class="small mb-1">${a.contenu}</p>
       <div class="text-muted" style="font-size:.76rem;">Publié par ${a.auteur||'—'}</div>
     </div>`).join('') : `<div class="empty-state"><i class="bi bi-megaphone"></i><p>Aucune annonce publiée</p></div>`;
+  // L'étudiant ou le formateur qui consulte les annonces n'a plus de notification à leur sujet sur son tableau de bord.
+  if(state.role==='etudiant' || state.role==='formateur'){
+    const u = currentUser();
+    if(u){ u.lastSeenAnnonces = new Date().toISOString(); saveDB(); }
+  }
 }
 document.getElementById('btnNewAnnonce').addEventListener('click', ()=>{
   document.getElementById('formAnnonce').reset();
@@ -5436,6 +5495,9 @@ function renderMessagerie(){
       <div class="small">${m.contenu}</div>
     </div>`;
   }).join('') : `<div class="empty-state"><i class="bi bi-chat"></i><p>Aucun message</p></div>`;
+  // Les messages reçus consultés disparaissent des notifications du tableau de bord.
+  const nonLus = DB.messages.filter(m=>m.destinataireId===state.userId && !m.lu);
+  if(nonLus.length){ nonLus.forEach(m=>m.lu=true); saveDB(); }
 }
 document.getElementById('formMessage').addEventListener('submit', async e=>{
   e.preventDefault();
@@ -5443,6 +5505,7 @@ document.getElementById('formMessage').addEventListener('submit', async e=>{
   data.id = uid();
   data.expediteurId = state.userId;
   data.date = new Date().toISOString();
+  data.lu = false;
   DB.messages.push(data);
   await saveDB();
   e.target.reset();
@@ -5972,8 +6035,8 @@ function askDelete(collection, id){
 document.getElementById('btnConfirmDelete').addEventListener('click', async ()=>{
   if(pendingDelete){
     if(pendingDelete.collection==='presences-session'){
-      // Supprime l'appel complet (toutes les présences) d'une filière à une date donnée
-      DB.presences = DB.presences.filter(p=>!(p.filiereId===pendingDelete.filiereId && p.date===pendingDelete.date));
+      // Supprime l'appel complet (toutes les présences) d'un module à une date donnée
+      DB.presences = DB.presences.filter(p=>!(p.moduleId===pendingDelete.moduleId && p.date===pendingDelete.date));
       await saveDB();
       toast('Appel supprimé');
       renderSection(state.section);
@@ -6003,18 +6066,20 @@ document.getElementById('btnConfirmDelete').addEventListener('click', async ()=>
       return;
     }
     if(pendingDelete.collection==='modules'){
-      // Retire le module des inscriptions des étudiants
+      // Retire le module des inscriptions des étudiants et supprime les présences liées
       DB.etudiants.forEach(e=>{ if(e.moduleIds) e.moduleIds = e.moduleIds.filter(id=>id!==pendingDelete.id); });
+      DB.presences = DB.presences.filter(p=>p.moduleId!==pendingDelete.id);
     }
     if(pendingDelete.collection==='formateurs'){
       // Détache le formateur des modules qui lui étaient confiés
       DB.modules.forEach(m=>{ if(m.formateurId===pendingDelete.id) m.formateurId=''; });
     }
     if(pendingDelete.collection==='filieres'){
-      // Supprime aussi les modules de cette filière et les inscriptions correspondantes
+      // Supprime aussi les modules de cette filière, les inscriptions et les présences correspondantes
       const modIds = modulesOfFiliere(pendingDelete.id).map(m=>m.id);
       DB.modules = DB.modules.filter(m=>m.filiereId!==pendingDelete.id);
       DB.etudiants.forEach(e=>{ if(e.moduleIds) e.moduleIds = e.moduleIds.filter(id=>!modIds.includes(id)); });
+      DB.presences = DB.presences.filter(p=>!modIds.includes(p.moduleId));
     }
     DB[pendingDelete.collection] = DB[pendingDelete.collection].filter(x=>x.id!==pendingDelete.id);
     await saveDB();
