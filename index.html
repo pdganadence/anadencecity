@@ -30,7 +30,13 @@ h1,h2,h3,h4,h5,.brand,.nav-section-title{font-family:'Poppins',sans-serif;}
 .logo-mark{
   width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,var(--amber),var(--amber-dark));
   display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--navy);font-family:'Poppins';font-size:20px;
-  box-shadow:0 6px 16px rgba(232,163,61,0.4);flex-shrink:0;
+  box-shadow:0 6px 16px rgba(232,163,61,0.4);flex-shrink:0;overflow:hidden;
+}
+.logo-mark.has-logo{background:#fff;padding:5px;box-shadow:0 6px 16px rgba(0,0,0,0.18);}
+.logo-mark.has-logo img{width:100%;height:100%;object-fit:contain;display:block;}
+/* Sur mobile, on n'affiche que le logo (sans le texte "ANADENCE CITY") dans les navbars */
+@media (max-width:767.98px){
+  .brand-hide-mobile{display:none!important;}
 }
 .btn-amber{background:var(--amber);border-color:var(--amber);color:var(--navy);font-weight:600;}
 .btn-amber:hover{background:var(--amber-dark);border-color:var(--amber-dark);color:#fff;}
@@ -162,6 +168,7 @@ h1,h2,h3,h4,h5,.brand,.nav-section-title{font-family:'Poppins',sans-serif;}
 .photo-upload-box img{width:100%;height:100%;object-fit:cover;}
 .photo-upload-box i{font-size:1.4rem;color:#B7BEC9;}
 .avatar-img{border-radius:50%;object-fit:cover;flex-shrink:0;}
+.avatar-img-square{border-radius:10px;object-fit:cover;flex-shrink:0;}
 /* Icône "voir en grand" affichée sur les cadres photo contenant déjà une image */
 .photo-view-hint{
   position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
@@ -312,6 +319,10 @@ table.table td{vertical-align:middle;font-size:.87rem;}
 }
 .fiche-banner .fiche-name{font-family:'Poppins';font-weight:700;font-size:1.25rem;}
 .fiche-banner .fiche-sub{color:#B9C2DC;font-size:.85rem;}
+.fiche-logo-badge{
+  position:absolute;top:14px;right:14px;width:42px;height:42px;border-radius:10px;
+  background:#fff;padding:4px;object-fit:contain;z-index:1;box-shadow:0 4px 10px rgba(0,0,0,.25);
+}
 .fiche-actions{position:relative;z-index:1;}
 .fiche-actions .btn{white-space:nowrap;}
 .fiche-section{
@@ -394,8 +405,8 @@ table.table td{vertical-align:middle;font-size:.87rem;}
   <nav class="public-navbar">
     <div class="container d-flex align-items-center justify-content-between">
       <div class="d-flex align-items-center gap-2">
-        <div class="logo-mark">NF</div>
-        <span class="brand text-white fw-bold">ANADENCE CITY</span>
+        <div class="logo-mark" id="logoMarkPublicNav">NF</div>
+        <span class="brand text-white fw-bold brand-hide-mobile">ANADENCE CITY</span>
       </div>
       <div class="d-none d-md-flex align-items-center gap-4">
         <a href="#public-accueil" class="nav-link-custom">Accueil</a>
@@ -418,8 +429,8 @@ table.table td{vertical-align:middle;font-size:.87rem;}
   <div class="offcanvas offcanvas-end" tabindex="-1" id="publicOffcanvasMenu">
     <div class="offcanvas-header">
       <div class="d-flex align-items-center gap-2">
-        <div class="logo-mark">NF</div>
-        <span class="brand fw-bold">ANADENCE CITY</span>
+        <div class="logo-mark" id="logoMarkPublicOffcanvas">NF</div>
+        <span class="brand fw-bold brand-hide-mobile">ANADENCE CITY</span>
       </div>
       <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
     </div>
@@ -620,7 +631,7 @@ table.table td{vertical-align:middle;font-size:.87rem;}
         <div class="col-md-5 login-side d-none d-md-flex flex-column justify-content-between">
           <div>
             <div class="d-flex align-items-center gap-2 mb-4">
-              <div class="logo-mark">NF</div>
+              <div class="logo-mark" id="logoMarkLogin">NF</div>
               <div class="brand">ANADENCE CITY</div>
             </div>
             <h5 class="fw-bold mb-2">Espace réservé</h5>
@@ -665,7 +676,7 @@ table.table td{vertical-align:middle;font-size:.87rem;}
   <!-- Sidebar desktop -->
   <div id="sidebar">
     <div class="p-3 d-flex align-items-center gap-2" style="border-bottom:1px solid rgba(255,255,255,.08);">
-      <div class="logo-mark">NF</div>
+      <div class="logo-mark" id="logoMarkSidebar">NF</div>
       <div class="brand">ANADENCE CITY</div>
     </div>
     <div id="navContainer" class="flex-grow-1 py-2" style="overflow-y:auto;"></div>
@@ -685,8 +696,8 @@ table.table td{vertical-align:middle;font-size:.87rem;}
   <div class="offcanvas offcanvas-start text-bg-dark" tabindex="-1" id="offcanvasSidebar" style="background:var(--navy);width:250px;">
     <div class="offcanvas-header">
       <div class="d-flex align-items-center gap-2">
-        <div class="logo-mark">NF</div>
-        <div class="brand">ANADENCE CITY</div>
+        <div class="logo-mark" id="logoMarkOffcanvas">NF</div>
+        <div class="brand brand-hide-mobile">ANADENCE CITY</div>
       </div>
       <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
     </div>
@@ -873,8 +884,29 @@ table.table td{vertical-align:middle;font-size:.87rem;}
         <div class="card-clean">
           <div class="card-header d-flex flex-wrap gap-2 align-items-center justify-content-between">
             <span><i class="bi bi-clock-history me-1"></i> <span id="historiquePeriodeTitle">Historique des paiements</span></span>
-            <div class="d-flex gap-2 flex-wrap align-items-center">
+            <div class="d-flex gap-2 flex-wrap">
               <button class="btn btn-outline-secondary btn-sm" id="btnExportHistoriquePeriodePdf"><i class="bi bi-file-earmark-pdf"></i> Exporter PDF</button>
+            </div>
+          </div>
+          <div class="px-3 pt-3 pb-2 border-bottom d-flex flex-wrap gap-2 align-items-end" id="historiquePeriodeFilters">
+            <div style="min-width:180px;flex:1 1 180px;">
+              <label class="form-label small mb-0 text-muted">Étudiant</label>
+              <input type="text" class="form-control form-control-sm" id="searchHistoriquePeriode" placeholder="Rechercher par nom...">
+            </div>
+            <div style="min-width:160px;">
+              <label class="form-label small mb-0 text-muted">Filière</label>
+              <select class="form-select form-select-sm" id="filterFiliereHistoriquePeriode" style="width:auto;"></select>
+            </div>
+            <div>
+              <label class="form-label small mb-0 text-muted">Du</label>
+              <input type="date" class="form-control form-control-sm" id="filterHistoriquePeriodeDateDebut">
+            </div>
+            <div>
+              <label class="form-label small mb-0 text-muted">Au</label>
+              <input type="date" class="form-control form-control-sm" id="filterHistoriquePeriodeDateFin">
+            </div>
+            <div>
+              <button class="btn btn-outline-secondary btn-sm" id="btnResetFilterHistoriquePeriode" title="Réinitialiser les filtres"><i class="bi bi-x-lg"></i></button>
             </div>
           </div>
           <div class="px-3 pt-2 text-muted small" id="historiquePeriodeSummary"></div>
@@ -888,6 +920,7 @@ table.table td{vertical-align:middle;font-size:.87rem;}
           </div>
         </div>
       </div>
+
 
       <!-- ===== EVALUATIONS ===== -->
       <div class="section-panel" id="panel-evaluations">
@@ -1113,9 +1146,26 @@ table.table td{vertical-align:middle;font-size:.87rem;}
         </div>
       </div>
 
-      <!-- ===== UTILISATEURS ===== -->
-      <div class="section-panel" id="panel-utilisateurs">
+      <!-- ===== PARAMÈTRES ===== -->
+      <div class="section-panel" id="panel-parametres">
         <div class="card-clean">
+          <div class="card-header"><i class="bi bi-image-fill me-1"></i> Logo du centre</div>
+          <div class="card-body">
+            <p class="text-muted small mb-3">Ce logo remplace les initiales « NF » dans le menu, la page de connexion, sur les fiches (étudiant, formateur, filière) ainsi que sur les documents PDF exportés (listes, fiches, rapports). Format recommandé : image carrée, fond transparent si possible.</p>
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+              <div class="photo-upload-box" id="centreLogoUploadBox" style="border-radius:12px;background:#fff;">
+                <img id="centreLogoPreview" style="display:none;object-fit:contain;">
+                <i class="bi bi-image" id="centreLogoPlaceholderIcon"></i>
+              </div>
+              <div>
+                <input type="file" accept="image/*" id="centreLogoInput" class="form-control form-control-sm mb-2" style="max-width:260px;">
+                <button class="btn btn-outline-danger btn-sm" id="btnRemoveCentreLogo"><i class="bi bi-trash"></i> Retirer le logo</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-clean mt-3">
           <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
             <span><i class="bi bi-shield-lock-fill me-1"></i> Comptes & rôles</span>
             <button class="btn btn-amber btn-sm" id="btnNewUser"><i class="bi bi-plus-lg"></i> Nouveau compte</button>
@@ -1491,7 +1541,8 @@ table.table td{vertical-align:middle;font-size:.87rem;}
               <select class="form-select" name="mode"><option>Espèces</option><option>Mobile Money</option><option>Virement bancaire</option></select>
             </div>
             <div class="col-md-6"><label class="form-label small">Type de versement</label>
-              <select class="form-select" name="type"><option>Frais d'inscription</option><option>Tranche 1</option><option>Tranche 2</option><option>Tranche 3</option><option>Solde</option></select>
+              <select class="form-select" name="type" id="selectTypePaiement"><option>Frais d'inscription</option><option>Tranche 1</option><option>Tranche 2</option><option>Tranche 3</option><option>Solde</option><option>Uniforme</option><option>Autre</option></select>
+              <input type="text" class="form-control mt-2" name="typeAutreLibelle" id="inputTypeAutreLibelle" placeholder="Précisez le type de versement" style="display:none;">
             </div>
           </div>
         </div>
@@ -1908,7 +1959,7 @@ const NAV = [
   {section:'annonces', label:'Annonces', icon:'bi-megaphone-fill', roles:['direction','secretariat','comptabilite','formateur','etudiant','partenaire']},
   {section:'messagerie', label:'Messagerie', icon:'bi-chat-dots-fill', roles:['direction','secretariat','comptabilite','formateur','etudiant','partenaire']},
   {section:'monprofil', label:'Mon profil', icon:'bi-person-badge-fill', roles:['formateur','etudiant']},
-  {section:'utilisateurs', label:'Utilisateurs', icon:'bi-shield-lock-fill', roles:['direction']},
+  {section:'parametres', label:'Paramètres', icon:'bi-gear-fill', roles:['direction']},
 ];
 
 /* ---------- Autorisations par menu (par défaut selon le rôle, ajustables par utilisateur) ---------- */
@@ -1927,7 +1978,7 @@ const DEFAULT_MANAGE = {
   annonces: ['direction','secretariat'],
 };
 // Liste des menus pouvant être cochés individuellement (hors tableau de bord, mon profil et utilisateurs, gérés à part)
-const PERMISSION_MODULES = NAV.filter(n=>!['dashboard','utilisateurs','monprofil'].includes(n.section));
+const PERMISSION_MODULES = NAV.filter(n=>!['dashboard','monprofil','parametres'].includes(n.section));
 
 function defaultPermsForRole(role){
   const perms = {};
@@ -1941,7 +1992,7 @@ function defaultPermsForRole(role){
 }
 function currentUser(){ return DB && DB.users ? DB.users.find(u=>u.id===state.userId) : null; }
 function hasPerm(section, type){
-  if(section==='utilisateurs') return state.role==='direction';
+  if(section==='parametres') return state.role==='direction';
   if(section==='monprofil') return state.role==='formateur' || state.role==='etudiant';
   if(section==='dashboard') return true;
   if(state.role==='direction') return true; // la direction a toujours accès complet
@@ -2023,10 +2074,15 @@ const uid = () => Math.random().toString(36).slice(2,9);
 const fmtCFA = n => new Intl.NumberFormat('fr-FR').format(Math.round(n||0)) + ' F';
 const fmtDate = d => d ? new Date(d).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}) : '—';
 const initials = (a,b='') => (((a||'?')[0]||'')+((b||'')[0]||'')).toUpperCase();
-function avatarHTML(o, size){
+function avatarHTML(o, size, shape){
   size = size||34;
-  if(o && o.photo){ return `<img src="${o.photo}" class="avatar-img" style="width:${size}px;height:${size}px;">`; }
+  const cls = shape==='square' ? 'avatar-img-square' : 'avatar-img';
+  if(o && o.photo){ return `<img src="${o.photo}" class="${cls}" style="width:${size}px;height:${size}px;">`; }
   return `<div class="avatar-circ" style="width:${size}px;height:${size}px;font-size:${size<40?'.7rem':'1rem'};">${initials(o?o.prenom:'',o?o.nom:'')}</div>`;
+}
+// Retourne le badge du logo du centre (affiché en haut à droite des fiches) si un logo a été configuré dans les Paramètres
+function ficheLogoBadgeHTML(){
+  return (DB && DB.parametres && DB.parametres.logo) ? `<img src="${DB.parametres.logo}" class="fiche-logo-badge">` : '';
 }
 // Numéro matricule au format: <n° d'ordre sur 3 chiffres>CF<mois d'inscription sur 2 chiffres><année d'inscription sur 2 chiffres>
 // Exemple : 001CF0622 => n° d'ordre 001, inscrit en 06 (juin) 2022
@@ -2077,13 +2133,34 @@ function waLink(phone){
   return `https://wa.me/${digits}`;
 }
 
+// Liste des types de versement rattachés au coût de la formation (tranches + solde) : ce sont les
+// seuls pris en compte pour le calcul de ce que l'étudiant doit encore et pour l'échéancier.
+// Frais d'inscription, Uniforme et Autre sont des frais annexes, suivis séparément mais jamais
+// additionnés au coût de la formation pour ces calculs.
+const TYPES_PAIEMENT_FORMATION = ['Tranche 1','Tranche 2','Tranche 3','Solde'];
+function paiementEstFormation(p){
+  if(typeof p.estFormation === 'boolean') return p.estFormation;
+  return TYPES_PAIEMENT_FORMATION.includes(p.type); // compat. anciens versements sans le champ
+}
 function etudiantFinance(etId){
   const et = getEtudiant(etId);
-  // Le montant dû est la somme des montants enregistrés lors de l'inscription de l'étudiant
-  // (coût de la formation + frais d'inscription + frais d'uniforme + autres frais), et non le
-  // prix générique de la filière : chaque étudiant peut avoir des montants négociés différents.
-  const total = et ? (Number(et.coutFormation)||0) + (Number(et.fraisInscription)||0) + (Number(et.fraisUniforme)||0) + (Number(et.autresFraisMontant)||0) : 0;
-  const paye = DB.paiements.filter(p=>p.etudiantId===etId).reduce((s,p)=>s+Number(p.montant),0);
+  // Ce que l'étudiant doit (et l'échéancier) ne portent que sur le coût de la formation : on ne
+  // fait pas la somme avec les frais d'inscription, d'uniforme ou autres frais, qui sont suivis
+  // à part. Seuls les versements de type Tranche/Solde sont comptés comme réglant ce montant.
+  const total = et ? (Number(et.coutFormation)||0) : 0;
+  const paye = DB.paiements.filter(p=>p.etudiantId===etId && paiementEstFormation(p)).reduce((s,p)=>s+Number(p.montant),0);
+  const reste = Math.max(total-paye,0);
+  let statut = 'Impayé';
+  if(reste<=0 && total>0) statut='Payé'; else if(paye>0) statut='Partiel';
+  return {total,paye,reste,statut};
+}
+// Suivi séparé des frais annexes (inscription + uniforme + autres frais) : même logique que
+// etudiantFinance mais sur le total de ces frais, réglés par les versements qui ne sont pas des
+// tranches/solde de formation (Frais d'inscription, Uniforme, Autre).
+function etudiantAutresFrais(etId){
+  const et = getEtudiant(etId);
+  const total = et ? (Number(et.fraisInscription)||0) + (Number(et.fraisUniforme)||0) + (Number(et.autresFraisMontant)||0) : 0;
+  const paye = DB.paiements.filter(p=>p.etudiantId===etId && !paiementEstFormation(p)).reduce((s,p)=>s+Number(p.montant),0);
   const reste = Math.max(total-paye,0);
   let statut = 'Impayé';
   if(reste<=0 && total>0) statut='Payé'; else if(paye>0) statut='Partiel';
@@ -2170,6 +2247,15 @@ function pdfHeader(doc, titre, sousTitre, font){
   doc.setFontSize(9);
   doc.setFont(font,'normal');
   doc.text('Centre de formation professionnelle — Cotonou, Bénin', 14, 18);
+  // Logo du centre configuré dans Paramètres (chargé et mis en cache en base64 par loadCentreLogoForPdf)
+  if(typeof centreLogoPdfDataUrl !== 'undefined' && centreLogoPdfDataUrl){
+    try{
+      const logoSize = 16;
+      doc.setFillColor(255,255,255);
+      doc.roundedRect(210-14-logoSize, 5, logoSize, logoSize, 2, 2, 'F');
+      doc.addImage(centreLogoPdfDataUrl, pdfImgFormat(centreLogoPdfDataUrl), 210-14-logoSize+1, 6, logoSize-2, logoSize-2);
+    }catch(err){ console.error('Logo PDF non affiché', err); }
+  }
   doc.setTextColor(30,30,30);
   doc.setFont(font,'bold');
   doc.setFontSize(15);
@@ -2223,17 +2309,25 @@ function pdfStatsRow(doc, x, y, w, stats, font){
   stats.forEach((s,i)=>pdfStatBox(doc,x+i*(bw+gap),y,bw,h,s.label,s.value,s.color,font));
   return y+h;
 }
+// Bandeau d'entête plein (trame navy) commun à toutes les rubriques de la fiche PDF,
+// dans le même style que les entêtes de tableau "ÉCHÉANCIER DE PAIEMENT" / "HISTORIQUE DES PAIEMENTS"
+function pdfSectionHeader(doc, x, y, w, title, font, h){
+  h = h || 10;
+  doc.setFillColor(22,35,63);
+  doc.roundedRect(x, y, w, h, 2.5, 2.5, 'F');
+  doc.rect(x, y+h-2.5, w, 2.5, 'F'); // carre les coins bas : bandeau arrondi en haut seulement
+  doc.setFont(font,'bold'); doc.setFontSize(9.5); doc.setTextColor(255,255,255);
+  doc.text(title.toUpperCase(), x+5, y+7);
+  return y+h;
+}
 // Carte bordée avec titre + une rangée de mini-statistiques (ex: "État financier", "Présence")
 function pdfStatsSection(doc, x, y, w, title, stats, font){
-  const pad = 5, titleH = 10, statsH = 17.5, boxH = titleH + statsH + pad;
+  const pad = 5, titleH = 10, gapAfterHeader = 4, statsH = 17.5, boxH = titleH + gapAfterHeader + statsH + pad - 1;
   if(y + boxH > 283){ doc.addPage(); y = 20; }
   doc.setDrawColor(228,231,236); doc.setLineWidth(0.2); doc.setFillColor(255,255,255);
-  doc.roundedRect(x, y, w, boxH, 2.5, 2.5, 'S');
-  doc.setFont(font,'bold'); doc.setFontSize(9.5); doc.setTextColor(22,35,63);
-  doc.text(title.toUpperCase(), x+pad, y+7);
-  doc.setDrawColor(228,231,236); doc.setLineWidth(0.2);
-  doc.line(x+pad, y+9.5, x+w-pad, y+9.5);
-  pdfStatsRow(doc, x+pad, y+titleH+1, w-pad*2, stats, font);
+  doc.roundedRect(x, y, w, boxH, 2.5, 2.5, 'FD');
+  pdfSectionHeader(doc, x, y, w, title, font, titleH);
+  pdfStatsRow(doc, x+pad, y+titleH+gapAfterHeader, w-pad*2, stats, font);
   return y+boxH;
 }
 // Carte bordée : titre + champs affichés en 2 colonnes, chaque libellé suivi directement de sa valeur sur la même ligne ("Sexe : Masculin")
@@ -2271,15 +2365,12 @@ function pdfSection(doc, x, y, w, title, fields, font){
     return maxLines*lineH + 2.6;
   });
   const contentH = rowHeights.reduce((a,b)=>a+b,0);
-  const boxH = titleH + contentH + pad - 1.5;
+  const boxH = titleH + contentH + pad - 0.5;
   if(y + boxH > 283){ doc.addPage(); y = 20; }
   doc.setDrawColor(228,231,236); doc.setLineWidth(0.2); doc.setFillColor(255,255,255);
-  doc.roundedRect(x, y, w, boxH, 2.5, 2.5, 'S');
-  doc.setFont(font,'bold'); doc.setFontSize(9.5); doc.setTextColor(22,35,63);
-  doc.text(title.toUpperCase(), x+pad, y+7);
-  doc.setDrawColor(228,231,236); doc.setLineWidth(0.2);
-  doc.line(x+pad, y+9.5, x+w-pad, y+9.5);
-  let cy = y + titleH + 3;
+  doc.roundedRect(x, y, w, boxH, 2.5, 2.5, 'FD');
+  pdfSectionHeader(doc, x, y, w, title, font, titleH);
+  let cy = y + titleH + 4;
   rows.forEach((pair,idx)=>{
     prepRows[idx].forEach((f,ci)=>{
       if(!f) return;
@@ -2299,16 +2390,13 @@ function pdfTextSection(doc,x,y,w,title,text,font){
   const pad = 5, titleH = 10;
   doc.setFont(font,'normal'); doc.setFontSize(8.8);
   const lines = doc.splitTextToSize(text||'—', w-pad*2);
-  const boxH = titleH + lines.length*4.0 + pad - 1;
+  const boxH = titleH + lines.length*4.0 + pad;
   if(y + boxH > 283){ doc.addPage(); y = 20; }
   doc.setDrawColor(228,231,236); doc.setLineWidth(0.2); doc.setFillColor(255,255,255);
-  doc.roundedRect(x, y, w, boxH, 2.5, 2.5, 'S');
-  doc.setFont(font,'bold'); doc.setFontSize(9.5); doc.setTextColor(22,35,63);
-  doc.text(title.toUpperCase(), x+pad, y+7);
-  doc.setDrawColor(228,231,236); doc.setLineWidth(0.2);
-  doc.line(x+pad, y+9.5, x+w-pad, y+9.5);
+  doc.roundedRect(x, y, w, boxH, 2.5, 2.5, 'FD');
+  pdfSectionHeader(doc, x, y, w, title, font, titleH);
   doc.setFont(font,'normal'); doc.setFontSize(8.8); doc.setTextColor(26,29,35);
-  doc.text(lines, x+pad, y+titleH+2.5);
+  doc.text(lines, x+pad, y+titleH+4);
   return y + boxH;
 }
 // Carte bordée : titre + champs (comme pdfSection) + vignettes d'images jointes (preuve, diplômes...)
@@ -2412,21 +2500,41 @@ async function exportFinancierPdf(){
   doc.save('etat-paiements-etudiants-anadence.pdf');
 }
 
-/* ---------- Historique des paiements (toutes transactions, filtrable par période) ---------- */
+/* ---------- Historique des paiements (toutes transactions, filtrable par nom, filière et période) ---------- */
 function scopedPaiements(){
   const scopedIds = scopeEtudiants(DB.etudiants).map(e=>e.id);
   return DB.paiements.filter(p=>scopedIds.includes(p.etudiantId));
 }
 function filteredHistoriquePeriode(){
-  return scopedPaiements();
+  let list = scopedPaiements();
+  // Les filtres (nom/filière/période) ne s'appliquent que pour direction/comptabilité :
+  // côté étudiant la carte n'affiche déjà que ses propres versements.
+  if(state.role!=='etudiant'){
+    const search = (document.getElementById('searchHistoriquePeriode').value||'').toLowerCase();
+    const filFilter = document.getElementById('filterFiliereHistoriquePeriode').value;
+    const from = document.getElementById('filterHistoriquePeriodeDateDebut').value;
+    const to = document.getElementById('filterHistoriquePeriodeDateFin').value;
+    if(search) list = list.filter(p=>{
+      const e = getEtudiant(p.etudiantId);
+      return e && nomComplet(e).toLowerCase().includes(search);
+    });
+    if(filFilter) list = list.filter(p=>{
+      const e = getEtudiant(p.etudiantId);
+      return e && e.filiereId===filFilter;
+    });
+    if(from) list = list.filter(p=>p.date>=from);
+    if(to) list = list.filter(p=>p.date<=to);
+  }
+  return list;
 }
 function renderHistoriquePeriode(){
   const editable = canEdit('paiements');
   // Pour un étudiant, cette section montre uniquement son propre historique
-  // (scopedPaiements() est déjà filtré via scopeEtudiants sur son id).
+  // (scopedPaiements() est déjà filtré via scopeEtudiants sur son id) : les filtres n'ont pas lieu d'être.
   document.getElementById('historiquePeriodeTitle').textContent = state.role==='etudiant'
     ? 'Mon historique des paiements'
     : 'Historique des paiements';
+  document.getElementById('historiquePeriodeFilters').style.display = state.role==='etudiant' ? 'none' : '';
   const list = filteredHistoriquePeriode().slice().sort((a,b)=> new Date(b.date)-new Date(a.date));
   const total = list.reduce((s,p)=>s+Number(p.montant),0);
   document.getElementById('historiquePeriodeSummary').textContent = `${list.length} versement(s) — Total collecté : ${fmtCFA(total)}`;
@@ -2444,13 +2552,24 @@ function renderHistoriquePeriode(){
     </tr>`;
   }).join('') : `<tr><td colspan="7"><div class="empty-state"><i class="bi bi-receipt"></i><p>Aucun versement</p></div></td></tr>`;
 }
+document.getElementById('searchHistoriquePeriode').addEventListener('input', renderHistoriquePeriode);
+document.getElementById('filterFiliereHistoriquePeriode').addEventListener('change', renderHistoriquePeriode);
+document.getElementById('filterHistoriquePeriodeDateDebut').addEventListener('change', renderHistoriquePeriode);
+document.getElementById('filterHistoriquePeriodeDateFin').addEventListener('change', renderHistoriquePeriode);
+document.getElementById('btnResetFilterHistoriquePeriode').addEventListener('click', ()=>{
+  document.getElementById('searchHistoriquePeriode').value = '';
+  document.getElementById('filterFiliereHistoriquePeriode').value = '';
+  document.getElementById('filterHistoriquePeriodeDateDebut').value = '';
+  document.getElementById('filterHistoriquePeriodeDateFin').value = '';
+  renderHistoriquePeriode();
+});
 async function exportHistoriquePeriodePdf(){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   const font = await ensurePdfFont(doc);
   const list = filteredHistoriquePeriode().slice().sort((a,b)=> new Date(a.date)-new Date(b.date));
   const total = list.reduce((s,p)=>s+Number(p.montant),0);
-  pdfHeader(doc, 'Historique des paiements', `Toutes périodes — ${list.length} versement(s)`, font);
+  pdfHeader(doc, 'Historique des paiements', `${list.length} versement(s)`, font);
   doc.autoTable({
     startY: 50,
     head: [['Date','Étudiant','Filière','Montant','Mode','Type']],
@@ -2564,6 +2683,7 @@ function migrateDB(){
   if(!DB.leads) DB.leads = [];
   if(!DB.modules) DB.modules = [];
   if(!DB.galerie) DB.galerie = [];
+  if(!DB.parametres) DB.parametres = { logo:'img/logo.png' };
   // Migration : les anciennes bases avaient un formateur unique par filière (filiere.formateurId).
   // On convertit ce lien en un module par défaut, pour ne pas perdre l'information existante.
   if(DB.modules.length===0){
@@ -2679,7 +2799,7 @@ function seedData(){
     {id:uid(), nom:'Adjovi HOUNSOU', role:'formateur', identifiant:'a.hounsou', motDePasse:'formateur123', formateurId:formateurIds.f1, perms:defaultPermsForRole('formateur')},
     {id:uid(), nom:'Chantal ALAPINI', role:'etudiant', identifiant:'c.alapini', motDePasse:'etudiant123', etudiantId:etudiants[0].id, perms:defaultPermsForRole('etudiant')},
   ];
-  return {filieres, modules, formateurs, etudiants, paiements, evaluations, rapports, users, leads:[], presences:[], documents:[], galerie:[], annonces:[
+  return {filieres, modules, formateurs, etudiants, paiements, evaluations, rapports, users, leads:[], presences:[], documents:[], galerie:[], parametres:{logo:'img/logo.png'}, annonces:[
     {id:uid(), titre:'Reprise des cours après les fêtes', contenu:"Les cours reprennent normalement le 5 janvier 2027 pour toutes les filières. Merci de vous présenter à l'heure.", auteur:'Direction Générale', date:'2026-12-20'}
   ], messages:[]};
 }
@@ -2925,7 +3045,7 @@ function countRapportsCorrectionEtudiant(){
   }, 0);
 }
 function renderNav(){
-  const items = NAV.filter(n=> n.section==='dashboard' ? true : n.section==='utilisateurs' ? state.role==='direction' : n.section==='monprofil' ? (state.role==='formateur'||state.role==='etudiant') : hasPerm(n.section,'view'));
+  const items = NAV.filter(n=> n.section==='dashboard' ? true : n.section==='parametres' ? state.role==='direction' : n.section==='monprofil' ? (state.role==='formateur'||state.role==='etudiant') : hasPerm(n.section,'view'));
   const html = `<div class="nav-section-title">Menu</div>` + items.map(n=>{
     const corrCount = n.section==='rapports' ? countRapportsCorrectionEtudiant() : 0;
     const badge = corrCount>0 ? `<span class="badge bg-danger rounded-pill ms-auto">${corrCount}</span>` : '';
@@ -2961,7 +3081,7 @@ function renderSection(section){
   if(section==='annonces') renderAnnonces();
   if(section==='messagerie') renderMessagerie();
   if(section==='monprofil') renderMonProfil();
-  if(section==='utilisateurs') renderUtilisateurs();
+  if(section==='parametres'){ renderUtilisateurs(); renderParametres(); }
 }
 
 function canEdit(module){
@@ -2994,6 +3114,8 @@ function populateAllSelects(){
   presenceHistMod.innerHTML = '<option value="">Tous les modules</option>'+modOpts;
   const filterFilPai = document.getElementById('filterFilierePaiement');
   filterFilPai.innerHTML = '<option value="">Toutes les filières</option>'+filOpts;
+  const filterFilHistPeriode = document.getElementById('filterFiliereHistoriquePeriode');
+  filterFilHistPeriode.innerHTML = '<option value="">Toutes les filières</option>'+filOpts;
 }
 
 /* ---------- DASHBOARD ---------- */
@@ -3240,7 +3362,7 @@ function renderEtudiants(){
     const statutCls = {actif:'badge-statut-actif',diplome:'badge-statut-diplome',abandon:'badge-statut-abandon'}[e.statut];
     const payCls = {'Payé':'badge-statut-paye','Partiel':'badge-statut-partiel','Impayé':'badge-statut-impaye'}[fin.statut];
     return `<tr>
-      <td><div class="d-flex align-items-center gap-2">${avatarHTML(e)}<div><div class="fw-semibold">${e.nom} ${e.prenom}</div><div class="text-muted d-md-none" style="font-size:.75rem;">${getFiliere(e.filiereId)?.nom||'—'}</div></div></div></td>
+      <td><div class="d-flex align-items-center gap-2">${avatarHTML(e,34,'square')}<div><div class="fw-semibold">${e.nom} ${e.prenom}</div><div class="text-muted d-md-none" style="font-size:.75rem;">${getFiliere(e.filiereId)?.nom||'—'}</div></div></div></td>
       <td class="text-mono d-none d-md-table-cell">${e.matricule}</td>
       <td class="d-none d-md-table-cell">${getFiliere(e.filiereId)?.nom||'—'}</td>
       <td class="d-none d-lg-table-cell">${e.telephone}</td>
@@ -3501,6 +3623,7 @@ function editEtudiant(id){
 function viewEtudiant(id){
   const e = getEtudiant(id);
   const fin = etudiantFinance(id);
+  const autresFin = etudiantAutresFrais(id);
   const notes = DB.evaluations.filter(ev=>ev.etudiantId===id);
   const moy = notes.length ? (notes.reduce((s,n)=>s+Number(n.note),0)/notes.length).toFixed(1) : '—';
   const editable = canEdit('etudiants');
@@ -3521,9 +3644,10 @@ function viewEtudiant(id){
 
   document.getElementById('ficheEtudiantBody').innerHTML = `
     <div class="fiche-banner mb-3">
+      ${ficheLogoBadgeHTML()}
       <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
         <div class="d-flex align-items-center gap-3">
-          <div style="border-radius:50%;padding:3px;background:rgba(255,255,255,.18);flex-shrink:0;">${avatarHTML(e, 60)}</div>
+          <div style="border-radius:14px;padding:3px;background:rgba(255,255,255,.18);flex-shrink:0;">${avatarHTML(e, 60, 'square')}</div>
           <div>
             <div class="fiche-name">${nomComplet(e)}</div>
             <div class="fiche-sub">${e.matricule} · ${fil?.nom||'—'}</div>
@@ -3540,30 +3664,6 @@ function viewEtudiant(id){
         </div>
       </div>
     </div>
-
-    ${showFinance ? `<div class="row g-3 mb-3">
-      <div class="col-4"><div class="fiche-mini-stat"><div class="stat-num">${fmtCFA(fin.total)}</div><div class="stat-label">Montant dû</div></div></div>
-      <div class="col-4"><div class="fiche-mini-stat"><div class="stat-num" style="color:#1C7A46;">${fmtCFA(fin.paye)}</div><div class="stat-label">Payé</div></div></div>
-      <div class="col-4"><div class="fiche-mini-stat"><div class="stat-num" style="color:#B03327;">${fmtCFA(fin.reste)}</div><div class="stat-label">Reste à payer</div></div></div>
-    </div>` : ''}
-
-    ${showFinance && e.echeancier && e.echeancier.length ? (()=>{
-      const statutCls = {'Payé':'badge-statut-paye','À échoir':'badge-statut-partiel','En retard':'badge-statut-impaye','À venir':'badge-statut-avenir'};
-      const rows = computeEcheancier(e.id);
-      return `<div class="fiche-section">
-        <h6><i class="bi bi-calendar2-week me-1"></i> Échéancier de paiement</h6>
-        <div class="table-responsive"><table class="table table-sm align-middle mb-0">
-          <thead><tr><th>Tranche</th><th>Montant</th><th>Payé</th><th>Reste</th><th>Date limite</th><th>Statut</th></tr></thead>
-          <tbody>${rows.map(r=>`<tr>
-            <td>${r.libelle}</td><td>${fmtCFA(r.montant)}</td>
-            <td class="text-success">${fmtCFA(r.paye)}</td>
-            <td class="${r.reste>0?'text-danger fw-semibold':''}">${r.reste>0?fmtCFA(r.reste):'—'}</td>
-            <td>${fmtDate(r.date)}</td>
-            <td><span class="badge ${statutCls[r.statut]}">${r.statut}</span></td>
-          </tr>`).join('')}</tbody>
-        </table></div>
-      </div>`;
-    })() : ''}
 
     <div class="row g-3 mb-1">
       <div class="${isFormateur ? 'col-12' : 'col-md-6'}">
@@ -3634,6 +3734,11 @@ function viewEtudiant(id){
     </div>` : ''}
 
     <div class="fiche-section">
+      <h6><i class="bi bi-clipboard-check-fill me-1"></i> Évaluations</h6>
+      ${notes.length? `<div class="d-flex flex-column gap-2">${notes.map(n=>`<div class="d-flex align-items-center justify-content-between"><span style="font-size:.87rem;">${n.module}</span><span class="note-pill ${noteCls(Number(n.note))}">${n.note}/20</span></div>`).join('')}</div>` : '<p class="text-muted small mb-0">Aucune évaluation enregistrée.</p>'}
+    </div>
+
+    <div class="fiche-section">
       <h6><i class="bi bi-calendar-check-fill me-1"></i> État de présence</h6>
       <div class="row g-2">
         <div class="col-6 col-md-3"><div class="fiche-mini-stat"><div class="stat-num" style="color:#1C7A46;">${nbPresent}</div><div class="stat-label">Présences</div></div></div>
@@ -3643,10 +3748,53 @@ function viewEtudiant(id){
       </div>
     </div>
 
-    <div class="fiche-section mb-0">
-      <h6><i class="bi bi-clipboard-check-fill me-1"></i> Évaluations</h6>
-      ${notes.length? `<div class="d-flex flex-column gap-2">${notes.map(n=>`<div class="d-flex align-items-center justify-content-between"><span style="font-size:.87rem;">${n.module}</span><span class="note-pill ${noteCls(Number(n.note))}">${n.note}/20</span></div>`).join('')}</div>` : '<p class="text-muted small mb-0">Aucune évaluation enregistrée.</p>'}
-    </div>
+    ${showFinance ? `<div class="fiche-section">
+      <h6><i class="bi bi-cash-stack me-1"></i> Frais de formation</h6>
+      <div class="row g-3">
+        <div class="col-4"><div class="fiche-mini-stat"><div class="stat-num">${fmtCFA(fin.total)}</div><div class="stat-label">Montant dû</div></div></div>
+        <div class="col-4"><div class="fiche-mini-stat"><div class="stat-num" style="color:#1C7A46;">${fmtCFA(fin.paye)}</div><div class="stat-label">Payé</div></div></div>
+        <div class="col-4"><div class="fiche-mini-stat"><div class="stat-num" style="color:#B03327;">${fmtCFA(fin.reste)}</div><div class="stat-label">Reste à payer</div></div></div>
+      </div>
+    </div>` : ''}
+
+    ${showFinance ? `<div class="fiche-section">
+      <h6><i class="bi bi-wallet2 me-1"></i> Autres frais</h6>
+      <div class="row g-3">
+        <div class="col-4"><div class="fiche-mini-stat"><div class="stat-num">${fmtCFA(autresFin.total)}</div><div class="stat-label">Montant dû</div></div></div>
+        <div class="col-4"><div class="fiche-mini-stat"><div class="stat-num" style="color:#1C7A46;">${fmtCFA(autresFin.paye)}</div><div class="stat-label">Payé</div></div></div>
+        <div class="col-4"><div class="fiche-mini-stat"><div class="stat-num" style="color:#B03327;">${fmtCFA(autresFin.reste)}</div><div class="stat-label">Reste à payer</div></div></div>
+      </div>
+    </div>` : ''}
+
+    ${showFinance && e.echeancier && e.echeancier.length ? (()=>{
+      const statutCls = {'Payé':'badge-statut-paye','À échoir':'badge-statut-partiel','En retard':'badge-statut-impaye','À venir':'badge-statut-avenir'};
+      const rows = computeEcheancier(e.id);
+      return `<div class="fiche-section">
+        <h6><i class="bi bi-calendar2-week me-1"></i> Échéancier de paiement</h6>
+        <div class="table-responsive"><table class="table table-sm align-middle mb-0">
+          <thead><tr><th>Tranche</th><th>Montant</th><th>Payé</th><th>Reste</th><th>Date limite</th><th>Statut</th></tr></thead>
+          <tbody>${rows.map(r=>`<tr>
+            <td>${r.libelle}</td><td>${fmtCFA(r.montant)}</td>
+            <td class="text-success">${fmtCFA(r.paye)}</td>
+            <td class="${r.reste>0?'text-danger fw-semibold':''}">${r.reste>0?fmtCFA(r.reste):'—'}</td>
+            <td>${fmtDate(r.date)}</td>
+            <td><span class="badge ${statutCls[r.statut]}">${r.statut}</span></td>
+          </tr>`).join('')}</tbody>
+        </table></div>
+      </div>`;
+    })() : ''}
+
+    ${showFinance ? (()=>{
+      const listPaiements = DB.paiements.filter(p=>p.etudiantId===e.id).sort((a,b)=>new Date(b.date)-new Date(a.date));
+      return `<div class="fiche-section mb-0">
+        <h6><i class="bi bi-cash-coin me-1"></i> Historique des paiements</h6>
+        ${listPaiements.length ? `<ul class="list-group list-group-flush">${listPaiements.map(p=>`
+          <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+            <div><div class="fw-semibold small">${p.type}</div><div class="text-muted" style="font-size:.75rem;">${fmtDate(p.date)} · ${p.mode}</div></div>
+            <span class="fw-bold">${fmtCFA(p.montant)}</span>
+          </li>`).join('')}</ul>` : `<p class="text-muted small mb-0">Aucun versement enregistré.</p>`}
+      </div>`;
+    })() : ''}
   `;
   new bootstrap.Modal(document.getElementById('modalFicheEtudiant')).show();
 }
@@ -3753,12 +3901,50 @@ async function exportFicheEtudiantPdf(id){
     ], pdfParseImages(e.diplomeFichiers), font) + 6;
   }
 
-  // ----- État financier (avant la présence) -----
+  // ----- Évaluations -----
+  if(notes.length){
+    if(y > 255){ doc.addPage(); y = 20; }
+    doc.autoTable({
+      startY: y,
+      margin:{left:M,right:210-M-W},
+      tableWidth:W,
+      theme:'grid',
+      head: [
+        [{content:'ÉVALUATIONS', colSpan:4, styles:{fillColor:[22,35,63], textColor:255, fontStyle:'bold', fontSize:9, halign:'left', cellPadding:{top:3.2,bottom:3.2,left:4,right:4}}}],
+        ['Module','Note /20','Appréciation','Date'].map(t=>({content:t, styles:{fillColor:[240,241,244], textColor:[90,95,105], fontStyle:'bold', fontSize:7.3}})),
+      ],
+      body: notes.map(n=>[n.module, n.note, n.appreciation||'—', fmtDate(n.date)]),
+      styles:{font, lineColor:[228,231,236], lineWidth:0.15, cellPadding:{top:2.8,bottom:2.8,left:4,right:3}},
+      bodyStyles:{fontSize:8.5, textColor:[26,29,35]},
+      alternateRowStyles:{fillColor:[248,249,251]},
+    });
+    y = doc.lastAutoTable.finalY + 6;
+  }
+
+  // ----- Présence -----
+  if(y > 250){ doc.addPage(); y = 20; }
+  y = pdfStatsSection(doc, M, y, W, 'Présence', [
+    {label:'Présences', value:nbPresent, color:[28,122,70]},
+    {label:'Retards', value:nbRetard, color:[180,112,11]},
+    {label:'Absences', value:nbAbsent, color:[176,51,39]},
+    {label:'Taux présence', value:tauxPres+'%', color:[22,35,63]},
+  ], font) + 6;
+
+  // ----- Frais de formation -----
   if(showFinance){
-    y = pdfStatsSection(doc, M, y, W, 'État financier', [
+    if(y > 250){ doc.addPage(); y = 20; }
+    y = pdfStatsSection(doc, M, y, W, 'Frais de formation', [
       {label:'Montant dû', value:fmtCFA(fin.total), color:[22,35,63]},
       {label:'Payé', value:fmtCFA(fin.paye), color:[28,122,70]},
       {label:'Reste à payer', value:fmtCFA(fin.reste), color:[176,51,39]},
+    ], font) + 6;
+
+    if(y > 250){ doc.addPage(); y = 20; }
+    const autresFin = etudiantAutresFrais(id);
+    y = pdfStatsSection(doc, M, y, W, 'Autres frais', [
+      {label:'Montant dû', value:fmtCFA(autresFin.total), color:[22,35,63]},
+      {label:'Payé', value:fmtCFA(autresFin.paye), color:[28,122,70]},
+      {label:'Reste à payer', value:fmtCFA(autresFin.reste), color:[176,51,39]},
     ], font) + 6;
 
     const echRows = computeEcheancier(id);
@@ -3780,34 +3966,27 @@ async function exportFicheEtudiantPdf(id){
       });
       y = doc.lastAutoTable.finalY + 6;
     }
-  }
 
-  // ----- Présence -----
-  y = pdfStatsSection(doc, M, y, W, 'Présence', [
-    {label:'Présences', value:nbPresent, color:[28,122,70]},
-    {label:'Retards', value:nbRetard, color:[180,112,11]},
-    {label:'Absences', value:nbAbsent, color:[176,51,39]},
-    {label:'Taux présence', value:tauxPres+'%', color:[22,35,63]},
-  ], font) + 6;
-
-  // ----- Évaluations -----
-  if(notes.length){
-    if(y > 255){ doc.addPage(); y = 20; }
-    doc.autoTable({
-      startY: y,
-      margin:{left:M,right:210-M-W},
-      tableWidth:W,
-      theme:'grid',
-      head: [
-        [{content:'ÉVALUATIONS', colSpan:4, styles:{fillColor:[22,35,63], textColor:255, fontStyle:'bold', fontSize:9, halign:'left', cellPadding:{top:3.2,bottom:3.2,left:4,right:4}}}],
-        ['Module','Note /20','Appréciation','Date'].map(t=>({content:t, styles:{fillColor:[240,241,244], textColor:[90,95,105], fontStyle:'bold', fontSize:7.3}})),
-      ],
-      body: notes.map(n=>[n.module, n.note, n.appreciation||'—', fmtDate(n.date)]),
-      styles:{font, lineColor:[228,231,236], lineWidth:0.15, cellPadding:{top:2.8,bottom:2.8,left:4,right:3}},
-      bodyStyles:{fontSize:8.5, textColor:[26,29,35]},
-      alternateRowStyles:{fillColor:[248,249,251]},
-    });
-    y = doc.lastAutoTable.finalY + 6;
+    // ----- Historique des paiements -----
+    const listPaiements = DB.paiements.filter(p=>p.etudiantId===id).sort((a,b)=>new Date(b.date)-new Date(a.date));
+    if(listPaiements.length){
+      if(y > 250){ doc.addPage(); y = 20; }
+      doc.autoTable({
+        startY: y,
+        margin:{left:M,right:210-M-W},
+        tableWidth:W,
+        theme:'grid',
+        head: [
+          [{content:'HISTORIQUE DES PAIEMENTS', colSpan:4, styles:{fillColor:[22,35,63], textColor:255, fontStyle:'bold', fontSize:9, halign:'left', cellPadding:{top:3.2,bottom:3.2,left:4,right:4}}}],
+          ['Date','Type','Mode','Montant'].map(t=>({content:t, styles:{fillColor:[240,241,244], textColor:[90,95,105], fontStyle:'bold', fontSize:7.3}})),
+        ],
+        body: listPaiements.map(p=>[fmtDate(p.date), p.type||'—', p.mode||'—', fmtCFA(p.montant)]),
+        styles:{font, lineColor:[228,231,236], lineWidth:0.15, cellPadding:{top:2.8,bottom:2.8,left:4,right:3}},
+        bodyStyles:{fontSize:8.5, textColor:[26,29,35]},
+        alternateRowStyles:{fillColor:[248,249,251]},
+      });
+      y = doc.lastAutoTable.finalY + 6;
+    }
   }
 
   pdfFooter(doc, font);
@@ -3877,6 +4056,7 @@ function viewFiliere(id){
   const editable = canEdit('filieres');
   document.getElementById('ficheFiliereBody').innerHTML = `
     <div class="fiche-banner mb-3">
+      ${ficheLogoBadgeHTML()}
       <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
         <div class="d-flex align-items-center gap-3">
           ${f.flyer ? `<img src="${f.flyer}" style="width:60px;height:60px;object-fit:cover;border-radius:12px;">` : `<div style="width:60px;height:60px;border-radius:12px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;"><i class="bi bi-mortarboard-fill" style="font-size:1.5rem;"></i></div>`}
@@ -4103,6 +4283,7 @@ function viewFormateur(id){
   const etudiantsSuivis = DB.etudiants.filter(e=>(e.moduleIds||[]).some(mid=>modIdsSet.includes(mid)));
   document.getElementById('ficheFormateurBody').innerHTML = `
     <div class="fiche-banner mb-3">
+      ${ficheLogoBadgeHTML()}
       <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
         <div class="d-flex align-items-center gap-3">
           <div style="border-radius:50%;padding:3px;background:rgba(255,255,255,.18);flex-shrink:0;">${avatarHTML(f, 60)}</div>
@@ -4316,6 +4497,16 @@ document.getElementById('btnExportFinancierPdf').addEventListener('click', expor
 // Indique si la modale Paiement a été ouverte depuis la modale Historique,
 // pour savoir si on doit rouvrir l'Historique une fois la modale Paiement fermée.
 let reopenHistoriqueAfterPaiement = false;
+// Affiche/masque le champ de saisie libre quand "Autre" est choisi comme type de versement.
+function toggleTypeAutreInput(){
+  const sel = document.getElementById('selectTypePaiement');
+  const input = document.getElementById('inputTypeAutreLibelle');
+  const isAutre = sel.value === 'Autre';
+  input.style.display = isAutre ? '' : 'none';
+  input.required = isAutre;
+  if(!isAutre) input.value = '';
+}
+document.getElementById('selectTypePaiement').addEventListener('change', toggleTypeAutreInput);
 document.getElementById('btnNewPaiement').addEventListener('click', ()=>{
   reopenHistoriqueAfterPaiement = false;
   document.getElementById('formPaiement').reset();
@@ -4324,6 +4515,7 @@ document.getElementById('btnNewPaiement').addEventListener('click', ()=>{
   document.getElementById('btnSubmitPaiement').textContent = 'Valider le versement';
   document.getElementById('selectEtudiantPaiement').disabled = false;
   document.getElementById('formPaiement').elements['date'].value = new Date().toISOString().slice(0,10);
+  toggleTypeAutreInput();
   new bootstrap.Modal(document.getElementById('modalPaiement')).show();
 });
 // Modification d'un versement déjà enregistré (accès direction / comptabilité)
@@ -4346,7 +4538,17 @@ function editPaiement(id){
   f.elements['montant'].value = p.montant;
   f.elements['date'].value = p.date;
   f.elements['mode'].value = p.mode;
-  f.elements['type'].value = p.type;
+  // Types fixes du menu : si le type enregistré n'en fait pas partie, c'est un libellé "Autre"
+  // saisi librement -> on sélectionne "Autre" et on remet le libellé dans le champ texte.
+  const typesFixes = ["Frais d'inscription",'Tranche 1','Tranche 2','Tranche 3','Solde','Uniforme'];
+  if(typesFixes.includes(p.type)){
+    f.elements['type'].value = p.type;
+    toggleTypeAutreInput();
+  } else {
+    f.elements['type'].value = 'Autre';
+    toggleTypeAutreInput();
+    document.getElementById('inputTypeAutreLibelle').value = p.type || '';
+  }
   document.getElementById('selectEtudiantPaiement').disabled = true; // on ne change pas l'étudiant d'un versement existant
   document.getElementById('modalPaiementTitle').textContent = 'Modifier le versement';
   document.getElementById('btnSubmitPaiement').textContent = 'Enregistrer les modifications';
@@ -4364,10 +4566,18 @@ document.getElementById('modalPaiement').addEventListener('hidden.bs.modal', ()=
 document.getElementById('formPaiement').addEventListener('submit', async e=>{
   e.preventDefault();
   const data = Object.fromEntries(new FormData(e.target).entries());
+  // "Tranche X"/"Solde" = versements liés au coût de la formation (pris en compte pour l'échéancier
+  // et le reste à payer). "Frais d'inscription"/"Uniforme"/"Autre" sont des frais annexes, jamais
+  // additionnés au coût de la formation pour ces calculs.
+  const estFormation = TYPES_PAIEMENT_FORMATION.includes(data.type);
+  const typeFinal = (data.type === 'Autre') ? (data.typeAutreLibelle||'Autre').trim() : data.type;
+  delete data.typeAutreLibelle;
+  data.type = typeFinal;
+  data.estFormation = estFormation;
   const editId = document.getElementById('editPaiementId').value;
   if(editId){
     const p = DB.paiements.find(x=>x.id===editId);
-    if(p){ p.montant = data.montant; p.date = data.date; p.mode = data.mode; p.type = data.type; }
+    if(p){ p.montant = data.montant; p.date = data.date; p.mode = data.mode; p.type = data.type; p.estFormation = data.estFormation; }
   } else {
     data.id = uid();
     DB.paiements.push(data);
@@ -4523,7 +4733,7 @@ function renderEvalBulkRows(){
     .sort((a,b)=>nomComplet(a).localeCompare(nomComplet(b),'fr',{sensitivity:'base'}));
   document.getElementById('evalBulkRows').innerHTML = list.length ? list.map(e=>`
     <tr>
-      <td><div class="d-flex align-items-center gap-2">${avatarHTML(e,28)}<span>${nomComplet(e)}</span></div></td>
+      <td><div class="d-flex align-items-center gap-2">${avatarHTML(e,28,'square')}<span>${nomComplet(e)}</span></div></td>
       <td><input type="number" min="0" max="20" step="0.5" class="form-control form-control-sm eval-bulk-note" data-etudiant-id="${e.id}" placeholder="—"></td>
       <td><input type="text" class="form-control form-control-sm eval-bulk-appreciation" data-etudiant-id="${e.id}" placeholder="Appréciation (optionnel)"></td>
     </tr>`).join('') : `<tr><td colspan="3" class="text-center text-muted py-3">Aucun étudiant actif dans cette filière</td></tr>`;
@@ -4769,7 +4979,7 @@ function rapportCardAdminHTML(r){
     return `
       <div class="border rounded p-2 mb-2">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-1">
-          <div class="d-flex align-items-center gap-2">${avatarHTML(et,28)}<span class="small fw-semibold">${nomComplet(et)}</span></div>
+          <div class="d-flex align-items-center gap-2">${avatarHTML(et,28,'square')}<span class="small fw-semibold">${nomComplet(et)}</span></div>
           <div class="d-flex align-items-center gap-2">
             <span class="badge bg-${st.cls}">${st.label}</span>
             <button class="btn btn-outline-secondary btn-sm" onclick="toggleParticipantDetail('${r.id}','${p.etudiantId}')">
@@ -4953,7 +5163,7 @@ function populateChantierParticipantsBody(){
   const students = DB.etudiants.filter(e=>e.filiereId===fid && e.statut==='actif').sort((a,b)=>nomComplet(a).localeCompare(nomComplet(b),'fr',{sensitivity:'base'}));
   document.getElementById('chantierParticipantsBody').innerHTML = students.length ? students.map(e=>`
     <tr data-student="${e.id}">
-      <td><div class="d-flex align-items-center gap-2">${avatarHTML(e,28)}${nomComplet(e)}</div></td>
+      <td><div class="d-flex align-items-center gap-2">${avatarHTML(e,28,'square')}${nomComplet(e)}</div></td>
       <td>
         <div class="btn-group btn-group-sm chantier-toggle" role="group">
           <button type="button" class="btn btn-success" data-val="oui">Oui</button>
@@ -5190,7 +5400,7 @@ function populatePresenceList(){
     const statut = existing ? existing.statut : 'present';
     const motif = existing ? (existing.motif||'') : '';
     return `<tr data-student="${e.id}">
-      <td><div class="d-flex align-items-center gap-2">${avatarHTML(e,30)}${nomComplet(e)}</div></td>
+      <td><div class="d-flex align-items-center gap-2">${avatarHTML(e,30,'square')}${nomComplet(e)}</div></td>
       <td>
         <div class="btn-group btn-group-sm presence-toggle" role="group">
           <button type="button" class="btn ${statut==='present'?'btn-success':'btn-outline-success'}" data-val="present">Présent</button>
@@ -6027,6 +6237,83 @@ async function migratePhotosToCloudinary(){
 }
 document.getElementById('btnMigrateCloudinary').addEventListener('click', migratePhotosToCloudinary);
 
+/* ---------- LOGO DU CENTRE (Paramètres) ---------- */
+// Met à jour tous les emplacements "logo-mark" de l'application (navbar publique, menu offcanvas,
+// modale de connexion, sidebar desktop/mobile) avec le logo configuré, ou revient aux initiales "NF".
+function refreshCentreLogo(){
+  const logo = DB && DB.parametres ? DB.parametres.logo : '';
+  document.querySelectorAll('.logo-mark').forEach(el=>{
+    if(logo){
+      el.classList.add('has-logo');
+      el.innerHTML = `<img src="${logo}" alt="Logo">`;
+    } else {
+      el.classList.remove('has-logo');
+      el.innerHTML = 'NF';
+    }
+  });
+  loadCentreLogoForPdf();
+}
+// Cache en base64 du logo (nécessaire pour l'insérer dans les PDF générés par jsPDF, qui exige des données base64)
+let centreLogoPdfDataUrl = null;
+async function loadCentreLogoForPdf(){
+  const logo = DB && DB.parametres ? DB.parametres.logo : '';
+  if(!logo){ centreLogoPdfDataUrl = null; return; }
+  try{
+    const res = await fetch(logo);
+    const blob = await res.blob();
+    centreLogoPdfDataUrl = await new Promise((resolve, reject)=>{
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  }catch(err){
+    console.error('Impossible de charger le logo pour les PDF', err);
+    centreLogoPdfDataUrl = null;
+  }
+}
+function renderParametres(){
+  setCentreLogoBox(DB.parametres ? DB.parametres.logo : '');
+}
+function resetCentreLogoBox(){
+  document.getElementById('centreLogoInput').value = '';
+  document.getElementById('centreLogoPreview').style.display = 'none';
+  document.getElementById('centreLogoPreview').src = '';
+  document.getElementById('centreLogoPlaceholderIcon').style.display = 'block';
+}
+function setCentreLogoBox(dataUrl){
+  const img = document.getElementById('centreLogoPreview');
+  const icon = document.getElementById('centreLogoPlaceholderIcon');
+  if(dataUrl){ img.src = dataUrl; img.style.display = 'block'; icon.style.display = 'none'; }
+  else { img.style.display = 'none'; icon.style.display = 'block'; }
+}
+document.getElementById('centreLogoUploadBox').addEventListener('click', ()=> document.getElementById('centreLogoInput').click());
+document.getElementById('centreLogoInput').addEventListener('change', async e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  setCentreLogoBox(URL.createObjectURL(file));
+  try{
+    const url = await uploadToCloudinary(file);
+    if(!DB.parametres) DB.parametres = {logo:'img/logo.png'};
+    DB.parametres.logo = url;
+    await saveDB();
+    refreshCentreLogo();
+    toast('Logo du centre mis à jour');
+  }catch(err){
+    console.error(err);
+    toast("Échec de l'envoi du logo — réessayez");
+    resetCentreLogoBox();
+  }
+});
+document.getElementById('btnRemoveCentreLogo').addEventListener('click', async ()=>{
+  if(!DB.parametres) DB.parametres = {logo:'img/logo.png'};
+  DB.parametres.logo = '';
+  await saveDB();
+  resetCentreLogoBox();
+  refreshCentreLogo();
+  toast('Logo retiré');
+});
+
 /* ---------- DELETE ---------- */
 function askDelete(collection, id){
   pendingDelete = {collection, id};
@@ -6095,6 +6382,7 @@ document.getElementById('btnConfirmDelete').addEventListener('click', async ()=>
 /* ---------- INIT ---------- */
 (async function init(){
   await loadDB();
+  refreshCentreLogo();
   renderPublicSite();
   let savedUserId = null;
   try{ savedUserId = localStorage.getItem('anadenceSessionUserId'); }catch(e){}
