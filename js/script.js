@@ -21,6 +21,7 @@ document.getElementById('imgLightboxOverlay').addEventListener('click', e=>{
 });
 document.getElementById('imgLightboxClose').addEventListener('click', closeImgLightbox);
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeImgLightbox(); });
+document.getElementById('btnRetryLoadDB')?.addEventListener('click', ()=> location.reload());
 
 /* ---------- Bouton oeil : afficher/masquer les champs mot de passe ---------- */
 document.querySelectorAll('.password-toggle-btn').forEach(btn=>{
@@ -218,6 +219,24 @@ function scopeEtudiants(list){
 const uid = () => Math.random().toString(36).slice(2,9);
 const fmtCFA = n => new Intl.NumberFormat('fr-FR').format(Math.round(n||0)) + ' F';
 const fmtDate = d => d ? new Date(d).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+// Affichage lisible de la dernière connexion d'un compte (utilisé par la direction pour suivre l'activité
+// des utilisateurs) : "Aujourd'hui à 14:32", "Hier à ...", "Il y a X jours", ou la date complète au-delà d'une
+// semaine. Un compte resté inactif 30 jours ou plus est mis en évidence en rouge.
+function fmtDerniereConnexion(iso){
+  if(!iso) return '<span class="text-muted fst-italic">Jamais connecté</span>';
+  const d = new Date(iso);
+  if(isNaN(d.getTime())) return '<span class="text-muted fst-italic">Jamais connecté</span>';
+  const now = new Date();
+  const startOfDay = dt => new Date(dt.getFullYear(), dt.getMonth(), dt.getDate());
+  const diffDays = Math.round((startOfDay(now) - startOfDay(d)) / 86400000);
+  const heure = d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  let label;
+  if(diffDays<=0) label = `Aujourd'hui à ${heure}`;
+  else if(diffDays===1) label = `Hier à ${heure}`;
+  else if(diffDays>1 && diffDays<7) label = `Il y a ${diffDays} jours`;
+  else label = `${d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'})} à ${heure}`;
+  return diffDays>=30 ? `<span class="text-danger">${label}</span>` : `<span>${label}</span>`;
+}
 const initials = (a,b='') => (((a||'?')[0]||'')+((b||'')[0]||'')).toUpperCase();
 function avatarHTML(o, size, shape){
   size = size||34;
@@ -811,13 +830,33 @@ async function exportRapportPdf(id, etudiantId){
 
 /* ---------- Persistence (Firebase Firestore) ---------- */
 async function loadDB(){
+  let snap;
   try{
-    const snap = await dbDocRef.get();
-    if(snap.exists){ DB = snap.data().payload ? JSON.parse(snap.data().payload) : snap.data(); migrateDB(); return; }
-  }catch(e){ console.error('Erreur de connexion à Firebase', e); toast("Impossible de se connecter à la base Firebase — vérifiez la configuration"); }
+    snap = await dbDocRef.get();
+  }catch(e){
+    // IMPORTANT : en cas d'erreur de connexion (réseau coupé, règles de sécurité Firestore expirées,
+    // quota dépassé, etc.), on NE DOIT JAMAIS continuer avec une base vide, car l'étape suivante
+    // (seedData() + saveDB()) écraserait alors définitivement les vraies données par la base de
+    // démonstration. On bloque donc l'application avec un message clair plutôt que de risquer une perte
+    // de données silencieuse.
+    console.error('Erreur de connexion à Firebase', e);
+    showDbErrorOverlay();
+    throw e;
+  }
+  if(snap.exists){
+    DB = snap.data().payload ? JSON.parse(snap.data().payload) : snap.data();
+    migrateDB();
+    return;
+  }
+  // Le document Firestore n'existe vraiment pas (toute première utilisation de l'application,
+  // confirmée par une lecture réussie) : on initialise avec la base de démonstration.
   DB = seedData();
   migrateDB();
   await saveDB();
+}
+function showDbErrorOverlay(){
+  const el = document.getElementById('dbErrorOverlay');
+  if(el) el.style.display = 'flex';
 }
 function migrateDB(){
   // Ajoute les nouvelles collections aux bases déjà sauvegardées (versions précédentes)
@@ -1126,6 +1165,10 @@ document.getElementById('formLogin').addEventListener('submit', e=>{
 });
 
 function enterApp(user, skipSave){
+  // Enregistre la date/heure de cette connexion (visible par la direction dans Comptes & rôles),
+  // que ce soit une connexion explicite via le formulaire ou une reprise de session déjà ouverte.
+  user.derniereConnexion = new Date().toISOString();
+  saveDB();
   state.role = user.role;
   state.userName = user.nom;
   state.userId = user.id;
@@ -3744,9 +3787,18 @@ async function exportPresenceRapportPdf(){
 document.getElementById('btnExportPresencePdf').addEventListener('click', exportPresenceRapportPdf);
 
 /* ---------- DOCUMENTS ---------- */
-function renderDocuments(){
-  const editable = canEdit('documents');
-  document.getElementById('btnNewDocument').style.display = editable?'inline-block':'none';
+// Types de pièces qui composent le dossier administratif numérique de l'étudiant
+// (constitué par la direction / le secrétariat au fil de l'inscription et du parcours).
+const DOCUMENT_TYPES = ["Copie acte de naissance","Carte d'identité / CIP","Photo d'identité","Fiche d'inscription","Contrat de formation","Diplôme / Bulletin","Attestation","Certificat médical","Fiche de retard","Fiche d'absence","Autre"];
+// Petit code couleur pour repérer vite les pièces administratives clés (identité / inscription / contrat)
+// des autres justificatifs (médical, retard, absence...).
+function documentBadgeClass(type){
+  if(["Copie acte de naissance","Carte d'identité / CIP","Photo d'identité"].includes(type)) return 'bg-info-subtle text-info-emphasis border-0';
+  if(["Fiche d'inscription","Contrat de formation"].includes(type)) return 'bg-warning-subtle text-warning-emphasis border-0';
+  if(type==='Diplôme / Bulletin' || type==='Attestation') return 'bg-success-subtle text-success-emphasis border-0';
+  return 'bg-light text-dark border';
+}
+function scopedDocumentsBase(){
   let base = DB.documents;
   if(state.role==='etudiant'){
     const u = currentUser();
@@ -3755,23 +3807,54 @@ function renderDocuments(){
     const ids = scopedFiliereIds();
     if(ids){ const etIds = DB.etudiants.filter(e=>ids.includes(e.filiereId)).map(e=>e.id); base = base.filter(d=>etIds.includes(d.etudiantId)); }
   }
+  return base;
+}
+function renderDocuments(){
+  const editable = canEdit('documents');
+  document.getElementById('btnNewDocument').style.display = editable?'inline-block':'none';
+  let base = scopedDocumentsBase();
+
+  // Filtres : étudiant concerné, type de pièce, recherche libre (nom du document ou de l'étudiant)
+  const selEtudiant = document.getElementById('filterEtudiantDocument');
+  const etudiantsVisibles = [...new Set(base.map(d=>d.etudiantId))].map(getEtudiant).filter(Boolean).sort((a,b)=>nomComplet(a).localeCompare(nomComplet(b)));
+  const currentEtudiantFilter = selEtudiant.value;
+  selEtudiant.innerHTML = `<option value="">Tous les étudiants</option>` + etudiantsVisibles.map(e=>`<option value="${e.id}">${nomComplet(e)}</option>`).join('');
+  selEtudiant.value = etudiantsVisibles.some(e=>e.id===currentEtudiantFilter) ? currentEtudiantFilter : '';
+
+  const selType = document.getElementById('filterTypeDocument');
+  const currentTypeFilter = selType.value;
+  selType.innerHTML = `<option value="">Tous les types</option>` + DOCUMENT_TYPES.map(t=>`<option value="${t}">${t}</option>`).join('');
+  selType.value = currentTypeFilter;
+
+  const search = (document.getElementById('searchDocument').value||'').toLowerCase();
+  if(selEtudiant.value) base = base.filter(d=>d.etudiantId===selEtudiant.value);
+  if(selType.value) base = base.filter(d=>d.type===selType.value);
+  if(search) base = base.filter(d=> d.nom.toLowerCase().includes(search) || nomComplet(getEtudiant(d.etudiantId)).toLowerCase().includes(search));
+
   const list = [...base].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  document.getElementById('documentsCountBadge').textContent = list.length;
   document.getElementById('documentsBody').innerHTML = list.length ? list.map(d=>`
     <tr>
       <td>${nomComplet(getEtudiant(d.etudiantId))}</td>
       <td>${d.nom}</td>
-      <td class="d-none d-md-table-cell"><span class="badge bg-light text-dark border">${d.type}</span></td>
+      <td class="d-none d-md-table-cell"><span class="badge ${documentBadgeClass(d.type)}">${d.type}</span></td>
       <td class="d-none d-lg-table-cell">${fmtDate(d.date)}</td>
       <td class="text-end">
         ${d.fichier ? `<a class="btn btn-sm btn-outline-secondary" href="${d.fichier}" target="_blank" download="${d.nom}"><i class="bi bi-download"></i></a>` : ''}
         ${editable ? `<button class="btn btn-sm btn-icon text-danger" onclick="askDelete('documents','${d.id}')"><i class="bi bi-trash"></i></button>` : ''}
       </td>
-    </tr>`).join('') : `<tr><td colspan="5"><div class="empty-state"><i class="bi bi-folder2-open"></i><p>Aucun document enregistré</p></div></td></tr>`;
+    </tr>`).join('') : `<tr><td colspan="5"><div class="empty-state"><i class="bi bi-folder2-open"></i><p>Aucune pièce enregistrée</p></div></td></tr>`;
 }
+document.getElementById('searchDocument').addEventListener('input', renderDocuments);
+document.getElementById('filterEtudiantDocument').addEventListener('change', renderDocuments);
+document.getElementById('filterTypeDocument').addEventListener('change', renderDocuments);
 document.getElementById('btnNewDocument').addEventListener('click', ()=>{
   document.getElementById('formDocument').reset();
   document.getElementById('documentFileInput').value='';
   document.getElementById('formDocument').elements['date'].value = new Date().toISOString().slice(0,10);
+  // Si un filtre étudiant est actif dans la liste, on le pré-sélectionne dans le formulaire d'ajout
+  const filtre = document.getElementById('filterEtudiantDocument').value;
+  if(filtre) document.getElementById('selectEtudiantDocument').value = filtre;
   new bootstrap.Modal(document.getElementById('modalDocument')).show();
 });
 document.getElementById('formDocument').addEventListener('submit', async e=>{
@@ -3779,19 +3862,18 @@ document.getElementById('formDocument').addEventListener('submit', async e=>{
   const data = Object.fromEntries(new FormData(e.target).entries());
   data.id = uid();
   const file = document.getElementById('documentFileInput').files[0];
-  if(file){
-    try{
-      data.fichier = await uploadToCloudinary(file);
-    }catch(err){
-      console.error(err);
-      toast("Échec de l'envoi du fichier — réessayez");
-      return;
-    }
+  if(!file){ toast('Merci de sélectionner un fichier numérique'); return; }
+  try{
+    data.fichier = await uploadToCloudinary(file);
+  }catch(err){
+    console.error(err);
+    toast("Échec de l'envoi du fichier — réessayez");
+    return;
   }
   DB.documents.push(data);
   await saveDB();
   bootstrap.Modal.getInstance(document.getElementById('modalDocument')).hide();
-  toast('Document enregistré');
+  toast('Pièce ajoutée au dossier de l\'étudiant');
   renderDocuments();
 });
 
@@ -4101,13 +4183,16 @@ function renderUtilisateurs(){
   const emptyLabel = {administration:'Aucun compte administration', formateur:'Aucun compte formateur', etudiant:'Aucun compte étudiant', partenaire:'Aucun compte partenaire'}[usersTab] || 'Aucun compte créé';
   document.getElementById('usersBody').innerHTML = list.length ? list.map(u=>`
     <tr>
-      <td><div class="d-flex align-items-center gap-2"><div class="avatar-circ">${initials(u.nom,'')}</div>${u.nom}</div></td>
+      <td>
+        <div class="d-flex align-items-center gap-2">
+          <div class="avatar-circ">${initials(u.nom,'')}</div>
+          <span>${u.nom}</span>
+          <button class="btn btn-sm btn-icon" onclick="editUser('${u.id}')" title="Afficher / modifier"><i class="bi bi-eye"></i></button>
+        </div>
+      </td>
       <td class="text-mono d-none d-md-table-cell">${u.identifiant||'—'}</td>
       <td><span class="role-badge rb-${u.role}">${ROLES.find(r=>r.id===u.role)?.label||u.role}</span></td>
-      <td class="text-end">
-        <button class="btn btn-sm btn-icon" onclick="editUser('${u.id}')" title="Modifier"><i class="bi bi-pencil"></i></button>
-        <button class="btn btn-sm btn-icon text-danger" onclick="askDelete('users','${u.id}')" title="Supprimer"><i class="bi bi-trash"></i></button>
-      </td>
+      <td class="d-none d-lg-table-cell small">${fmtDerniereConnexion(u.derniereConnexion)}</td>
     </tr>`).join('') : `<tr><td colspan="4"><div class="empty-state"><i class="bi bi-person-x"></i><p>${emptyLabel}</p></div></td></tr>`;
 }
 function fillUserRoleSelect(){
@@ -4146,6 +4231,8 @@ document.getElementById('btnNewUser').addEventListener('click', ()=>{
   document.getElementById('formUser').reset();
   document.getElementById('formUser').elements['id'].value='';
   document.getElementById('modalUserTitle').textContent='Nouveau compte';
+  document.getElementById('userLastLoginWrap').classList.add('d-none');
+  document.getElementById('btnDeleteUserFromModal').classList.add('d-none');
   // Pré-sélectionne le rôle correspondant à l'onglet actif (ex : ouvrir "Nouveau compte" depuis l'onglet Formateur pré-remplit le rôle Formateur).
   const roleForTab = usersTab==='formateur' ? 'formateur' : usersTab==='etudiant' ? 'etudiant' : usersTab==='partenaire' ? 'partenaire' : 'direction';
   document.getElementById('selectUserRole').value = roleForTab;
@@ -4163,6 +4250,17 @@ function editUser(id){
   toggleUserLinkFields(u.role);
   renderPermsGrid(u.role, u.perms);
   document.getElementById('modalUserTitle').textContent='Modifier le compte';
+  const lastLoginWrap = document.getElementById('userLastLoginWrap');
+  lastLoginWrap.classList.remove('d-none');
+  document.getElementById('userLastLoginValue').innerHTML = fmtDerniereConnexion(u.derniereConnexion);
+  // Le bouton de suppression n'apparaît qu'en modification d'un compte existant, jamais à la création.
+  // On empêche la direction de supprimer son propre compte par erreur pendant qu'elle est connectée dessus.
+  const btnDelete = document.getElementById('btnDeleteUserFromModal');
+  btnDelete.classList.toggle('d-none', u.id===state.userId);
+  btnDelete.onclick = ()=>{
+    bootstrap.Modal.getInstance(document.getElementById('modalUser')).hide();
+    askDelete('users', u.id);
+  };
   new bootstrap.Modal(document.getElementById('modalUser')).show();
 }
 document.getElementById('formUser').addEventListener('submit', async e=>{
@@ -4526,7 +4624,13 @@ document.getElementById('btnConfirmDelete').addEventListener('click', async ()=>
 
 /* ---------- INIT ---------- */
 (async function init(){
-  await loadDB();
+  try{
+    await loadDB();
+  }catch(e){
+    // Le chargement a échoué : l'overlay d'erreur est déjà affiché par loadDB(), on n'ouvre surtout
+    // pas l'application avec une base vide (cela écraserait les vraies données à la prochaine sauvegarde).
+    return;
+  }
   refreshCentreLogo();
   renderPublicSite();
   let savedUserId = null;
